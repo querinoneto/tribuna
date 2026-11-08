@@ -89,25 +89,29 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
       {/* Cabeçalho grande (home) */}
       {isHome && (
         <header ref={masthead} className="wrap pt-5 sm:pt-7">
-          <div className="flex items-center justify-between gap-6 pb-4 sm:items-end sm:pb-[18px]">
-            <button type="button" className="-ml-2 inline-flex size-11 items-center justify-center lg:hidden" aria-label="Abrir menu" onClick={() => setMenu(true)}>
-              <IconMenu />
-            </button>
-            <p className="hidden flex-1 text-xs leading-normal text-muted lg:block">
-              {SITE_TAGLINE.split(", ")[0]},<br />
-              {SITE_TAGLINE.split(", ")[1]}
-            </p>
+          <div className="flex items-center justify-between gap-2 pb-4 sm:items-end sm:gap-6 sm:pb-[18px]">
+            <div className="flex items-center gap-3 lg:flex-1">
+              <button type="button" className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center" aria-label="Abrir menu" onClick={() => setMenu(true)}>
+                <IconMenu />
+              </button>
+              <p className="hidden text-xs leading-normal whitespace-nowrap text-muted xl:block">
+                {SITE_TAGLINE.split(", ")[0]},<br />
+                {SITE_TAGLINE.split(", ")[1]}
+              </p>
+            </div>
             <Link href="/" aria-label="Tribuna Socialista, página inicial">
               <h1 className="m-0">
-                <Wordmark className="text-[34px] sm:text-[64px] lg:text-[96px]" />
+                <Wordmark className="text-[30px] sm:text-[60px] lg:text-[80px] xl:text-[88px]" />
               </h1>
             </Link>
-            <div className="hidden flex-1 justify-end lg:flex">
-              <SearchForm className="w-52" />
+            <div className="flex justify-end lg:flex-1">
+              <div className="hidden lg:block">
+                <SearchForm className="w-44" />
+              </div>
+              <Link href="/busca" className="-mr-2 inline-flex size-11 items-center justify-center lg:hidden" aria-label="Buscar">
+                <IconSearch size={20} />
+              </Link>
             </div>
-            <Link href="/busca" className="-mr-2 inline-flex size-11 items-center justify-center lg:hidden" aria-label="Buscar">
-              <IconSearch size={20} />
-            </Link>
           </div>
           <nav aria-label="Editorias" className="border-t-4 border-b border-rule-strong">
             <SectionScroller sections={sections} />
@@ -150,16 +154,18 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
         </div>
       </div>
 
-      {/* Menu em tela cheia (celular) */}
+      {/* Menu lateral: tela cheia no celular, painel à esquerda no computador */}
       {menu && (
-        <div role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-paper">
-          <div className="wrap flex h-14 items-center justify-between border-b border-rule-strong sm:h-16">
+        <div role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-[70] flex">
+          <button type="button" aria-label="Fechar menu" tabIndex={-1} className="absolute inset-0 hidden bg-black/40 sm:block" onClick={() => setMenu(false)} />
+          <div className="relative flex h-full w-full flex-col overflow-y-auto bg-paper sm:w-[380px] sm:border-r sm:border-rule-strong">
+          <div className="flex h-14 items-center justify-between border-b border-rule-strong px-4 sm:h-16 sm:px-6">
             <Wordmark className="text-[24px]" />
             <button type="button" className="-mr-2 inline-flex size-11 items-center justify-center" aria-label="Fechar menu" onClick={() => setMenu(false)} autoFocus>
               <IconClose />
             </button>
           </div>
-          <nav aria-label="Menu principal" className="wrap py-4">
+          <nav aria-label="Menu principal" className="px-4 py-4 sm:px-6">
             <ul className="flex flex-col">
               {MENU.map((m) => (
                 <li key={m.href}>
@@ -177,6 +183,7 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
               Escreva e publique conosco
             </Link>
           </nav>
+          </div>
         </div>
       )}
     </>
