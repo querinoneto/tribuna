@@ -15,7 +15,7 @@ import type { ArticleCard, ArticleFull, Author, Page, Section } from "@/lib/type
  */
 
 export const CARD_SELECT =
-  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), author:authors(name, slug, avatar_url)";
+  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), author:authors(name, slug, avatar_url, is_contributor)";
 
 function setup() {
   cacheTag(CONTENT_TAG);
@@ -168,7 +168,7 @@ export async function getAuthorPage(slug: string, page: number) {
   "use cache";
   const db = setup();
   if (!db) return null;
-  const { data: author } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, profile_id").eq("slug", slug).maybeSingle();
+  const { data: author } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id").eq("slug", slug).maybeSingle();
   if (!author) return null;
   const from = (page - 1) * PAGE_SIZE;
   const { data, count, error } = await db
@@ -185,7 +185,7 @@ export async function getColumnists(): Promise<Author[]> {
   "use cache";
   const db = setup();
   if (!db) return [];
-  const { data, error } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, profile_id").eq("is_columnist", true).order("name");
+  const { data, error } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id").eq("is_columnist", true).order("name");
   log("colunistas", error);
   return (data ?? []) as Author[];
 }

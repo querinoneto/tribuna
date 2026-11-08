@@ -3,6 +3,8 @@ import { requireRole } from "@/lib/auth";
 import { formatShort } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/admin/page-header";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { prepareSubmission } from "./actions";
 import { SubmissionActions } from "./submission-actions";
 
 export const metadata = { title: "Envios de leitores" };
@@ -84,8 +86,19 @@ export default async function EnviosPage({ searchParams }: PageProps<"/admin/env
               </div>
               {r.message && <p className="mt-3 rounded-md bg-paper-2 p-3 font-serif text-base whitespace-pre-line">{r.message}</p>}
               <div className="mt-4 flex flex-wrap items-center gap-2">
+                {r.article_id ? (
+                  <Link href={`/admin/textos/${r.article_id}`} className="btn-primary">
+                    Abrir rascunho
+                  </Link>
+                ) : (
+                  <form action={async () => { "use server"; await prepareSubmission(r.id); }}>
+                    <SubmitButton className="btn-primary" pendingText="Preparando…">
+                      Preparar para publicação
+                    </SubmitButton>
+                  </form>
+                )}
                 {url.get(r.file_path) && (
-                  <a href={url.get(r.file_path)} className="btn-primary" target="_blank" rel="noopener">
+                  <a href={url.get(r.file_path)} className="btn-secondary" target="_blank" rel="noopener">
                     Baixar o texto{r.file_name ? ` (${r.file_name.split(".").pop()?.toUpperCase()})` : ""}
                   </a>
                 )}

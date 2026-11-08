@@ -67,6 +67,15 @@ Se faltar algo obrigatório (título, editoria, autor, texto ou descrição da c
 - Tirar do ar: em Detalhes, toque em **Voltar para rascunho** ou **Arquivar**. O arquivado continua guardado e pode ser republicado.
 - Excluir: em Detalhes, toque em **Excluir texto**. O painel pede confirmação, porque a exclusão não tem volta.
 
+## Publicar um texto enviado por leitor
+
+1. Abra **Envios de leitores** e toque em **Preparar para publicação** no envio escolhido.
+2. O painel abre o rascunho com título e autor preenchidos. A pessoa entra como **colaboradora**: aparece com nome, foto e o selo "Colaboração", mas não vira colunista.
+3. Se o texto veio em Word (.docx), ele já está no editor. Se veio em PDF, baixe o arquivo e cole o texto.
+4. Escolha a editoria, revise e publique.
+
+Para completar a mini biografia da pessoa, vá em **Colunistas e autores**. Se quiser torná-la colunista oficial, mude o **Tipo** para "Colunista".
+
 ## Dicas
 
 - A lista **Textos** tem busca e filtros por estado, editoria e autor.

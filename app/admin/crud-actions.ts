@@ -84,12 +84,12 @@ export async function saveAuthor(_: FormState, fd: FormData): Promise<FormState>
     slug: str(fd, "slug") || slugify(str(fd, "name")),
     bio: str(fd, "bio"),
     avatar_url: str(fd, "avatar_url"),
-    is_columnist: fd.get("is_columnist") === "on",
+    is_columnist: str(fd, "kind") === "colunista",
   });
   if (!parsed.success) return fail(firstError(parsed.error));
   const profileId = str(fd, "profile_id") || null;
   const supabase = await createClient();
-  const row = { ...parsed.data, profile_id: profileId };
+  const row = { ...parsed.data, is_contributor: str(fd, "kind") === "colaborador", profile_id: profileId };
   const { error } = id
     ? await supabase.from("authors").update(row).eq("id", id)
     : await supabase.from("authors").insert(row);

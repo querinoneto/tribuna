@@ -6,7 +6,7 @@ Marque cada item conforme for concluindo.
 
 - [ ] Projeto criado no Supabase, na região São Paulo (README, 3.1)
 - [ ] Extensão **pg_cron** ativada (README, 3.2)
-- [ ] As 4 migrações e o `seed.sql` rodados, nesta ordem (README, 3.3)
+- [ ] As 5 migrações e o `seed.sql` rodados, nesta ordem (README, 3.3)
 - [ ] Em **Table Editor → allowed_emails**, `querino.neto@gmail.com` aparece como `admin`
 - [ ] Em **Storage**, o bucket `media` existe e é público, e o bucket `envios` existe e é **privado**
 - [ ] Login com Google configurado no Google Cloud e no Supabase (README, 4)

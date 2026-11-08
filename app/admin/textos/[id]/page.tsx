@@ -5,8 +5,9 @@ import { ArticleEditor, type EditorArticle } from "@/components/admin/article-ed
 
 export const metadata = { title: "Editar texto" };
 
-export default async function EditArticlePage({ params }: PageProps<"/admin/textos/[id]">) {
+export default async function EditArticlePage({ params, searchParams }: PageProps<"/admin/textos/[id]">) {
   const { id } = await params;
+  const { preparado } = (await searchParams) as { preparado?: string };
   const staff = await requireStaff();
   const supabase = await createClient();
 
@@ -59,6 +60,22 @@ export default async function EditArticlePage({ params }: PageProps<"/admin/text
       sections={sections ?? []}
       authors={authorOptions.map((a) => ({ id: a.id, name: a.name }))}
       role={staff.role}
+      notice={preparedNotice(preparado)}
     />
   );
+}
+
+/** Mensagem exibida no editor logo depois de "Preparar para publicação". */
+function preparedNotice(code?: string): string | undefined {
+  if (!code) return undefined;
+  const parts = code.split(",");
+  const who = parts.includes("colaboracao-existente")
+    ? "A assinatura usa o cadastro de colaboração que essa pessoa já tinha."
+    : "A pessoa foi cadastrada como colaboradora (não aparece entre os colunistas), com a foto enviada.";
+  const text = parts.includes("texto-importado")
+    ? "O texto do arquivo Word já está no editor: revise a formatação."
+    : parts.includes("texto-falhou")
+      ? "Não foi possível ler o arquivo Word: baixe-o em Envios de leitores e cole o texto aqui."
+      : "O arquivo veio em PDF (ou Word antigo): baixe-o em Envios de leitores e cole o texto aqui.";
+  return `Rascunho criado a partir do envio. ${who} ${text} Antes de publicar, escolha a editoria.`;
 }

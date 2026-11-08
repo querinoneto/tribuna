@@ -44,6 +44,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
             ) : (
               <span className="font-bold">Redação</span>
             )}
+            {article.author?.is_contributor && <span className="text-xs font-semibold tracking-[0.08em] text-accent uppercase">Colaboração</span>}
             <span className="text-muted">
               <time dateTime={published}>{formatDateTime(published)}</time> · {article.reading_minutes} min de leitura
             </span>

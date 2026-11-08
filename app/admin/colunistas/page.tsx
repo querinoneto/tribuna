@@ -8,7 +8,7 @@ import { deleteAuthor, saveAuthor } from "../crud-actions";
 
 export const metadata = { title: "Colunistas e autores" };
 
-type A = { id: string; name: string; slug: string; bio: string | null; avatar_url: string | null; is_columnist: boolean; profile_id: string | null };
+type A = { id: string; name: string; slug: string; bio: string | null; avatar_url: string | null; is_columnist: boolean; is_contributor: boolean; profile_id: string | null };
 
 function Fields({ a, profiles }: { a?: A; profiles: { id: string; name: string; email: string }[] }) {
   return (
@@ -45,10 +45,27 @@ function Fields({ a, profiles }: { a?: A; profiles: { id: string; name: string; 
           </select>
         </label>
       </div>
-      <label className="flex min-h-11 items-center gap-3 text-sm">
-        <input type="checkbox" name="is_columnist" defaultChecked={a?.is_columnist} className="size-5 accent-[var(--accent)]" />
-        Mostrar na lista de colunistas do site
-      </label>
+      <fieldset className="flex flex-col gap-1">
+        <legend className="mb-1 text-sm font-medium">Tipo</legend>
+        {[
+          { v: "colunista", label: "Colunista", hint: "aparece na página Colunistas" },
+          { v: "colaborador", label: "Colaboração", hint: "escreveu espontaneamente; recebe os créditos, mas não é colunista" },
+          { v: "redacao", label: "Equipe / Redação", hint: "assinatura da equipe do jornal" },
+        ].map((o) => (
+          <label key={o.v} className="flex min-h-10 items-center gap-3 text-sm">
+            <input
+              type="radio"
+              name="kind"
+              value={o.v}
+              defaultChecked={(a ? (a.is_columnist ? "colunista" : a.is_contributor ? "colaborador" : "redacao") : "colunista") === o.v}
+              className="size-4 accent-[var(--accent)]"
+            />
+            <span>
+              <strong className="font-semibold">{o.label}</strong> <span className="text-muted">({o.hint})</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
     </div>
   );
 }
@@ -65,7 +82,7 @@ export default async function ColunistasPage() {
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
       <PageHeader
         title="Colunistas e autores"
-        description="Quem assina os textos. Colunistas convidados não precisam de conta; quem publica pelo painel pode ter a conta ligada à assinatura."
+        description="Quem assina os textos: colunistas, colaborações (pessoas que enviaram textos pelo site) e a equipe. Ninguém precisa de conta para assinar; quem publica pelo painel pode ter a conta ligada à assinatura."
       />
 
       <section className="rounded-lg border border-rule bg-paper p-4 sm:p-5">
@@ -87,7 +104,7 @@ export default async function ColunistasPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block font-sans text-lg font-semibold">{a.name}</span>
                   <span className="text-xs text-muted">
-                    {a.is_columnist ? "Colunista" : "Autor"} · /autor/{a.slug}
+                    {a.is_columnist ? "Colunista" : a.is_contributor ? "Colaboração" : "Equipe / Redação"} · /autor/{a.slug}
                   </span>
                 </span>
                 <span className="btn-ghost text-sm">Editar</span>

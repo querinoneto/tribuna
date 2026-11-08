@@ -94,7 +94,8 @@ Escolha **um** dos dois caminhos.
 2. `supabase/migrations/20261108000002_rls.sql`
 3. `supabase/migrations/20261108000003_storage_cron.sql`
 4. `supabase/migrations/20261108000004_submissions.sql`
-5. `supabase/seed.sql`
+5. `supabase/migrations/20261108000005_contributors.sql`
+6. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
 
@@ -213,6 +214,7 @@ Outras proteções:
 - cabeçalhos de segurança: HSTS, X-Frame-Options, nosniff, Referrer-Policy e Permissions-Policy;
 - a exportação em CSV protege contra fórmulas maliciosas no Excel;
 - **envios de leitores** ("Escreva e publique conosco", em `/publique`): os arquivos vão para um bucket **privado** (`envios`, até 10 MB, só PDF, Word e imagens). Visitantes só conseguem enviar, nunca ler; apenas editores e administradores veem e baixam os envios, em **Painel → Envios de leitores**. Há limite de 5 envios por e-mail por hora.
+- **Preparar para publicação**: em cada envio, esse botão cadastra a pessoa como **colaboradora** (ou reaproveita o cadastro, se ela já mandou textos), copia a foto para a biblioteca, cria o rascunho com título e autor e, se o arquivo for Word (.docx), já importa o texto. Colaboradores recebem os créditos ("Colaboração") mas **não** aparecem entre os colunistas: colunista é só quem a edição cadastra como tal, em **Colunistas e autores**.
 
 ### Redes sociais do rodapé
 

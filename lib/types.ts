@@ -10,6 +10,7 @@ export type Author = {
   bio: string | null;
   avatar_url: string | null;
   is_columnist: boolean;
+  is_contributor: boolean;
   profile_id: string | null;
 };
 
@@ -55,7 +56,7 @@ export type ArticleCard = Pick<
   | "pinned"
 > & {
   section: Pick<Section, "name" | "slug"> | null;
-  author: Pick<Author, "name" | "slug" | "avatar_url"> | null;
+  author: (Pick<Author, "name" | "slug" | "avatar_url"> & { is_contributor?: boolean }) | null;
 };
 
 export type ArticleFull = ArticleCard &

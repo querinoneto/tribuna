@@ -55,11 +55,13 @@ export function ArticleEditor({
   sections,
   authors,
   role,
+  notice,
 }: {
   article: EditorArticle;
   sections: Option[];
   authors: Option[];
   role: Role;
+  notice?: string;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -502,6 +504,12 @@ export function ArticleEditor({
         )}
         {actions}
       </header>
+
+      {notice && (
+        <p role="status" className="border-b border-rule bg-[#e6edf8] px-4 py-3 text-center text-sm text-[#1f4170] dark:bg-[#1c2a40] dark:text-[#a9c4ec]">
+          {notice}
+        </p>
+      )}
 
       {!editorCanPublish && status !== "draft" && (
         <p role="status" className="border-b border-rule bg-paper-2 px-4 py-3 text-center text-sm">
