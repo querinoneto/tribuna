@@ -6,9 +6,9 @@ Marque cada item conforme for concluindo.
 
 - [ ] Projeto criado no Supabase, na região São Paulo (README, 3.1)
 - [ ] Extensão **pg_cron** ativada (README, 3.2)
-- [ ] As 3 migrações e o `seed.sql` rodados, nesta ordem (README, 3.3)
+- [ ] As 4 migrações e o `seed.sql` rodados, nesta ordem (README, 3.3)
 - [ ] Em **Table Editor → allowed_emails**, `querino.neto@gmail.com` aparece como `admin`
-- [ ] Em **Storage**, o bucket `media` existe e é público
+- [ ] Em **Storage**, o bucket `media` existe e é público, e o bucket `envios` existe e é **privado**
 - [ ] Login com Google configurado no Google Cloud e no Supabase (README, 4)
 - [ ] Tela de consentimento do Google publicada ("Em produção")
 - [ ] E-mail de acesso traduzido (README, 3.5)
@@ -37,7 +37,8 @@ Marque cada item conforme for concluindo.
 - [ ] Testar com uma conta **fora** da lista e ver "Acesso não autorizado"
 - [ ] Publicar um texto de teste e conferir na capa; depois apagar
 - [ ] Agendar um texto para daqui a 10 minutos e conferir que entra no ar sozinho
-- [ ] Inscrever um e-mail na newsletter pelo rodapé e exportar o CSV em **Newsletter**
+- [ ] Inscrever um e-mail na newsletter e exportar o CSV em **Newsletter**
+- [ ] Enviar um texto de teste em `/publique` e conferir em **Envios de leitores**
 - [ ] Conferir `/sitemap.xml` e `/robots.txt`
 - [ ] Compartilhar uma matéria no WhatsApp e ver a prévia com título e imagem
 - [ ] Testar no celular: menu, modo escuro e editor

@@ -1,27 +1,20 @@
 /**
  * Redes sociais do jornal, exibidas no rodapé.
  *
- * Preencha o endereço de cada perfil. Só aparecem os botões com endereço
- * preenchido; deixe "" nas redes que o jornal não usa.
+ * Os botões aparecem sempre. Enquanto o endereço estiver vazio, o botão
+ * fica visível mas sem link ("em breve"); preencha o endereço do perfil
+ * para ativá-lo. A ordem aqui é a ordem no site.
  */
 export const SOCIAL_LINKS = {
-  instagram: "",
   x: "",
-  facebook: "",
+  instagram: "",
   youtube: "",
-  tiktok: "",
-  telegram: "",
-  whatsapp: "", // canal do WhatsApp, ex.: https://whatsapp.com/channel/...
 } as const;
 
 export type SocialNetwork = keyof typeof SOCIAL_LINKS;
 
 export const SOCIAL_LABEL: Record<SocialNetwork, string> = {
-  instagram: "Instagram",
   x: "X",
-  facebook: "Facebook",
+  instagram: "Instagram",
   youtube: "YouTube",
-  tiktok: "TikTok",
-  telegram: "Telegram",
-  whatsapp: "WhatsApp",
 };

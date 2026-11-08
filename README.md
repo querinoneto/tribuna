@@ -2,7 +2,7 @@
 
 Jornal digital com site público e painel administrativo para publicar textos.
 
-- **Site público**: capa, editorias, matérias, colunistas, busca, newsletter e modo escuro.
+- **Site público**: capa, editorias, matérias, colunistas, busca, newsletter, "Escreva e publique conosco" (envio de textos por leitores) e modo escuro.
 - **Painel (`/admin`)**: editor de texto com salvamento automático, imagens, agendamento e controle de quem pode fazer o quê.
 
 Guias rápidos:
@@ -93,7 +93,8 @@ Escolha **um** dos dois caminhos.
 1. `supabase/migrations/20261108000001_schema.sql`
 2. `supabase/migrations/20261108000002_rls.sql`
 3. `supabase/migrations/20261108000003_storage_cron.sql`
-4. `supabase/seed.sql`
+4. `supabase/migrations/20261108000004_submissions.sql`
+5. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
 
@@ -101,7 +102,7 @@ Escolha **um** dos dois caminhos.
 npx supabase login
 npx supabase link --project-ref SEU-PROJECT-REF
 npx supabase db push            # aplica as migrações
-# depois rode supabase/seed.sql no SQL Editor (passo 4 do caminho A)
+# depois rode supabase/seed.sql no SQL Editor (último passo do caminho A)
 ```
 
 O `seed.sql` faz o seguinte:
@@ -210,7 +211,12 @@ Outras proteções:
 - o HTML do editor é higienizado antes de salvar (sem scripts, sem eventos e sem iframes que não sejam do YouTube);
 - uploads só de imagens de até 5 MB, limite conferido no navegador e no próprio bucket do Storage;
 - cabeçalhos de segurança: HSTS, X-Frame-Options, nosniff, Referrer-Policy e Permissions-Policy;
-- a exportação em CSV protege contra fórmulas maliciosas no Excel.
+- a exportação em CSV protege contra fórmulas maliciosas no Excel;
+- **envios de leitores** ("Escreva e publique conosco", em `/publique`): os arquivos vão para um bucket **privado** (`envios`, até 10 MB, só PDF, Word e imagens). Visitantes só conseguem enviar, nunca ler; apenas editores e administradores veem e baixam os envios, em **Painel → Envios de leitores**. Há limite de 5 envios por e-mail por hora.
+
+### Redes sociais do rodapé
+
+Os botões de X, Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço de cada perfil para ativar o link; enquanto estiver vazio, o botão aparece sem link.
 
 ## 8. Como funcionam a publicação, o cache e o agendamento
 

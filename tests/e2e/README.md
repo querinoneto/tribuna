@@ -1,5 +1,7 @@
 # Testes de ponta a ponta (opcionais)
 
+`envios.spec.ts` testa o "Escreva e publique conosco" (envio pelo visitante e leitura pela edição).
+
 `publicacao.spec.ts` percorre, no navegador, o fluxo completo de quatro situações:
 
 1. o editor cria um texto, que salva sozinho; publica, e o texto aparece na capa na hora;

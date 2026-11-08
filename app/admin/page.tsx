@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { formatShort } from "@/lib/format";
-import { STATUS_LABEL } from "@/lib/permissions";
+import { canPublish, STATUS_LABEL } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { ArticleStatus } from "@/lib/types";
 import { NewArticleButton } from "@/components/admin/new-article-button";
@@ -20,6 +20,10 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
     return count ?? 0;
   };
   const [published, drafts, scheduled] = await Promise.all([count("published"), count("draft"), count("scheduled")]);
+
+  const { count: newSubmissions } = canPublish(staff.role)
+    ? await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo")
+    : { count: 0 };
 
   const { data: recent } = await supabase
     .from("articles")
@@ -45,6 +49,21 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         </div>
         <NewArticleButton />
       </div>
+
+      {(newSubmissions ?? 0) > 0 && (
+        <Link
+          href="/admin/envios"
+          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/5 p-4 hover:border-accent"
+        >
+          <span>
+            <strong className="font-semibold">
+              {newSubmissions} {newSubmissions === 1 ? "texto novo enviado" : "textos novos enviados"} por leitores
+            </strong>{" "}
+            <span className="text-sm text-muted">aguardando leitura</span>
+          </span>
+          <span className="text-sm font-semibold text-accent">Ver envios →</span>
+        </Link>
+      )}
 
       <section aria-label="Resumo" className="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
         {stats.map((s) => (

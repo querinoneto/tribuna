@@ -346,3 +346,82 @@ describe.runIf(DB)("administrador", () => {
     expect(n).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
+  const id = () => crypto.randomUUID();
+  const envio = (over: Record<string, unknown> = {}) => {
+    const k = id();
+    return {
+      name: "Maria Leitora",
+      email: `maria.${k.slice(0, 6)}@exemplo.test`,
+      file_path: `recebidos/${k}/texto.pdf`,
+      photo_path: `recebidos/${k}/foto.jpg`,
+      first_time: true,
+      ...over,
+    };
+  };
+  const insert = (c: import("pg").PoolClient, e: ReturnType<typeof envio>) =>
+    c.query(
+      "insert into submissions (name, email, file_path, photo_path, first_time) values ($1, $2, $3, $4, $5)",
+      [e.name, e.email, e.file_path, e.photo_path, e.first_time],
+    );
+
+  it("visitante envia, mas não lê nenhum envio", async () => {
+    await as(null, async (c) => {
+      await insert(c, envio());
+      expect((await c.query("select * from submissions")).rowCount).toBe(0);
+    });
+  });
+
+  it("primeira vez exige foto", async () => {
+    await expectDenied(as(null, (c) => insert(c, envio({ photo_path: null, first_time: true }))));
+    await as(null, (c) => insert(c, envio({ photo_path: null, first_time: false })));
+  });
+
+  it("recusa caminhos de arquivo fora da pasta de envios", async () => {
+    await expectDenied(as(null, (c) => insert(c, envio({ file_path: "../media/x.pdf" }))));
+    await expectDenied(as(null, (c) => insert(c, envio({ file_path: `recebidos/${id()}/texto.exe` }))));
+  });
+
+  it("visitante não consegue criar envio já marcado como lido", async () => {
+    const e = envio();
+    await expectDenied(
+      as(null, (c) =>
+        c.query("insert into submissions (name, email, file_path, photo_path, status) values ($1,$2,$3,$4,'lido')", [
+          e.name, e.email, e.file_path, e.photo_path,
+        ]),
+      ),
+    );
+  });
+
+  it("limita a 5 envios por e-mail por hora", async () => {
+    const email = `repetido.${id().slice(0, 6)}@exemplo.test`;
+    for (let i = 0; i < 5; i++) await asRoot((c) => insert(c, envio({ email })));
+    const msg = await expectDenied(asRoot((c) => insert(c, envio({ email }))));
+    expect(msg).toMatch(/Muitos envios/);
+  });
+
+  it("editor lê e marca envios; colunista não vê nada", async () => {
+    await asRoot((c) => insert(c, envio()));
+    const vistoPeloEditor = await as(editor, async (c) => (await c.query("select id from submissions")).rowCount);
+    expect(vistoPeloEditor).toBeGreaterThan(0);
+    const vistoPelaColunista = await as(colunista, async (c) => (await c.query("select id from submissions")).rowCount);
+    expect(vistoPelaColunista).toBe(0);
+    await as(editor, async (c) => {
+      expect((await c.query("update submissions set status = 'lido'")).rowCount).toBeGreaterThan(0);
+    });
+  });
+
+  it("visitante envia arquivo só na pasta permitida do bucket privado", async () => {
+    await as(null, async (c) => {
+      await c.query("insert into storage.objects (bucket_id, name) values ('envios', $1)", [`recebidos/${id()}/texto.pdf`]);
+      expect((await c.query("select * from storage.objects where bucket_id = 'envios'")).rowCount).toBe(0);
+    });
+    await expectDenied(
+      as(null, (c) => c.query("insert into storage.objects (bucket_id, name) values ('envios', 'qualquer/coisa.pdf')")),
+    );
+    await expectDenied(
+      as(null, (c) => c.query("insert into storage.objects (bucket_id, name) values ('media', $1)", [`recebidos/${id()}/foto.jpg`])),
+    );
+  });
+});

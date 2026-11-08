@@ -266,7 +266,7 @@ textarea.input {
   position: relative;
   margin-top: 2em;
   margin-bottom: 2em;
-  padding: 2.4rem 0 1.4rem;
+  padding: 3.1rem 0 1.4rem;
   border-top: 4px solid var(--rule-strong);
   border-bottom: 1px solid var(--rule-strong);
   font-family: var(--font-serif);
@@ -278,7 +278,7 @@ textarea.input {
 .prose-tribuna blockquote::before {
   content: "“";
   position: absolute;
-  top: -0.1rem;
+  top: 0.45rem;
   left: 0;
   font-size: 3.2em;
   line-height: 1;

@@ -103,3 +103,53 @@ export function validateImageFile(file: { type: string; size: number }): string 
 export function firstError(err: z.ZodError): string {
   return err.issues[0]?.message ?? "Verifique os campos e tente de novo.";
 }
+
+/* ------------------------- Escreva e publique conosco ------------------------- */
+export const TEXT_FILE_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+};
+export const PHOTO_FILE_TYPES: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+export const MAX_TEXT_BYTES = 10 * 1024 * 1024;
+export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+export function fileExtension(name: string): string {
+  return (name.split(".").pop() ?? "").toLowerCase();
+}
+
+export function validateTextFile(file: { name: string; size: number }): string | null {
+  if (!TEXT_FILE_TYPES[fileExtension(file.name)]) return "Envie o texto em PDF ou Word (.pdf, .doc ou .docx).";
+  if (file.size > MAX_TEXT_BYTES) return "O arquivo do texto passa de 10 MB.";
+  if (file.size === 0) return "O arquivo do texto está vazio.";
+  return null;
+}
+
+export function validatePhotoFile(file: { name: string; size: number }): string | null {
+  if (!PHOTO_FILE_TYPES[fileExtension(file.name)]) return "Envie a foto em JPG, PNG ou WebP.";
+  if (file.size > MAX_PHOTO_BYTES) return "A foto passa de 5 MB.";
+  if (file.size === 0) return "O arquivo da foto está vazio.";
+  return null;
+}
+
+export const submissionSchema = z
+  .object({
+    name: z.string().trim().min(2, "Informe seu nome.").max(120, "Nome muito longo."),
+    email: emailSchema,
+    title: z.string().trim().max(200, "Título muito longo.").default(""),
+    message: z.string().trim().max(2000, "A mensagem pode ter no máximo 2.000 caracteres.").default(""),
+    first_time: z.boolean(),
+    file_path: z.string().regex(/^recebidos\/[0-9a-f-]{36}\/texto\.(pdf|doc|docx)$/, "Envie o arquivo do texto."),
+    file_name: z.string().max(200).default(""),
+    photo_path: z
+      .string()
+      .regex(/^recebidos\/[0-9a-f-]{36}\/foto\.(jpg|jpeg|png|webp)$/)
+      .nullable(),
+    consent: z.literal(true, { message: "Para enviar, marque que concorda com a Política de privacidade." }),
+  })
+  .refine((v) => !v.first_time || v.photo_path, { message: "Como é sua primeira publicação, envie uma foto.", path: ["photo_path"] });

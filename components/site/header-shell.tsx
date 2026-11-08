@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { IconClose, IconMenu, IconSearch } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SITE_TAGLINE } from "@/lib/env";
+import { SectionScroller } from "./section-scroller";
 import { Wordmark } from "./wordmark";
 
 type S = { name: string; slug: string };
@@ -109,15 +110,7 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
             </Link>
           </div>
           <nav aria-label="Editorias" className="border-t-4 border-b border-rule-strong">
-            <ul className="-mx-4 flex gap-x-6 overflow-x-auto px-4 text-[12px] font-semibold tracking-[0.1em] whitespace-nowrap uppercase sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-x-9 sm:overflow-visible sm:px-0 sm:text-[13px]">
-              {sections.map((s) => (
-                <li key={s.slug}>
-                  <Link href={`/editoria/${s.slug}`} className={`block py-3.5 hover:text-accent ${s.slug === "opiniao" ? "text-accent" : ""}`}>
-                    {s.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <SectionScroller sections={sections} />
           </nav>
         </header>
       )}
@@ -180,6 +173,9 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
                 </li>
               ))}
             </ul>
+            <Link href="/publique" onClick={() => setMenu(false)} className="btn-primary mt-8 h-12 w-full text-base">
+              Escreva e publique conosco
+            </Link>
           </nav>
         </div>
       )}
