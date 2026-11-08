@@ -94,11 +94,11 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
             <span className="kicker text-muted">Compartilhe</span>
             <ShareButtons url={url} title={article.title} />
           </div>
-
-          <NewsletterInline />
         </div>
         <div aria-hidden className="hidden w-14 shrink-0 lg:block" />
       </div>
+
+      <NewsletterInline />
     </article>
   );
 }

@@ -71,7 +71,7 @@ export function NewsletterBlock() {
         <div className="flex-[1_1_380px]">
           <span className="kicker">Newsletter</span>
           <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
-            O essencial da semana, direto no seu e-mail.
+            O essencial da semana, direto no seu <span className="whitespace-nowrap">e-mail</span>.
           </h2>
           <p className="font-serif text-lg text-ink-soft">Sem algoritmo decidindo o que você lê. Cancele quando quiser.</p>
         </div>
@@ -86,12 +86,18 @@ export function NewsletterBlock() {
 /** Convite no fim da matéria. */
 export function NewsletterInline() {
   return (
-    <aside aria-label="Newsletter" className="mt-8 flex flex-col gap-4 bg-band p-6 text-band-ink">
-      <div>
-        <p className="font-display text-2xl leading-tight">Gostou? Receba a Tribuna no seu e-mail.</p>
-        <p className="mt-1 text-sm text-band-muted">Uma seleção semanal, sem algoritmo.</p>
+    <aside aria-label="Newsletter" className="mt-12 bg-band text-band-ink">
+      <div className="wrap flex flex-wrap items-center gap-x-12 gap-y-5 py-10">
+        <div className="flex-[1_1_320px]">
+          <p className="font-display text-2xl leading-tight text-balance sm:text-3xl">
+            Gostou? Receba a Tribuna no seu <span className="whitespace-nowrap">e-mail</span>.
+          </p>
+          <p className="mt-1.5 text-sm text-band-muted">Uma seleção semanal, sem algoritmo.</p>
+        </div>
+        <div className="flex-[1_1_380px]">
+          <Form dark />
+        </div>
       </div>
-      <Form dark />
     </aside>
   );
 }

@@ -124,7 +124,7 @@ body {
   @apply decoration-1 underline-offset-4 hover:underline;
 }
 @utility rule-title {
-  @apply border-t-4 border-rule-strong pt-3 font-display text-2xl leading-none sm:text-[28px];
+  @apply border-t-4 border-rule-strong pt-3 font-display text-2xl leading-none font-bold tracking-[-0.02em] sm:text-[28px];
 }
 @utility btn {
   @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
