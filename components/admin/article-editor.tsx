@@ -522,7 +522,7 @@ export function ArticleEditor({
               value={form.title}
               onChange={(e) => set("title", e.target.value.replace(/\n/g, " "))}
               placeholder="Título"
-              className="w-full resize-none border-0 bg-transparent p-0 font-serif text-[32px] leading-[1.08] font-extrabold tracking-[-0.02em] outline-none placeholder:text-muted/60 [field-sizing:content] sm:text-[44px]"
+              className="w-full resize-none border-0 bg-transparent p-0 font-sans text-[28px] leading-[1.12] font-bold tracking-[-0.025em] outline-none placeholder:text-muted/60 [field-sizing:content] sm:text-[40px]"
             />
             <label htmlFor="linha-fina" className="sr-only">
               Linha fina

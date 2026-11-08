@@ -21,7 +21,7 @@ async function Content({ params }: Props) {
     <div className="wrap pt-8 pb-16 sm:pt-12">
       <header className="mb-8 border-b border-rule-strong pb-6">
         <p className="kicker mb-2">Tag</p>
-        <h1 className="font-display text-5xl leading-none sm:text-6xl">{data.tag.name}</h1>
+        <h1 className="font-display text-4xl leading-none sm:text-5xl">{data.tag.name}</h1>
       </header>
       {data.articles.length === 0 ? (
         <EmptyState title="Nenhum texto com esta tag" />

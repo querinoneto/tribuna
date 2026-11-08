@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useId } from "react";
 import { subscribe, type NewsletterState } from "@/app/actions/newsletter";
 
@@ -51,6 +52,13 @@ function Form({ dark = false, compact = false }: { dark?: boolean; compact?: boo
           {state.message}
         </p>
       )}
+      <p className={`text-xs ${dark ? "text-band-muted" : "text-muted"}`}>
+        Ao se inscrever, você concorda com a nossa{" "}
+        <Link href="/privacidade" className="underline underline-offset-2 hover:text-accent">
+          Política de privacidade
+        </Link>
+        .
+      </p>
     </form>
   );
 }
@@ -62,7 +70,7 @@ export function NewsletterBlock() {
       <div className="wrap flex flex-wrap items-center gap-x-14 gap-y-8 py-14">
         <div className="flex-[1_1_380px]">
           <span className="kicker">Newsletter</span>
-          <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-4xl leading-[1.05] sm:text-[42px]">
+          <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
             O essencial da semana, direto no seu e-mail.
           </h2>
           <p className="font-serif text-lg text-ink-soft">Sem algoritmo decidindo o que você lê. Cancele quando quiser.</p>

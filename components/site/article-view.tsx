@@ -21,7 +21,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
             <span aria-hidden className="h-0.5 w-8 bg-accent" />
           </Link>
         )}
-        <h1 className="font-serif text-[36px] leading-[1.03] font-extrabold tracking-[-0.03em] text-balance sm:text-[52px] lg:text-[64px]">
+        <h1 className="font-sans text-[30px] leading-[1.1] font-bold tracking-[-0.025em] text-balance sm:text-[42px] lg:text-[50px]">
           {article.title}
         </h1>
         {article.subtitle && (

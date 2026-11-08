@@ -18,7 +18,7 @@ export default async function PaginasPage() {
         {pages?.map((p) => (
           <li key={p.slug}>
             <Link href={`/admin/paginas/${p.slug}`} className="flex flex-wrap items-center gap-3 p-4 hover:bg-paper-2">
-              <span className="flex-1 font-serif text-lg font-semibold">{p.title}</span>
+              <span className="flex-1 font-sans text-lg font-semibold">{p.title}</span>
               <span className="text-xs text-muted">/{p.slug} · atualizada {formatShort(p.updated_at)}</span>
               <span className="btn-ghost text-sm">Editar</span>
             </Link>

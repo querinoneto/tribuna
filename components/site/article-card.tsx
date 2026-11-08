@@ -38,7 +38,7 @@ export function ArticleCard({ article, showDek = true, headingLevel = 3 }: { art
         <Cover src={article.cover_url} alt={article.cover_alt} seed={article.id} sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" />
       </Link>
       <Kicker article={article} />
-      <H className="font-serif text-[21px] leading-[1.18] font-bold tracking-[-0.005em]">
+      <H className="font-sans text-lg leading-snug font-bold tracking-[-0.01em]">
         <Link href={href} className="headline-link">
           {article.title}
         </Link>
@@ -56,7 +56,7 @@ export function ArticleRow({ article }: { article: Card }) {
     <article className="flex gap-4 border-b border-rule py-4">
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <Kicker article={article} className="text-[10px]" />
-        <h3 className="font-serif text-[19px] leading-tight font-bold">
+        <h3 className="font-sans text-base leading-snug font-bold">
           <Link href={href} className="headline-link">
             {article.title}
           </Link>

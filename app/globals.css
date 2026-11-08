@@ -69,7 +69,7 @@
   --color-band-rule: var(--band-rule);
   --color-band-accent: var(--band-accent);
 
-  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-display: var(--font-inter-tight), system-ui, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;
   --font-sans: var(--font-inter-tight), system-ui, sans-serif;
 }
@@ -124,7 +124,7 @@ body {
   @apply decoration-1 underline-offset-4 hover:underline;
 }
 @utility rule-title {
-  @apply border-t-4 border-rule-strong pt-3 font-display text-3xl leading-none font-normal sm:text-[34px];
+  @apply border-t-4 border-rule-strong pt-3 font-display text-2xl leading-none sm:text-[28px];
 }
 @utility btn {
   @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
@@ -208,7 +208,7 @@ textarea.input {
 }
 .prose-tribuna.drop-cap > p:first-child::first-letter {
   float: left;
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 4.6em;
   line-height: 0.8;
@@ -216,15 +216,17 @@ textarea.input {
   color: var(--accent);
 }
 .prose-tribuna h2 {
+  font-family: var(--font-sans);
   margin-top: 1.8em;
-  font-size: 1.5em;
-  line-height: 1.15;
+  font-size: 1.3em;
+  line-height: 1.2;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 .prose-tribuna h3 {
+  font-family: var(--font-sans);
   margin-top: 1.6em;
-  font-size: 1.2em;
+  font-size: 1.1em;
   line-height: 1.25;
   font-weight: 700;
 }
@@ -267,7 +269,7 @@ textarea.input {
   padding: 2.4rem 0 1.4rem;
   border-top: 4px solid var(--rule-strong);
   border-bottom: 1px solid var(--rule-strong);
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-size: 1.4em;
   font-weight: 500;
   font-style: italic;
@@ -366,9 +368,9 @@ textarea.input {
   background-color: #7a1716;
 }
 
-/* Títulos de destaque (logotipo, seções, citações): Newsreader seminegrito,
-   um pouco mais justo. Fora de camadas para valer sobre font-normal. */
+/* Títulos de seção: sem serifa, em negrito e um pouco mais justos.
+   Fora de camadas para valer sobre font-normal. */
 .font-display {
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }

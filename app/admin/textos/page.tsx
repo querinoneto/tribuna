@@ -147,7 +147,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
                   return (
                     <tr key={a.id} className="hover:bg-paper-2/60">
                       <td className="max-w-md px-4 py-3">
-                        <Link href={`/admin/textos/${a.id}`} className="font-serif text-base font-semibold hover:underline">
+                        <Link href={`/admin/textos/${a.id}`} className="font-sans text-base font-semibold hover:underline">
                           {a.title || <span className="text-muted italic">Sem título</span>}
                         </Link>
                       </td>
@@ -175,7 +175,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
             {rows.map((a) => (
               <li key={a.id}>
                 <Link href={`/admin/textos/${a.id}`} className="flex flex-col gap-1.5 px-4 py-3.5 active:bg-paper-2">
-                  <span className="font-serif text-lg leading-snug font-semibold">
+                  <span className="font-sans text-lg leading-snug font-semibold">
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted">

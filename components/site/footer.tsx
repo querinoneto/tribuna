@@ -1,56 +1,40 @@
-import Link from "next/link";
-import { cacheLife } from "next/cache";
-import { getSections } from "@/lib/data/public";
 import { SITE_TAGLINE } from "@/lib/env";
+import { SOCIAL_LABEL, SOCIAL_LINKS, type SocialNetwork } from "@/lib/social";
 import { NewsletterBlock } from "./newsletter-form";
+import { SocialIcon } from "./social-icons";
 import { Wordmark } from "./wordmark";
 
-async function year() {
-  "use cache";
-  cacheLife("days");
-  return new Date().getFullYear();
-}
-
-export async function SiteFooter() {
-  const [sections, y] = await Promise.all([getSections(), year()]);
-  const half = Math.ceil(sections.length / 2);
+/** Rodapé enxuto: nome, slogan e redes sociais. */
+export function SiteFooter() {
+  const networks = (Object.keys(SOCIAL_LINKS) as SocialNetwork[]).filter((n) => SOCIAL_LINKS[n]);
   return (
     <>
       <div id="newsletter">
         <NewsletterBlock />
       </div>
       <footer className="bg-band text-band-ink">
-        <div className="wrap flex flex-wrap gap-10 pt-12 pb-8">
-          <div className="flex flex-[2_1_320px] flex-col gap-3.5">
-            <Wordmark className="text-[40px]" />
-            <p className="font-serif text-[17px] text-band-muted italic">{SITE_TAGLINE}</p>
-          </div>
-          <nav aria-label="Editorias no rodapé" className="flex flex-[1_1_150px] flex-col gap-2.5 text-sm">
-            <span className="text-[11px] font-bold tracking-[0.14em] text-band-muted">EDITORIAS</span>
-            {sections.slice(0, half).map((s) => (
-              <Link key={s.slug} href={`/editoria/${s.slug}`} className="hover:text-band-accent">
-                {s.name}
-              </Link>
-            ))}
-          </nav>
-          <nav aria-label="Mais editorias" className="flex flex-[1_1_150px] flex-col gap-2.5 text-sm sm:pt-[26px]">
-            {sections.slice(half).map((s) => (
-              <Link key={s.slug} href={`/editoria/${s.slug}`} className="hover:text-band-accent">
-                {s.name}
-              </Link>
-            ))}
-            <Link href="/colunistas" className="hover:text-band-accent">Colunistas</Link>
-          </nav>
-          <nav aria-label="O jornal" className="flex flex-[1_1_150px] flex-col gap-2.5 text-sm">
-            <span className="text-[11px] font-bold tracking-[0.14em] text-band-muted">O JORNAL</span>
-            <Link href="/sobre" className="hover:text-band-accent">Sobre</Link>
-            <Link href="/expediente" className="hover:text-band-accent">Expediente</Link>
-            <Link href="/contato" className="hover:text-band-accent">Contato</Link>
-            <Link href="/privacidade" className="hover:text-band-accent">Política de privacidade</Link>
-          </nav>
-        </div>
-        <div className="wrap border-t border-band-rule pt-4 pb-7 text-xs text-band-muted">
-          © {y} Tribuna Socialista. Reprodução permitida com citação da fonte.
+        <div className="wrap flex flex-col items-center gap-4 py-12 text-center">
+          <Wordmark className="text-[32px] sm:text-[40px]" />
+          <p className="font-serif text-[17px] text-band-muted italic">{SITE_TAGLINE}</p>
+          {networks.length > 0 && (
+            <nav aria-label="Redes sociais" className="mt-2">
+              <ul className="flex flex-wrap justify-center gap-3">
+                {networks.map((n) => (
+                  <li key={n}>
+                    <a
+                      href={SOCIAL_LINKS[n]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Tribuna Socialista no ${SOCIAL_LABEL[n]}`}
+                      className="inline-flex size-11 items-center justify-center rounded-full border border-band-rule text-band-ink transition-colors duration-150 hover:border-band-accent hover:text-band-accent"
+                    >
+                      <SocialIcon network={n} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
         </div>
       </footer>
     </>

@@ -15,7 +15,7 @@ export default function NotFound() {
         <p className="font-display text-[120px] leading-none text-accent sm:text-[160px]" aria-hidden>
           404
         </p>
-        <h1 className="mt-4 font-serif text-3xl font-bold sm:text-4xl">Esta página saiu de circulação</h1>
+        <h1 className="mt-4 font-sans text-3xl font-bold tracking-tight sm:text-4xl">Esta página saiu de circulação</h1>
         <p className="mt-3 max-w-md font-serif text-lg text-ink-soft">
           O endereço pode ter mudado ou o texto foi retirado do ar. Tente a busca ou volte à capa.
         </p>

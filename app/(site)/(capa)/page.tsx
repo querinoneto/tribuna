@@ -32,7 +32,7 @@ export default async function HomePage() {
                   </Link>
                 )}
                 <Kicker article={a} />
-                <h2 className={`mt-2 font-serif leading-[1.15] font-bold tracking-[-0.01em] ${i === 0 ? "text-[23px]" : "text-[21px]"}`}>
+                <h2 className={`mt-2 font-sans leading-[1.2] font-bold tracking-[-0.015em] ${i === 0 ? "text-xl" : "text-lg"}`}>
                   <Link href={articlePath(a)} className="headline-link">
                     {a.title}
                   </Link>
@@ -51,7 +51,7 @@ export default async function HomePage() {
               <span aria-hidden className="h-0.5 w-7 bg-accent" />
               <Kicker article={hero} />
             </div>
-            <h2 className="font-serif text-[34px] leading-[1.03] font-extrabold tracking-[-0.025em] text-balance sm:text-[44px] lg:text-[54px]">
+            <h2 className="font-sans text-[28px] leading-[1.08] font-bold tracking-[-0.025em] text-balance sm:text-[36px] lg:text-[42px]">
               <Link href={articlePath(hero)} className="headline-link">
                 {hero.title}
               </Link>
@@ -62,18 +62,18 @@ export default async function HomePage() {
 
           {/* Mais lidas */}
           <aside aria-labelledby="mais-lidas" className="order-3 lg:border-l lg:border-rule lg:pl-7">
-            <h2 id="mais-lidas" className="border-b-2 border-rule-strong pb-2.5 font-display text-[26px] font-normal">
+            <h2 id="mais-lidas" className="border-b-2 border-rule-strong pb-2.5 font-display text-2xl">
               Mais lidas
             </h2>
             <ol>
               {mostRead.map((a, i) => (
                 <li key={a.id} className="flex gap-3.5 border-b border-rule py-3.5">
-                  <span aria-hidden className="min-w-[26px] font-display text-[40px] leading-[0.85] text-accent">
+                  <span aria-hidden className="min-w-[22px] font-display text-[30px] leading-none text-accent">
                     {i + 1}
                   </span>
                   <div className="flex flex-col gap-1">
                     {a.section && <span className="kicker text-[10px] text-muted">{a.section.name}</span>}
-                    <Link href={articlePath(a)} className="headline-link font-serif text-[17px] leading-tight font-semibold">
+                    <Link href={articlePath(a)} className="headline-link font-sans text-[15px] leading-snug font-semibold">
                       {a.title}
                     </Link>
                   </div>
@@ -108,7 +108,7 @@ export default async function HomePage() {
         <section aria-labelledby="opiniao" className="bg-band text-band-ink">
           <div className="wrap py-10 sm:py-14">
             <div className="mb-8 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-band-rule pb-5">
-              <h2 id="opiniao" className="font-display text-[40px] leading-none font-normal sm:text-[52px]">
+              <h2 id="opiniao" className="font-display text-[32px] leading-none sm:text-[40px]">
                 Opinião
               </h2>
               <span className="hidden font-serif text-lg text-band-muted italic sm:inline">Vozes que disputam o debate público</span>
@@ -135,7 +135,7 @@ export default async function HomePage() {
                       {a.author.name}
                     </Link>
                   )}
-                  <h3 className="font-serif text-[22px] leading-[1.2] font-medium italic sm:text-2xl">
+                  <h3 className="font-sans text-lg leading-snug font-semibold sm:text-xl">
                     <Link href={articlePath(a)} className="headline-link">
                       {a.title}
                     </Link>
@@ -155,7 +155,7 @@ export default async function HomePage() {
               <span className="text-xs font-bold tracking-[0.18em] uppercase">
                 Especial{special.section ? ` · ${special.section.name}` : ""}
               </span>
-              <h2 id="especial" className="font-display text-[38px] leading-none font-normal tracking-[-0.015em] sm:text-[56px]">
+              <h2 id="especial" className="font-display text-[30px] leading-[1.05] sm:text-[44px]">
                 {special.title}
               </h2>
               {special.subtitle && <p className="font-serif text-lg leading-normal text-[#fbe3e2] sm:text-xl">{special.subtitle}</p>}
@@ -176,7 +176,7 @@ export default async function HomePage() {
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
             {blocks.map(({ section, articles: [lead, ...rest] }) => (
               <section key={section.slug} aria-labelledby={`bloco-${section.slug}`} className="flex flex-col border-t-4 border-rule-strong pt-3">
-                <h2 id={`bloco-${section.slug}`} className="mb-4 flex items-baseline justify-between font-display text-[30px] font-normal">
+                <h2 id={`bloco-${section.slug}`} className="mb-4 flex items-baseline justify-between font-display text-2xl">
                   <Link href={`/editoria/${section.slug}`} className="hover:text-accent">
                     {section.name}
                   </Link>
@@ -185,13 +185,13 @@ export default async function HomePage() {
                 <Link href={articlePath(lead)} tabIndex={-1} aria-hidden className="mb-3.5">
                   <Cover src={lead.cover_url} alt={lead.cover_alt} seed={lead.id} sizes="(min-width: 1024px) 33vw, 100vw" />
                 </Link>
-                <h3 className="mb-3.5 font-serif text-[22px] leading-[1.18] font-bold">
+                <h3 className="mb-3.5 font-sans text-xl leading-tight font-bold tracking-[-0.015em]">
                   <Link href={articlePath(lead)} className="headline-link">
                     {lead.title}
                   </Link>
                 </h3>
                 {rest.map((a) => (
-                  <Link key={a.id} href={articlePath(a)} className="headline-link border-t border-rule py-3 font-serif text-[17px] leading-snug font-medium">
+                  <Link key={a.id} href={articlePath(a)} className="headline-link border-t border-rule py-3 font-sans text-[15px] leading-snug font-medium">
                     {a.title}
                   </Link>
                 ))}

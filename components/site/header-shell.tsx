@@ -10,6 +10,14 @@ import { Wordmark } from "./wordmark";
 
 type S = { name: string; slug: string };
 
+/** Itens do menu lateral (botão de três listras). */
+const MENU = [
+  { href: "/", label: "Início" },
+  { href: "/sobre", label: "Sobre" },
+  { href: "/colunistas", label: "Colunistas" },
+  { href: "/contato", label: "Contato" },
+];
+
 function SearchForm({ className = "", autoFocus = false, onDone }: { className?: string; autoFocus?: boolean; onDone?: () => void }) {
   const router = useRouter();
   return (
@@ -158,39 +166,21 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
               <IconClose />
             </button>
           </div>
-          <div className="wrap flex flex-1 flex-col gap-8 py-6">
-            <SearchForm onDone={() => setMenu(false)} />
-            <nav aria-label="Editorias">
-              <ul className="flex flex-col">
-                <li>
-                  <Link href="/" className="block border-b border-rule py-3 font-display text-3xl" onClick={() => setMenu(false)}>
-                    Início
+          <nav aria-label="Menu principal" className="wrap py-4">
+            <ul className="flex flex-col">
+              {MENU.map((m) => (
+                <li key={m.href}>
+                  <Link
+                    href={m.href}
+                    onClick={() => setMenu(false)}
+                    className="block border-b border-rule py-4 font-sans text-2xl font-semibold tracking-[-0.01em] hover:text-accent"
+                  >
+                    {m.label}
                   </Link>
                 </li>
-                {sections.map((s) => (
-                  <li key={s.slug}>
-                    <Link
-                      href={`/editoria/${s.slug}`}
-                      onClick={() => setMenu(false)}
-                      className="block border-b border-rule py-3 font-display text-3xl hover:text-accent"
-                    >
-                      {s.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <nav aria-label="O jornal" className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
-              <Link href="/colunistas" onClick={() => setMenu(false)}>Colunistas</Link>
-              <Link href="/sobre" onClick={() => setMenu(false)}>Sobre</Link>
-              <Link href="/expediente" onClick={() => setMenu(false)}>Expediente</Link>
-              <Link href="/contato" onClick={() => setMenu(false)}>Contato</Link>
-            </nav>
-            <div className="mt-auto flex items-center gap-3 border-t border-rule pt-4 text-sm">
-              <ThemeToggle className="inline-flex size-11 items-center justify-center rounded-full border border-rule" />
-              <span className="text-muted">Alternar modo claro/escuro</span>
-            </div>
-          </div>
+              ))}
+            </ul>
+          </nav>
         </div>
       )}
     </>

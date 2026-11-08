@@ -13,7 +13,7 @@ export default async function ColumnistsPage() {
   return (
     <div className="wrap pt-8 pb-16 sm:pt-12">
       <header className="mb-10 border-b border-rule-strong pb-6">
-        <h1 className="font-display text-5xl leading-none sm:text-7xl">Colunistas</h1>
+        <h1 className="font-display text-4xl leading-none sm:text-5xl">Colunistas</h1>
         <p className="mt-3 font-serif text-lg text-ink-soft sm:text-xl">Vozes que disputam o debate público.</p>
       </header>
       {columnists.length === 0 ? (

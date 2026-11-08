@@ -78,7 +78,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
                   href={`/admin/textos/${a.id}`}
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-paper-2"
                 >
-                  <span className="min-w-0 flex-1 truncate font-serif text-lg font-semibold">
+                  <span className="min-w-0 flex-1 truncate font-sans text-lg font-semibold">
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
                   <StatusBadge status={a.status as ArticleStatus} />

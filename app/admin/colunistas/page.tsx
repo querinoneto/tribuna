@@ -85,7 +85,7 @@ export default async function ColunistasPage() {
                   {a.name.charAt(0)}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-serif text-lg font-semibold">{a.name}</span>
+                  <span className="block font-sans text-lg font-semibold">{a.name}</span>
                   <span className="text-xs text-muted">
                     {a.is_columnist ? "Colunista" : "Autor"} · /autor/{a.slug}
                   </span>

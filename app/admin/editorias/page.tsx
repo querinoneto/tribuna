@@ -58,7 +58,7 @@ export default async function EditoriasPage() {
               <summary className="flex cursor-pointer list-none items-center gap-3">
                 <span className="w-8 text-center text-sm text-muted tabular-nums">{s.position}</span>
                 <span className="flex-1">
-                  <span className="font-serif text-lg font-semibold">{s.name}</span>
+                  <span className="font-sans text-lg font-semibold">{s.name}</span>
                   <span className="ml-2 text-sm text-muted">/editoria/{s.slug}</span>
                 </span>
                 <span className="btn-ghost text-sm group-open:hidden">Editar</span>
