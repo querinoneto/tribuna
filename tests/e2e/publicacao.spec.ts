@@ -1,0 +1,99 @@
+import { expect, test, type BrowserContext } from "@playwright/test";
+
+/**
+ * Fluxo completo de publicação e agendamento, pelo navegador.
+ * Requer: E2E_ADMIN_COOKIE, E2E_COLUNISTA_COOKIE e E2E_INTRUSO_COOKIE com o
+ * valor do cookie de sessão do Supabase ("base64-…") de cada conta.
+ */
+const COOKIE_NAME = process.env.E2E_COOKIE_NAME ?? "sb-localhost-auth-token";
+const host = new URL(process.env.E2E_BASE_URL ?? "http://localhost:3000").hostname;
+
+async function login(context: BrowserContext, value: string | undefined) {
+  test.skip(!value, "Sessão de teste não configurada");
+  await context.addCookies([{ name: COOKIE_NAME, value: value!, domain: host, path: "/" }]);
+}
+
+const unique = () => Date.now().toString(36);
+
+test("editor escreve, salva automaticamente e publica; o texto aparece no site", async ({ page, context }) => {
+  await login(context, process.env.E2E_ADMIN_COOKIE);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Painel" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Novo texto" }).click();
+  await page.waitForURL(/\/admin\/textos\/[0-9a-f-]{36}$/);
+
+  const title = `Assembleia popular debate o orçamento ${unique()}`;
+  await page.getByRole("textbox", { name: "Título", exact: true }).fill(title);
+  await page.getByRole("textbox", { name: "Linha fina", exact: true }).fill("Moradores apresentam propostas para saúde e transporte.");
+  const body = page.getByRole("textbox", { name: "Corpo do texto" });
+  await body.click();
+  await body.pressSequentially("Mais de duzentas pessoas participaram da assembleia no centro comunitário neste sábado.");
+
+  // Autosave
+  await expect(page.getByText(/Salvo às \d{2}:\d{2}/)).toBeVisible({ timeout: 10_000 });
+
+  // Detalhes
+  const details = page.getByRole("complementary", { name: "Detalhes do texto" });
+  await details.getByLabel("Editoria").selectOption({ label: "Política" });
+  await details.getByLabel("Autor").selectOption({ label: "Redação" });
+  await details.getByLabel("Tags").fill("orçamento, participação");
+
+  await page.getByRole("button", { name: "Publicar", exact: true }).click();
+  await expect(page.getByText("Texto publicado.")).toBeVisible();
+  await expect(page.locator("header").getByText("Publicado")).toBeVisible();
+
+  // O site público mostra o texto na hora (revalidação sob demanda)
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: title }).first()).toBeVisible();
+  await page.getByRole("link", { name: title }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+  await expect(page.getByText("orçamento", { exact: true })).toBeVisible();
+});
+
+test("texto agendado não aparece no site antes da hora", async ({ page, context }) => {
+  await login(context, process.env.E2E_ADMIN_COOKIE);
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Novo texto" }).click();
+  await page.waitForURL(/\/admin\/textos\/[0-9a-f-]{36}$/);
+
+  const title = `Texto agendado para amanhã ${unique()}`;
+  await page.getByRole("textbox", { name: "Título", exact: true }).fill(title);
+  const body = page.getByRole("textbox", { name: "Corpo do texto" });
+  await body.click();
+  await body.pressSequentially("Este texto só deve aparecer no site na data marcada pelo editor.");
+  const details = page.getByRole("complementary", { name: "Detalhes do texto" });
+  await details.getByLabel("Editoria").selectOption({ label: "Economia" });
+  await details.getByLabel("Autor").selectOption({ label: "Redação" });
+
+  await page.getByRole("button", { name: "Agendar", exact: true }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Agendar publicação" });
+  const tomorrow = new Date(Date.now() + 86_400_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  await dialog
+    .getByLabel("Data e hora")
+    .fill(`${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T09:00`);
+  await dialog.getByRole("button", { name: "Agendar" }).click();
+  await expect(page.getByText(/Agendado para/).first()).toBeVisible();
+
+  await page.goto(`/busca?q=${encodeURIComponent("agendado amanhã")}`);
+  await expect(page.getByText(title)).toHaveCount(0);
+});
+
+test("colunista só salva rascunho: não há botão de publicar", async ({ page, context }) => {
+  await login(context, process.env.E2E_COLUNISTA_COOKIE);
+  await page.goto("/admin");
+  await page.getByRole("button", { name: "Novo texto" }).click();
+  await page.waitForURL(/\/admin\/textos\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Publicar", exact: true })).toHaveCount(0);
+  await page.goto("/admin/usuarios");
+  await expect(page).toHaveURL(/erro=sem-permissao/);
+});
+
+test("conta fora da lista vê 'acesso não autorizado'", async ({ page, context }) => {
+  await login(context, process.env.E2E_INTRUSO_COOKIE);
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/erro=nao-autorizado/);
+  await expect(page.getByText(/Acesso não autorizado\. Esta conta/)).toBeVisible();
+});

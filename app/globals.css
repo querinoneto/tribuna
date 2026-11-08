@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+/* Modo escuro por classe (.dark no <html>), definido pelo alternador
+   ou pela preferência do sistema. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------
+   Paleta — modo claro
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #faf8f5;
+  --paper-2: #efe9e0;
+  --ink: #1a1a1a;
+  --ink-soft: #3d3935;
+  --muted: #5e5953;
+  --rule: #d9d2c8;
+  --rule-strong: #1a1a1a;
+  --accent: #b3201f;
+  --accent-strong: #8a1817;
+  --accent-ink: #ffffff;
+  --band: #1a1a1a;
+  --band-ink: #edeae5;
+  --band-muted: #b8b2aa;
+  --band-rule: #3a3734;
+  --band-accent: #f0716b;
+  --ph: #d6ccbf;
+  --ph-dot: #1a1a1a;
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------
+   Paleta — modo escuro (contrastes conferidos para WCAG AA)
+   ------------------------------------------------------------------ */
+.dark {
+  --paper: #121110;
+  --paper-2: #1c1a19;
+  --ink: #edeae5;
+  --ink-soft: #c9c3bb;
+  --muted: #a8a29a;
+  --rule: #34302d;
+  --rule-strong: #edeae5;
+  --accent: #f0716b;
+  --accent-strong: #f59a95;
+  --accent-ink: #121110;
+  --band: #0b0a0a;
+  --band-ink: #edeae5;
+  --band-muted: #a8a29a;
+  --band-rule: #2e2b28;
+  --band-accent: #f0716b;
+  --ph: #2a2725;
+  --ph-dot: #faf8f5;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-band: var(--band);
+  --color-band-ink: var(--band-ink);
+  --color-band-muted: var(--band-muted);
+  --color-band-rule: var(--band-rule);
+  --color-band-accent: var(--band-accent);
+
+  --font-display: var(--font-dm-serif), Georgia, serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-inter-tight), system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Foco visível e consistente para navegação por teclado */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Animações sutis, desligadas para quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Componentes utilitários
+   ------------------------------------------------------------------ */
+@utility wrap {
+  @apply mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8;
+}
+/* Rótulo de editoria: caixa-alta pequena na cor de destaque */
+@utility kicker {
+  @apply font-sans text-[11px] font-bold tracking-[0.14em] text-accent uppercase;
+}
+@utility headline-link {
+  @apply decoration-1 underline-offset-4 hover:underline;
+}
+@utility rule-title {
+  @apply border-t-4 border-rule-strong pt-3 font-display text-3xl leading-none font-normal sm:text-[34px];
+}
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-accent-ink hover:bg-accent-strong;
+}
+@utility btn-secondary {
+  @apply btn border border-rule bg-paper text-ink hover:border-ink;
+}
+@utility btn-ghost {
+  @apply btn text-ink hover:bg-paper-2;
+}
+@utility btn-danger {
+  @apply btn border border-accent/40 text-accent hover:bg-accent hover:text-accent-ink;
+}
+@utility field {
+  @apply flex flex-col gap-1.5 text-sm font-medium;
+}
+@utility input {
+  @apply min-h-11 w-full rounded-md border border-rule bg-paper px-3 text-base font-normal text-ink placeholder:text-muted focus:border-ink focus:outline-none sm:text-sm;
+}
+textarea.input {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+/* ------------------------------------------------------------------
+   Imagem provisória com retícula (quando a matéria não tem capa)
+   ------------------------------------------------------------------ */
+.halftone {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--ph);
+}
+.halftone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--ph-dot) 0.9px, transparent 1.3px);
+  background-size: 5px 5px;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(165deg, rgb(0 0 0 / 0.05) 20%, #000 90%);
+  mask-image: linear-gradient(165deg, rgb(0 0 0 / 0.05) 20%, #000 90%);
+}
+.halftone-1 {
+  background-image: radial-gradient(circle at 80% 26%, var(--accent) 0 9%, transparent 9.4%),
+    linear-gradient(90deg, transparent 0 6%, #2b2826 6% 13%, transparent 13% 19%, #2b2826 19% 23%, transparent 23% 36%, #2b2826 36% 47%, transparent 47% 58%, #2b2826 58% 62%, transparent 62% 74%, #2b2826 74% 84%, transparent 84% 90%, #2b2826 90% 94%, transparent 94%);
+  background-size: 100% 100%, 100% 48%;
+  background-position: 0 0, bottom;
+  background-repeat: no-repeat;
+}
+.halftone-2 {
+  background-image: linear-gradient(180deg, transparent 0 58%, #3a3532 58%);
+}
+.halftone-3 {
+  background-color: var(--accent);
+}
+.halftone-4 {
+  background-image: linear-gradient(118deg, transparent 0 52%, rgb(0 0 0 / 0.12) 52%);
+}
+
+/* ------------------------------------------------------------------
+   Corpo da matéria
+   ------------------------------------------------------------------ */
+.prose-tribuna {
+  font-family: var(--font-serif);
+  font-size: 1.1875rem; /* 19px */
+  line-height: 1.72;
+  color: var(--ink);
+  max-width: 68ch;
+  overflow-wrap: break-word;
+}
+@media (min-width: 640px) {
+  .prose-tribuna {
+    font-size: 1.25rem; /* 20px */
+  }
+}
+.prose-tribuna > * + * {
+  margin-top: 1.35em;
+}
+.prose-tribuna.drop-cap > p:first-child::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 4.6em;
+  line-height: 0.8;
+  padding: 0.08em 0.12em 0 0;
+  color: var(--accent);
+}
+.prose-tribuna h2 {
+  margin-top: 1.8em;
+  font-size: 1.5em;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.prose-tribuna h3 {
+  margin-top: 1.6em;
+  font-size: 1.2em;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.prose-tribuna h2 + *,
+.prose-tribuna h3 + * {
+  margin-top: 0.6em;
+}
+.prose-tribuna a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose-tribuna a:hover {
+  color: var(--accent-strong);
+}
+.prose-tribuna strong {
+  font-weight: 700;
+}
+.prose-tribuna ul,
+.prose-tribuna ol {
+  padding-left: 1.4em;
+}
+.prose-tribuna ul {
+  list-style: disc;
+}
+.prose-tribuna ol {
+  list-style: decimal;
+}
+.prose-tribuna li + li {
+  margin-top: 0.4em;
+}
+.prose-tribuna li::marker {
+  color: var(--accent);
+}
+.prose-tribuna blockquote {
+  position: relative;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  padding: 2.4rem 0 1.4rem;
+  border-top: 4px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+  font-family: var(--font-display);
+  font-size: 1.45em;
+  line-height: 1.2;
+}
+.prose-tribuna blockquote::before {
+  content: "“";
+  position: absolute;
+  top: -0.1rem;
+  left: 0;
+  font-size: 3.2em;
+  line-height: 1;
+  color: var(--accent);
+}
+.prose-tribuna blockquote p + p {
+  margin-top: 0.6em;
+}
+.prose-tribuna hr {
+  border: 0;
+  height: 1px;
+  background: var(--rule);
+  margin: 2.4em auto;
+  width: 40%;
+}
+.prose-tribuna img {
+  width: 100%;
+  height: auto;
+}
+.prose-tribuna div[data-youtube-video] {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.prose-tribuna iframe {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------
+   Editor (Tiptap) — mesma tipografia do site para "o que você vê é o
+   que será publicado"
+   ------------------------------------------------------------------ */
+.tiptap {
+  outline: none;
+  min-height: 18rem;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted);
+}
+.tiptap img.ProseMirror-selectednode,
+.tiptap div[data-youtube-video].ProseMirror-selectednode {
+  outline: 3px solid var(--accent);
+}
+
+/* Barra de progresso de leitura */
+.reading-progress {
+  transform-origin: 0 50%;
+  transition: transform 80ms linear;
+}
+
+/* Esqueletos de carregamento */
+.skeleton {
+  background: linear-gradient(90deg, var(--paper-2) 0%, color-mix(in srgb, var(--paper-2) 60%, var(--paper)) 50%, var(--paper-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton 1.2s ease-in-out infinite;
+}
+@keyframes skeleton {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Link "Pular para o conteúdo": invisível até receber foco pelo teclado */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* No modo escuro, a retícula vermelha usa um vermelho mais fechado */
+.dark .halftone-3 {
+  background-color: #7a1716;
+}
