@@ -6,17 +6,9 @@ import "./globals.css";
 /*
  * Fontes servidas pelo próprio site (next/font/local), sem chamadas ao
  * Google: mais rápido e mais privado para o leitor. Licença: SIL OFL 1.1.
- *  - DM Serif Display: logotipo, manchetes de seção e citações
- *  - Newsreader (variável, com tamanho óptico): títulos e texto longo
+ *  - Newsreader (variável, com tamanho óptico): logotipo, títulos e texto longo
  *  - Inter Tight (variável): interface
  */
-const display = localFont({
-  src: "./fonts/dm-serif-display.woff2",
-  weight: "400",
-  variable: "--font-dm-serif",
-  display: "swap",
-});
-
 const serif = localFont({
   src: [
     { path: "./fonts/newsreader.woff2", weight: "200 800", style: "normal" },
@@ -38,7 +30,6 @@ export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { types: { "application/rss+xml": [{ url: "/rss.xml", title: SITE_NAME }] } },
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -66,7 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${display.variable} ${serif.variable} ${sans.variable}`}
+      className={`${serif.variable} ${sans.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

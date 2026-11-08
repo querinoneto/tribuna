@@ -38,7 +38,7 @@ Marque cada item conforme for concluindo.
 - [ ] Publicar um texto de teste e conferir na capa; depois apagar
 - [ ] Agendar um texto para daqui a 10 minutos e conferir que entra no ar sozinho
 - [ ] Inscrever um e-mail na newsletter pelo rodapé e exportar o CSV em **Newsletter**
-- [ ] Conferir `/rss.xml`, `/sitemap.xml` e `/robots.txt`
+- [ ] Conferir `/sitemap.xml` e `/robots.txt`
 - [ ] Compartilhar uma matéria no WhatsApp e ver a prévia com título e imagem
 - [ ] Testar no celular: menu, modo escuro e editor
 - [ ] Apagar as 3 matérias de exemplo

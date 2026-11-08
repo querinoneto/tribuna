@@ -71,14 +71,9 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
 
       {/* Tarja superior */}
       <div className="bg-band text-[12px] text-band-ink">
-        <div className="wrap flex h-[34px] items-center justify-between gap-4">
-          <span className="truncate">{date}</span>
-          <nav aria-label="Atalhos" className="hidden items-center gap-5 sm:flex">
-            <a href="#newsletter" className="hover:text-band-accent">Newsletter</a>
-            <Link href="/colunistas" className="hover:text-band-accent">Colunistas</Link>
-            <Link href="/sobre" className="hover:text-band-accent">Sobre</Link>
-          </nav>
-          <ThemeToggle className="-mr-2 inline-flex size-9 items-center justify-center hover:text-band-accent" />
+        <div className="wrap relative flex h-[34px] items-center justify-center">
+          <span className="truncate px-10">{date}</span>
+          <ThemeToggle className="absolute right-2 inline-flex size-9 items-center justify-center hover:text-band-accent sm:right-4 lg:right-6" />
         </div>
       </div>
 

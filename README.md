@@ -2,7 +2,7 @@
 
 Jornal digital com site público e painel administrativo para publicar textos.
 
-- **Site público**: capa, editorias, matérias, colunistas, busca, RSS, newsletter e modo escuro.
+- **Site público**: capa, editorias, matérias, colunistas, busca, newsletter e modo escuro.
 - **Painel (`/admin`)**: editor de texto com salvamento automático, imagens, agendamento e controle de quem pode fazer o quê.
 
 Guias rápidos:
@@ -39,7 +39,7 @@ Guias rápidos:
 | Testes | Vitest (regras de acesso e publicação) e Playwright (fluxo no navegador) |
 | Hospedagem | Vercel |
 
-As fontes (DM Serif Display, Newsreader e Inter Tight, licença SIL OFL) ficam no próprio projeto e são carregadas com `next/font/local`. Assim o site não faz chamadas ao Google.
+As fontes (Newsreader e Inter Tight, licença SIL OFL) ficam no próprio projeto e são carregadas com `next/font/local`. Assim o site não faz chamadas ao Google.
 
 ## 2. Estrutura de pastas
 
@@ -51,7 +51,7 @@ app/
   entrar/                 login (Google ou link por e-mail)
   auth/                   retorno do login e saída
   materia/[slug]/         endereço curto, que redireciona para /ano/mês/slug
-  rss.xml/  sitemap.ts  robots.ts  icon.svg
+  sitemap.ts  robots.ts  icon.svg
 components/
   site/                   cabeçalho, rodapé, cards, matéria, compartilhar, newsletter
   admin/                  editor de texto, barra de formatação, diálogos, avisos

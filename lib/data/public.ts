@@ -230,19 +230,6 @@ export async function getPage(slug: string): Promise<Page | null> {
   return (data as Page) ?? null;
 }
 
-export async function getFeedArticles(limit = 30) {
-  "use cache";
-  const db = setup();
-  if (!db) return [] as (ArticleCard & { content_html: string; updated_at: string })[];
-  const { data, error } = await db
-    .from("articles")
-    .select(`${CARD_SELECT}, content_html, updated_at`)
-    .order("published_at", { ascending: false })
-    .limit(limit);
-  log("rss", error);
-  return (data ?? []) as unknown as (ArticleCard & { content_html: string; updated_at: string })[];
-}
-
 export async function getSitemapData() {
   "use cache";
   const db = setup();

@@ -47,7 +47,6 @@ export async function SiteFooter() {
             <Link href="/expediente" className="hover:text-band-accent">Expediente</Link>
             <Link href="/contato" className="hover:text-band-accent">Contato</Link>
             <Link href="/privacidade" className="hover:text-band-accent">Política de privacidade</Link>
-            <a href="/rss.xml" className="hover:text-band-accent">RSS</a>
           </nav>
         </div>
         <div className="wrap border-t border-band-rule pt-4 pb-7 text-xs text-band-muted">
