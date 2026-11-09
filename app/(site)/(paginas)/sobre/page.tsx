@@ -3,5 +3,5 @@ import { InstitutionalPage, institutionalMetadata } from "@/components/site/inst
 export const generateMetadata = () => institutionalMetadata("sobre", "Sobre");
 
 export default function Page() {
-  return <InstitutionalPage slug="sobre" />;
+  return <InstitutionalPage slug="sobre" showUpdated={false} />;
 }

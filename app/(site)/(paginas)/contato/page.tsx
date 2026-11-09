@@ -5,7 +5,7 @@ export const generateMetadata = () => institutionalMetadata("contato", "Contato"
 
 export default function Page() {
   return (
-    <InstitutionalPage slug="contato">
+    <InstitutionalPage slug="contato" showUpdated={false}>
       <ContactForm />
     </InstitutionalPage>
   );
