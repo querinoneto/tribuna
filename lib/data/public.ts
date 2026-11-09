@@ -39,16 +39,6 @@ export async function getSections(): Promise<Section[]> {
   return (data ?? []) as Section[];
 }
 
-/** Colunas com nome próprio, para o menu (em ordem alfabética). */
-export async function getColumns(): Promise<Column[]> {
-  "use cache";
-  const db = setup();
-  if (!db) return [];
-  const { data, error } = await db.from("columns").select("id, name, slug, description, author_id").order("name");
-  log("colunas", error);
-  return (data ?? []) as Column[];
-}
-
 export async function getColumnPage(slug: string, page: number) {
   "use cache";
   const db = setup();
@@ -228,8 +218,8 @@ export async function getAuthorPage(slug: string, page: number) {
     .order("published_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
   log("autor", error);
-  const { data: column } = await db.from("columns").select("name, slug").eq("author_id", author.id).maybeSingle();
-  return { author: author as Author, column: (column ?? null) as { name: string; slug: string } | null, articles: asCards(data), total: count ?? 0 };
+  // A página do autor não aponta para a coluna: a coluna só é alcançada pelo nome, dentro do texto
+  return { author: author as Author, articles: asCards(data), total: count ?? 0 };
 }
 
 export async function getColumnists(): Promise<Author[]> {
@@ -242,7 +232,6 @@ export async function getColumnists(): Promise<Author[]> {
 }
 
 export type ColumnistSummary = Author & {
-  column: { name: string; slug: string } | null;
   total: number;
   latest: { title: string; slug: string; published_at: string } | null;
 };
@@ -268,11 +257,9 @@ export async function getColumnistsOverview(): Promise<ColumnistSummary[]> {
     .order("published_at", { ascending: false })
     .limit(2000);
   const rows = (arts ?? []) as { author_id: string; title: string; slug: string; published_at: string }[];
-  const { data: cols } = await db.from("columns").select("author_id, name, slug");
-  const colOf = new Map(((cols ?? []) as { author_id: string; name: string; slug: string }[]).map((c) => [c.author_id, { name: c.name, slug: c.slug }]));
   return list.map((a) => {
     const mine = rows.filter((r) => r.author_id === a.id);
-    return { ...a, column: colOf.get(a.id) ?? null, total: mine.length, latest: mine[0] ? { title: mine[0].title, slug: mine[0].slug, published_at: mine[0].published_at } : null };
+    return { ...a, total: mine.length, latest: mine[0] ? { title: mine[0].title, slug: mine[0].slug, published_at: mine[0].published_at } : null };
   });
 }
 
@@ -303,15 +290,13 @@ export async function getPage(slug: string): Promise<Page | null> {
 export async function getSitemapData() {
   "use cache";
   const db = setup();
-  if (!db) return { articles: [], sections: [], authors: [], columns: [] };
-  const [a, s, au, co] = await Promise.all([
+  if (!db) return { articles: [], sections: [], authors: [] };
+  const [a, s, au] = await Promise.all([
     db.from("articles").select("slug, published_at, updated_at").order("published_at", { ascending: false }).limit(5000),
     db.from("sections").select("slug"),
     db.from("authors").select("slug").eq("is_contributor", false),
-    db.from("columns").select("slug"),
   ]);
   return {
-    columns: (co.data ?? []) as { slug: string }[],
     articles: (a.data ?? []) as { slug: string; published_at: string; updated_at: string }[],
     sections: (s.data ?? []) as { slug: string }[],
     authors: (au.data ?? []) as { slug: string }[],

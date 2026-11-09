@@ -72,15 +72,15 @@ export function ArticleEditor({
   const toast = useToast();
   const editorCanPublish = canPublish(role);
   const coordination = isCoordination(role);
+  // URL, manchete principal e fixação na home: só o administrador
+  const isAdmin = role === "admin";
 
   const [form, setForm] = useState(() => ({
     title: article.title,
     subtitle: article.subtitle,
     slug: article.slug,
-    excerpt: article.excerpt,
     cover_url: article.cover_url ?? "",
     cover_alt: article.cover_alt,
-    cover_caption: article.cover_caption,
     cover_credit: article.cover_credit,
     section_id: article.section_id ?? "",
     // Rascunho novo de quem tem coluna com nome já nasce na coluna
@@ -116,6 +116,8 @@ export function ArticleEditor({
     const { column_id, ...f } = formRef.current;
     return {
       ...f,
+      // Texto de coluna não tem editoria
+      ...(column_id ? { section_id: "" } : {}),
       // Só envia a coluna quando o recurso existe (há colunas cadastradas)
       ...(columns.length > 0 ? { column_id } : {}),
       content_json: content.current.json,
@@ -226,7 +228,7 @@ export function ArticleEditor({
   async function onCover(file: File) {
     setUploading(true);
     try {
-      const up = await uploadImage(file, { alt: form.cover_alt, caption: form.cover_caption, credit: form.cover_credit });
+      const up = await uploadImage(file, { alt: form.cover_alt, credit: form.cover_credit });
       set("cover_url", up.url);
       toast("success", "Imagem de capa enviada. Lembre de preencher o texto alternativo.");
     } catch (e) {
@@ -343,95 +345,103 @@ export function ArticleEditor({
           </span>
           <input className="input" value={form.cover_alt} onChange={(e) => set("cover_alt", e.target.value)} placeholder="Descreva a imagem para quem não pode vê-la" />
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          <label className="field col-span-2">
-            Legenda
-            <input className="input" value={form.cover_caption} onChange={(e) => set("cover_caption", e.target.value)} />
-          </label>
-          <label className="field">
-            Crédito
-            <input className="input" value={form.cover_credit} onChange={(e) => set("cover_credit", e.target.value)} placeholder="Foto: …" />
-          </label>
-        </div>
+        <label className="field">
+          Crédito
+          <input className="input" value={form.cover_credit} onChange={(e) => set("cover_credit", e.target.value)} placeholder="Foto: …" />
+        </label>
       </section>
 
       <hr className="border-rule" />
 
       {authorColumn && (
         <div className="flex flex-col gap-1">
-          <label className="field">
-            Coluna
-            <select className="input" value={form.column_id} onChange={(e) => set("column_id", e.target.value)} aria-describedby="coluna-dica">
-              <option value="">Nenhuma (texto avulso)</option>
-              <option value={authorColumn.id}>{authorColumn.name}</option>
-            </select>
+          <label className="flex min-h-11 items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              className="size-5 accent-[var(--accent)]"
+              checked={form.column_id === authorColumn.id}
+              onChange={(e) => {
+                const on = e.target.checked;
+                // Texto de coluna não tem editoria
+                setForm((f) => ({ ...f, column_id: on ? authorColumn.id : "", section_id: on ? "" : f.section_id }));
+                touch();
+              }}
+              aria-describedby="coluna-dica"
+            />
+            <span>
+              Este texto sai na coluna <strong>{authorColumn.name}</strong>
+            </span>
           </label>
           <span id="coluna-dica" className="text-xs text-muted">
-            Textos da coluna não precisam de editoria.
+            {form.column_id ? "Textos da coluna não têm editoria." : "Sem marcar, o texto sai como avulso e precisa de uma editoria."}
           </span>
         </div>
       )}
 
-      <label className="field">
-        {form.column_id ? "Editoria (opcional)" : "Editoria"}
-        <select className="input" value={form.section_id} onChange={(e) => set("section_id", e.target.value)}>
-          <option value="">{form.column_id ? "Nenhuma" : "Escolha…"}</option>
-          {sections.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {!form.column_id && (
+        <label className="field">
+          Editoria
+          <select className="input" value={form.section_id} onChange={(e) => set("section_id", e.target.value)}>
+            <option value="">Escolha…</option>
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
-      <label className="field">
-        Autor
-        <select
-          className="input"
-          value={form.author_id}
-          onChange={(e) => {
-            const author = e.target.value;
-            set("author_id", author);
-            // A coluna é do autor: ao trocar o autor, sai da coluna anterior
-            if (form.column_id && !columns.some((c) => c.id === form.column_id && c.author_id === author)) set("column_id", "");
-          }}
-        >
-          <option value="">Escolha…</option>
-          {authors.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="field">
-        Endereço (URL)
-        <div className="flex items-center overflow-hidden rounded-md border border-rule focus-within:border-ink">
-          <span className="shrink-0 pl-3 text-xs text-muted">/{publishedAt ? articlePath({ slug: "", published_at: publishedAt }).split("/").slice(1, 3).join("/") : "ano/mês"}/</span>
-          <input
-            aria-label="Endereço (URL)"
-            className="min-h-11 w-full min-w-0 bg-transparent px-1 text-base outline-none sm:text-sm"
-            value={form.slug}
+      {coordination ? (
+        <label className="field">
+          Autor
+          <select
+            className="input"
+            value={form.author_id}
             onChange={(e) => {
-              setSlugTouched(true);
-              set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+              const author = e.target.value;
+              set("author_id", author);
+              // A coluna é do autor: ao trocar o autor, sai da coluna anterior
+              if (form.column_id && !columns.some((c) => c.id === form.column_id && c.author_id === author)) set("column_id", "");
             }}
-            onBlur={() => set("slug", slugify(form.slug) || slugify(form.title))}
-          />
-        </div>
-        <span className="text-xs font-normal text-muted">
-          Gerado a partir do título. {live && "Mudar o endereço de um texto publicado quebra links já compartilhados."}
-        </span>
-      </label>
+          >
+            <option value="">Escolha…</option>
+            {authors.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <p className="text-sm text-ink-soft">
+          <span className="font-semibold text-ink">Autor:</span> {authors.find((a) => a.id === form.author_id)?.name ?? "Redação"}
+        </p>
+      )}
 
-      <label className="field">
-        Resumo para redes sociais
-        <textarea className="input" rows={3} maxLength={300} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} placeholder="Aparece ao compartilhar no WhatsApp, X e e-mail." />
-        <span className="text-right text-xs font-normal text-muted tabular-nums">{form.excerpt.length}/300</span>
-      </label>
+      {isAdmin && (
+        <label className="field">
+          Endereço (URL)
+          <div className="flex items-center overflow-hidden rounded-md border border-rule focus-within:border-ink">
+            <span className="shrink-0 pl-3 text-xs text-muted">/{publishedAt ? articlePath({ slug: "", published_at: publishedAt }).split("/").slice(1, 3).join("/") : "ano/mês"}/</span>
+            <input
+              aria-label="Endereço (URL)"
+              className="min-h-11 w-full min-w-0 bg-transparent px-1 text-base outline-none sm:text-sm"
+              value={form.slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+              }}
+              onBlur={() => set("slug", slugify(form.slug) || slugify(form.title))}
+            />
+          </div>
+          <span className="text-xs font-normal text-muted">
+            Gerado a partir do título. {live && "Mudar o endereço de um texto publicado quebra links já compartilhados."}
+          </span>
+        </label>
+      )}
 
-      {coordination && (
+      {isAdmin && (
         <fieldset className="flex flex-col gap-1 border-t border-rule pt-4">
           <legend className="sr-only">Destaque na home</legend>
           <label className="flex min-h-11 items-center gap-3 text-sm">

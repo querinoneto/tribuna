@@ -1,5 +1,5 @@
 import { cacheLife } from "next/cache";
-import { getColumns, getSections } from "@/lib/data/public";
+import { getSections } from "@/lib/data/public";
 import { formatToday } from "@/lib/format";
 import { HeaderShell } from "./header-shell";
 
@@ -11,12 +11,11 @@ async function today(): Promise<string> {
 }
 
 export async function SiteHeader({ variant }: { variant: "home" | "compact" }) {
-  const [sections, columns, date] = await Promise.all([getSections(), getColumns(), today()]);
+  const [sections, date] = await Promise.all([getSections(), today()]);
   return (
     <HeaderShell
       variant={variant}
       sections={sections.map((s) => ({ name: s.name, slug: s.slug }))}
-      columns={columns.map((c) => ({ name: c.name, slug: c.slug }))}
       date={date}
     />
   );

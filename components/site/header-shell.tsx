@@ -47,7 +47,7 @@ function SearchForm({ className = "", autoFocus = false, onDone }: { className?:
   );
 }
 
-export function HeaderShell({ sections, columns = [], date, variant }: { sections: S[]; columns?: S[]; date: string; variant: "home" | "compact" }) {
+export function HeaderShell({ sections, date, variant }: { sections: S[]; date: string; variant: "home" | "compact" }) {
   const isHome = variant === "home";
   const masthead = useRef<HTMLDivElement>(null);
   const [pastMasthead, setPastMasthead] = useState(false);
@@ -116,7 +116,7 @@ export function HeaderShell({ sections, columns = [], date, variant }: { section
             </div>
           </div>
           <nav aria-label="Editorias" className="border-t-4 border-b border-rule-strong">
-            <SectionScroller sections={sections} columns={columns} />
+            <SectionScroller sections={sections} />
           </nav>
         </header>
       )}

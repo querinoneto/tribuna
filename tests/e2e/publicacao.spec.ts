@@ -96,6 +96,9 @@ test("colunista publica o próprio texto; coordenação pode tirar do ar", async
   // Destaque na capa continua sendo da coordenação
   await expect(page.getByText("Manchete principal da home")).toHaveCount(0);
   const details = page.getByRole("complementary", { name: "Detalhes do texto" });
+  // Se a colunista tiver coluna, o rascunho nasce na coluna (sem editoria): aqui o texto é avulso
+  const naColuna = details.getByRole("checkbox", { name: /sai na coluna/ });
+  if (await naColuna.count()) await naColuna.uncheck();
   await details.getByLabel("Editoria").selectOption({ label: "Política" });
 
   await page.getByRole("button", { name: "Publicar", exact: true }).click();

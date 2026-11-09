@@ -254,7 +254,8 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 
 ## 8.1.1. Colunas com nome e fórmulas
 
-- **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>` e entra no menu suspenso **Colunas** da capa (em vermelho, ao lado de **Opinião**; as editorias ficam em preto). A faixa Opinião da capa mostra só textos da editoria Opinião, nunca de colunas. No editor, o campo **Coluna** aparece para quem tem coluna; texto da coluna dispensa editoria. O nome da coluna não substitui a assinatura do colunista.
+- **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>`, mas **não há menu nem lista de colunas**: a página só é alcançada pelo nome da coluna, no alto da própria matéria. A página da coluna mostra o autor (foto, biografia e link para o perfil); a página do autor não aponta para a coluna. A faixa Opinião da capa mostra só textos da editoria Opinião, nunca de colunas. No editor, quem tem coluna vê a caixa **Este texto sai na coluna …**; marcada, o texto não tem editoria. O nome da coluna não substitui a assinatura do colunista.
+- **Campos do editor por papel** (regras em `lib/article-rules.ts`, aplicadas no servidor): o endereço (URL), a manchete principal e a fixação na home são só do **administrador** (para os demais, o endereço de um rascunho nasce do título e, depois de publicado, não muda); trocar o autor do texto é do administrador e da coordenação. A legenda da imagem de capa e o "resumo para redes sociais" saíram do painel.
 - **Fórmulas (LaTeX).** Botão **∑** na barra do editor, ou digite `$$fórmula$$` (no meio da frase) ou `$$$fórmula$$$` (em destaque). Clique na fórmula para editar. No site, são desenhadas pelo KaTeX.
 
 ## 8.2. Instagram (card automático)

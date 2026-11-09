@@ -37,13 +37,23 @@ async function Content({ params, searchParams }: Props) {
         <p className="kicker">Coluna</p>
         <h1 className="font-display text-4xl leading-none sm:text-6xl">{column.name}</h1>
         {author && (
-          <Link href={`/autor/${author.slug}`} className="group flex items-center gap-3">
-            {author.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={author.avatar_url} alt="" className="size-11 rounded-full object-cover" />
-            ) : null}
-            <span className="text-[13px] font-bold tracking-[0.06em] uppercase group-hover:text-accent">por {author.name}</span>
-          </Link>
+          <div className="flex max-w-xl flex-col items-center gap-3">
+            <Link href={`/autor/${author.slug}`} className="group flex flex-col items-center gap-3">
+              {author.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={author.avatar_url} alt={`Foto de ${author.name}`} className="size-24 rounded-full object-cover grayscale" />
+              ) : (
+                <span aria-hidden className="flex size-24 items-center justify-center rounded-full bg-paper-2 font-display text-4xl text-muted">
+                  {author.name.charAt(0)}
+                </span>
+              )}
+              <span className="text-[13px] font-bold tracking-[0.06em] uppercase group-hover:text-accent">por {author.name}</span>
+            </Link>
+            {author.bio && <p className="font-sans text-[15px] leading-relaxed text-ink-soft sm:text-base">{author.bio}</p>}
+            <Link href={`/autor/${author.slug}`} className="text-[13px] font-semibold text-accent hover:underline">
+              Ver perfil e todos os textos de {author.name}
+            </Link>
+          </div>
         )}
         {column.description && <p className="max-w-2xl font-sans text-lg text-ink-soft">{column.description}</p>}
       </header>

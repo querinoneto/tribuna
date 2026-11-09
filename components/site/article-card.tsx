@@ -13,6 +13,8 @@ export function kickerOf(article: Pick<Card, "section" | "column">): { name: str
 export function Kicker({ article, className = "" }: { article: Card; className?: string }) {
   const k = kickerOf(article);
   if (!k) return null;
+  // O nome da coluna é só um rótulo nas listas; o link para a coluna fica na matéria
+  if (article.column) return <span className={`kicker ${className}`}>{k.name}</span>;
   return (
     <Link href={k.href} className={`kicker hover:underline ${className}`}>
       {k.name}

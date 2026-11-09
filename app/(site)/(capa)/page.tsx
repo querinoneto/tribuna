@@ -146,9 +146,7 @@ export default async function HomePage() {
                           </Link>
                         ))}
                       {a.column && (
-                        <Link href={`/colunas/${a.column.slug}`} className="font-sans text-[13px] leading-snug text-band-muted italic hover:underline">
-                          {a.column.name}
-                        </Link>
+                        <span className="font-sans text-[13px] leading-snug text-band-muted italic">{a.column.name}</span>
                       )}
                     </div>
                   </div>

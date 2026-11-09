@@ -18,12 +18,13 @@ export const articleSchema = z.object({
   title: z.string().trim().max(200, "O título pode ter no máximo 200 caracteres."),
   subtitle: z.string().trim().max(400, "A linha fina pode ter no máximo 400 caracteres."),
   slug,
-  excerpt: z.string().trim().max(300, "O resumo para redes sociais pode ter no máximo 300 caracteres."),
+  // Campos que o painel não oferece mais: se vierem, só são aceitos como estão
+  excerpt: z.string().trim().max(300).optional(),
   content_json: z.unknown().nullable(),
   content_html: z.string().max(500_000, "O texto ficou grande demais."),
   cover_url: z.string().url("Endereço da imagem inválido.").nullable().or(z.literal("").transform(() => null)),
   cover_alt: z.string().trim().max(300, "O texto alternativo pode ter no máximo 300 caracteres."),
-  cover_caption: z.string().trim().max(400),
+  cover_caption: z.string().trim().max(400).optional(),
   cover_credit: z.string().trim().max(120),
   section_id: optionalUuid,
   // Ausente quando o editor não oferece colunas (ex.: antes da migração 18)

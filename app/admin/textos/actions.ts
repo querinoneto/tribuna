@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { postArticle, postDueArticles } from "@/lib/instagram/service";
 import { getStaff, requireStaff } from "@/lib/auth";
-import { readingTime } from "@/lib/format";
+import { applyRoleRules, slugFollowsTitle, type Current } from "@/lib/article-rules";
 import { dbErrorMessage, planTransition } from "@/lib/publishing";
 import { revalidateContent } from "@/lib/revalidate";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
@@ -48,25 +48,15 @@ function normalize(raw: unknown): { ok: true; value: ArticleInput } | { ok: fals
   return { ok: true, value };
 }
 
-function columns(v: ArticleInput) {
-  return {
-    title: v.title,
-    subtitle: v.subtitle,
-    slug: v.slug,
-    excerpt: v.excerpt,
-    content_json: v.content_json ?? null,
-    content_html: v.content_html,
-    cover_url: v.cover_url,
-    cover_alt: v.cover_alt,
-    cover_caption: v.cover_caption,
-    cover_credit: v.cover_credit,
-    section_id: v.section_id,
-    author_id: v.author_id,
-    ...(v.column_id !== undefined ? { column_id: v.column_id } : {}),
-    featured: v.featured,
-    pinned: v.pinned,
-    reading_minutes: readingTime(v.content_html),
-  };
+/** Atualiza o texto; se o endereço gerado do título já estiver em uso, acrescenta um sufixo curto. */
+async function updateArticle(supabase: Awaited<ReturnType<typeof createClient>>, id: string, cols: Record<string, unknown>, autoSlug: boolean) {
+  const run = (patch: Record<string, unknown>) =>
+    supabase.from("articles").update(patch).eq("id", id).select("status, published_at, updated_at").maybeSingle();
+  let r = await run(cols);
+  if (autoSlug && r.error?.code === "23505" && typeof cols.slug === "string") {
+    r = await run({ ...cols, slug: `${cols.slug.slice(0, 90)}-${Math.random().toString(36).slice(2, 6)}` });
+  }
+  return r;
 }
 
 /** Salvamento (usado pelo autosave e pelo botão Salvar). */
@@ -78,19 +68,11 @@ export async function saveArticle(id: string, raw: unknown): Promise<SaveResult>
   if (!n.ok) return n;
   const supabase = await createClient();
 
-  // Destaques da capa são da coordenação: o colunista não mexe neles
-  const cols: Partial<ReturnType<typeof columns>> = columns(n.value);
-  if (staff.role === "colunista") {
-    delete cols.featured;
-    delete cols.pinned;
-  }
+  const { data: current } = await supabase.from("articles").select("slug, status, author_id, published_at").eq("id", id).maybeSingle();
+  if (!current) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
+  const cols = applyRoleRules(staff.role, n.value, current as Current);
 
-  const { data, error } = await supabase
-    .from("articles")
-    .update(cols)
-    .eq("id", id)
-    .select("status, published_at, updated_at")
-    .maybeSingle();
+  const { data, error } = await updateArticle(supabase, id, cols, slugFollowsTitle(staff.role, current as Current));
 
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
@@ -115,8 +97,9 @@ export async function changeStatus(
   if (!n.ok) return n;
 
   const supabase = await createClient();
-  const { data: current } = await supabase.from("articles").select("published_at, status").eq("id", id).maybeSingle();
+  const { data: current } = await supabase.from("articles").select("slug, status, author_id, published_at").eq("id", id).maybeSingle();
   if (!current) return { ok: false, error: "Texto não encontrado ou sem permissão." };
+  const cols = applyRoleRules(staff.role, n.value, current as Current);
 
   const plan = planTransition({
     role: staff.role,
@@ -127,18 +110,8 @@ export async function changeStatus(
   });
   if (!plan.ok) return plan;
 
-  const cols: Partial<ReturnType<typeof columns>> = columns(n.value);
-  if (staff.role === "colunista") {
-    delete cols.featured;
-    delete cols.pinned;
-  }
-
-  const { data, error } = await supabase
-    .from("articles")
-    .update({ ...cols, ...plan.patch })
-    .eq("id", id)
-    .select("status, published_at, updated_at")
-    .maybeSingle();
+  // O endereço de um texto que vai ao ar não muda mais (para quem não é administrador)
+  const { data, error } = await updateArticle(supabase, id, { ...cols, ...plan.patch }, slugFollowsTitle(staff.role, current as Current));
 
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não tem permissão para alterar o estado deste texto." };
