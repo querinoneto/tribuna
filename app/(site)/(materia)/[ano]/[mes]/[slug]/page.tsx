@@ -79,7 +79,7 @@ async function Article({ params }: { params: Promise<Params> }) {
     author: article.author
       ? { "@type": "Person", name: article.author.name, url: `${SITE_URL}/autor/${article.author.slug}` }
       : { "@type": "Organization", name: SITE_NAME },
-    publisher: { "@type": "NewsMediaOrganization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` } },
+    publisher: { "@type": "NewsMediaOrganization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
   };
 
   return (

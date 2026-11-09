@@ -51,7 +51,7 @@ app/
   entrar/                 login (Google ou link por e-mail)
   auth/                   retorno do login e saída
   materia/[slug]/         endereço curto, que redireciona para /ano/mês/slug
-  sitemap.ts  robots.ts  icon.svg
+  sitemap.ts  robots.ts  icon.png  apple-icon.png
 components/
   site/                   cabeçalho, rodapé, cards, matéria, compartilhar, newsletter
   admin/                  editor de texto, barra de formatação, diálogos, avisos

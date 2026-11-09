@@ -14,7 +14,7 @@ export function SiteFooter() {
       <footer className="bg-band text-band-ink">
         <div className="wrap flex flex-col items-center gap-3 py-7 text-center">
           {LOGO && (
-            <Image src={LOGO.src} alt="" width={LOGO.width} height={LOGO.height} className="h-14 w-auto sm:h-16" />
+            <Image src={LOGO.src} alt="" width={LOGO.width} height={LOGO.height} className="size-16 sm:size-[72px]" />
           )}
           <div className="flex flex-col items-center gap-1">
             <Wordmark className="text-[24px]" />
