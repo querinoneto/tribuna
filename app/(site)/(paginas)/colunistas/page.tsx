@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getColumnists } from "@/lib/data/public";
+import { getColumnistsOverview } from "@/lib/data/public";
+import { articlePath } from "@/lib/format";
 import { EmptyState } from "@/components/site/article-card";
 
 export const metadata: Metadata = {
@@ -9,35 +10,81 @@ export const metadata: Metadata = {
 };
 
 export default async function ColumnistsPage() {
-  const columnists = await getColumnists();
+  const columnists = await getColumnistsOverview();
   return (
-    <div className="wrap pt-8 pb-16 sm:pt-12">
-      <header className="mb-10 border-b border-rule-strong pb-6">
+    <div className="wrap max-w-[760px] pt-10 pb-16 sm:pt-14">
+      <header className="mb-8 text-center">
+        <p className="kicker mb-3 flex items-center justify-center gap-3">
+          <span aria-hidden className="h-0.5 w-7 bg-accent" />
+          Opinião
+          <span aria-hidden className="h-0.5 w-7 bg-accent" />
+        </p>
         <h1 className="font-display text-4xl leading-none sm:text-5xl">Colunistas</h1>
-        <p className="mt-3 font-sans text-lg text-ink-soft sm:text-xl">Vozes que disputam o debate público.</p>
+        <p className="mx-auto mt-4 max-w-md font-sans text-[17px] leading-snug text-ink-soft">
+          Militantes, pesquisadores e trabalhadores que disputam o debate público na Tribuna Socialista.
+        </p>
       </header>
+
       {columnists.length === 0 ? (
         <EmptyState title="Em breve">Os colunistas da Tribuna Socialista aparecerão aqui.</EmptyState>
       ) : (
-        <ul className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="border-t-4 border-rule-strong">
           {columnists.map((c) => (
-            <li key={c.id} className="flex gap-4">
-              {c.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.avatar_url} alt="" className="size-20 shrink-0 rounded-full object-cover grayscale" />
-              ) : (
-                <span aria-hidden className="flex size-20 shrink-0 items-center justify-center rounded-full bg-paper-2 font-display text-3xl text-muted">
-                  {c.name.charAt(0)}
+            <li key={c.id} className="group relative border-b border-rule">
+              <article className="flex gap-4 py-6 sm:gap-6 sm:py-7">
+                {c.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={c.avatar_url}
+                    alt=""
+                    className="size-16 shrink-0 rounded-full object-cover grayscale transition duration-300 group-hover:grayscale-0 sm:size-20"
+                  />
+                ) : (
+                  <span
+                    aria-hidden
+                    className="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper-2 font-display text-2xl text-muted sm:size-20 sm:text-3xl"
+                  >
+                    {c.name.charAt(0)}
+                  </span>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-display text-[22px] leading-tight sm:text-2xl">
+                    {/* O link cobre o cartão inteiro (área de toque maior no celular) */}
+                    <Link href={`/autor/${c.slug}`} className="after:absolute after:inset-0 group-hover:text-accent">
+                      {c.name}
+                    </Link>
+                  </h2>
+                  {c.bio && <p className="mt-1.5 font-sans text-[14px] leading-relaxed text-ink-soft sm:text-[15px]">{c.bio}</p>}
+
+                  <p className="mt-3 flex flex-col gap-y-1 text-[13px] text-muted sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2">
+                    <span className="font-semibold text-ink-soft tabular-nums">
+                      {c.total} {c.total === 1 ? "texto" : "textos"}
+                    </span>
+                    {c.latest && (
+                      <>
+                        <span aria-hidden className="hidden sm:inline">·</span>
+                        <span className="min-w-0">
+                          Mais recente:{" "}
+                          <Link
+                            href={articlePath(c.latest)}
+                            className="relative z-10 font-medium text-ink underline decoration-rule underline-offset-[3px] hover:text-accent hover:decoration-accent"
+                          >
+                            {c.latest.title}
+                          </Link>
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <span
+                  aria-hidden
+                  className="hidden self-center text-xl text-muted transition-transform duration-200 group-hover:translate-x-1 group-hover:text-accent sm:block"
+                >
+                  →
                 </span>
-              )}
-              <div className="min-w-0 flex-1">
-                <h2 className="font-display text-2xl leading-tight">
-                  <Link href={`/autor/${c.slug}`} className="hover:text-accent">
-                    {c.name}
-                  </Link>
-                </h2>
-                {c.bio && <p className="mt-1 font-sans text-base leading-snug text-ink-soft">{c.bio}</p>}
-              </div>
+              </article>
             </li>
           ))}
         </ul>

@@ -190,6 +190,38 @@ export async function getColumnists(): Promise<Author[]> {
   return (data ?? []) as Author[];
 }
 
+export type ColumnistSummary = Author & {
+  total: number;
+  latest: { title: string; slug: string; published_at: string } | null;
+};
+
+/** Colunistas com o número de textos publicados e o texto mais recente. */
+export async function getColumnistsOverview(): Promise<ColumnistSummary[]> {
+  "use cache";
+  const db = setup();
+  if (!db) return [];
+  const { data: authors, error } = await db
+    .from("authors")
+    .select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id")
+    .eq("is_columnist", true)
+    .order("name");
+  log("colunistas", error);
+  const list = (authors ?? []) as Author[];
+  if (!list.length) return [];
+  // A política de leitura pública só devolve textos já publicados
+  const { data: arts } = await db
+    .from("articles")
+    .select("author_id, title, slug, published_at")
+    .in("author_id", list.map((a) => a.id))
+    .order("published_at", { ascending: false })
+    .limit(2000);
+  const rows = (arts ?? []) as { author_id: string; title: string; slug: string; published_at: string }[];
+  return list.map((a) => {
+    const mine = rows.filter((r) => r.author_id === a.id);
+    return { ...a, total: mine.length, latest: mine[0] ? { title: mine[0].title, slug: mine[0].slug, published_at: mine[0].published_at } : null };
+  });
+}
+
 export async function searchArticles(q: string, page: number) {
   "use cache";
   cacheTag(CONTENT_TAG);
