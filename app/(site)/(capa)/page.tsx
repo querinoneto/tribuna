@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getHomeData } from "@/lib/data/public";
 import { articlePath } from "@/lib/format";
 import { ArticleCard, ArticleRow, Byline, EmptyState, Kicker } from "@/components/site/article-card";
+import { ClampedSnippet } from "@/components/site/clamped-snippet";
 import { Cover } from "@/components/site/cover";
 
 export default async function HomePage() {
@@ -62,10 +63,7 @@ export default async function HomePage() {
             <Byline article={hero} className="mt-3.5 text-[13px]" />
             {heroSnippet && (
               <div className="mt-5 hidden border-t border-rule pt-5 lg:block">
-                <p className="line-clamp-7 font-sans text-[15px] leading-relaxed text-ink-soft">{heroSnippet}</p>
-                <Link href={articlePath(hero)} aria-label={`Ler mais: ${hero.title}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
-                  Ler mais →
-                </Link>
+                <ClampedSnippet text={heroSnippet} href={articlePath(hero)} lines={5} label={`Ler mais: ${hero.title}`} />
               </div>
             )}
           </article>

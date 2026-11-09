@@ -105,6 +105,7 @@ Escolha **um** dos dois caminhos.
 13. `supabase/migrations/20261109000013_sobre.sql`
 14. `supabase/migrations/20261109000014_assinaturas_resumo_semanal.sql`
 15. `supabase/migrations/20261109000015_envio_linha_fina.sql`
+16. `supabase/migrations/20261109000016_expediente.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
