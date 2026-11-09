@@ -26,9 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!a) return { title: "Página não encontrada" };
   const url = articleUrl(SITE_URL, a);
   const description = a.excerpt || a.subtitle || stripHtml(a.content_html).slice(0, 160);
-  const images = a.cover_url
-    ? [{ url: a.cover_url, alt: a.cover_alt }]
-    : [{ url: "/og-default.png", width: 1200, height: 630, alt: SITE_NAME }];
+  // A imagem de compartilhamento vem de ./opengraph-image.tsx (gerada para cada matéria)
   return {
     title: a.title,
     description,
@@ -47,9 +45,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       modifiedTime: a.updated_at,
       section: a.section?.name,
       authors: a.author ? [a.author.name] : undefined,
-      images,
     },
-    twitter: { card: "summary_large_image", title: a.title, description, images: [images[0].url] },
+    twitter: { card: "summary_large_image", title: a.title, description },
   };
 }
 
