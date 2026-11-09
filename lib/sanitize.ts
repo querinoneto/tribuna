@@ -11,13 +11,15 @@ export function sanitizeArticleHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags: [
       "p", "h2", "h3", "strong", "b", "em", "i", "u", "s", "a", "blockquote",
-      "ul", "ol", "li", "hr", "br", "img", "figure", "figcaption", "div", "iframe",
+      "ul", "ol", "li", "hr", "br", "img", "figure", "figcaption", "div", "iframe", "span",
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
       img: ["src", "alt", "title", "width", "height"],
       iframe: ["src", "width", "height", "allowfullscreen", "allow", "title", "frameborder"],
-      div: ["data-youtube-video"],
+      div: ["data-youtube-video", "data-type", "data-latex"],
+      // Fórmulas (LaTeX): só o código, que o site transforma em fórmula ao exibir
+      span: ["data-type", "data-latex"],
       ol: ["start"],
     },
     allowedSchemes: ["http", "https", "mailto"],

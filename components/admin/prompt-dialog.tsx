@@ -2,7 +2,17 @@
 
 import { useCallback, useRef, useState } from "react";
 
-type Field = { name: string; label: string; placeholder?: string; defaultValue?: string; type?: string; hint?: string; required?: boolean };
+type Field = {
+  name: string;
+  label: string;
+  placeholder?: string;
+  defaultValue?: string;
+  type?: string;
+  hint?: string;
+  required?: boolean;
+  /** Quando presente, o campo vira uma lista de opções. */
+  options?: { value: string; label: string }[];
+};
 type Config = { title: string; fields: Field[]; confirmLabel?: string };
 type Values = Record<string, string>;
 
@@ -50,15 +60,26 @@ export function usePrompt(): [React.ReactNode, (c: Config) => Promise<Values | n
           {config.fields.map((f, i) => (
             <label key={f.name} className="field">
               {f.label}
-              <input
-                name={f.name}
-                type={f.type ?? "text"}
-                defaultValue={f.defaultValue}
-                placeholder={f.placeholder}
-                required={f.required}
-                autoFocus={i === 0}
-                className="input"
-              />
+              {f.options ? (
+                <select name={f.name} defaultValue={f.defaultValue} className="input">
+                  {f.options.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name={f.name}
+                  type={f.type ?? "text"}
+                  defaultValue={f.defaultValue}
+                  placeholder={f.placeholder}
+                  required={f.required}
+                  autoFocus={i === 0}
+                  className="input"
+                  spellCheck={f.type === "latex" ? false : undefined}
+                />
+              )}
               {f.hint && <span className="text-xs font-normal text-muted">{f.hint}</span>}
             </label>
           ))}

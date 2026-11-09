@@ -29,6 +29,7 @@ export type EditorArticle = {
   cover_caption: string;
   cover_credit: string;
   section_id: string | null;
+  column_id: string | null;
   author_id: string | null;
   featured: boolean;
   pinned: boolean;
@@ -56,12 +57,14 @@ export function ArticleEditor({
   article,
   sections,
   authors,
+  columns = [],
   role,
   notice,
 }: {
   article: EditorArticle;
   sections: Option[];
   authors: Option[];
+  columns?: (Option & { author_id: string })[];
   role: Role;
   notice?: string;
 }) {
@@ -80,6 +83,12 @@ export function ArticleEditor({
     cover_caption: article.cover_caption,
     cover_credit: article.cover_credit,
     section_id: article.section_id ?? "",
+    // Rascunho novo de quem tem coluna com nome já nasce na coluna
+    column_id:
+      article.column_id ??
+      (!article.title && !article.content_html && article.status === "draft"
+        ? (columns.find((c) => c.author_id === article.author_id)?.id ?? "")
+        : ""),
     author_id: article.author_id ?? "",
     featured: article.featured,
     pinned: article.pinned,
@@ -104,13 +113,15 @@ export function ArticleEditor({
   }, [form]);
 
   const payload = useCallback(() => {
-    const f = formRef.current;
+    const { column_id, ...f } = formRef.current;
     return {
       ...f,
+      // Só envia a coluna quando o recurso existe (há colunas cadastradas)
+      ...(columns.length > 0 ? { column_id } : {}),
       content_json: content.current.json,
       content_html: content.current.html,
     };
-  }, []);
+  }, [columns.length]);
 
   const applyResult = useCallback(
     (r: SaveResult, okMessage?: string) => {
@@ -276,6 +287,8 @@ export function ArticleEditor({
   ) : null;
 
   /* ------------------------------ Painel de detalhes ------------------------------ */
+  const authorColumn = columns.find((c) => c.author_id === form.author_id) ?? null;
+
   const details = (
     <div className="flex flex-col gap-5">
       <section aria-labelledby="capa-t" className="flex flex-col gap-3">
@@ -344,10 +357,25 @@ export function ArticleEditor({
 
       <hr className="border-rule" />
 
+      {authorColumn && (
+        <div className="flex flex-col gap-1">
+          <label className="field">
+            Coluna
+            <select className="input" value={form.column_id} onChange={(e) => set("column_id", e.target.value)} aria-describedby="coluna-dica">
+              <option value="">Nenhuma (texto avulso)</option>
+              <option value={authorColumn.id}>{authorColumn.name}</option>
+            </select>
+          </label>
+          <span id="coluna-dica" className="text-xs text-muted">
+            Textos da coluna não precisam de editoria.
+          </span>
+        </div>
+      )}
+
       <label className="field">
-        Editoria
+        {form.column_id ? "Editoria (opcional)" : "Editoria"}
         <select className="input" value={form.section_id} onChange={(e) => set("section_id", e.target.value)}>
-          <option value="">Escolha…</option>
+          <option value="">{form.column_id ? "Nenhuma" : "Escolha…"}</option>
           {sections.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -358,7 +386,16 @@ export function ArticleEditor({
 
       <label className="field">
         Autor
-        <select className="input" value={form.author_id} onChange={(e) => set("author_id", e.target.value)}>
+        <select
+          className="input"
+          value={form.author_id}
+          onChange={(e) => {
+            const author = e.target.value;
+            set("author_id", author);
+            // A coluna é do autor: ao trocar o autor, sai da coluna anterior
+            if (form.column_id && !columns.some((c) => c.id === form.column_id && c.author_id === author)) set("column_id", "");
+          }}
+        >
           <option value="">Escolha…</option>
           {authors.map((a) => (
             <option key={a.id} value={a.id}>

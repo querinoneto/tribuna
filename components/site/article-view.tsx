@@ -1,6 +1,9 @@
 import Link from "next/link";
+import "katex/dist/katex.min.css";
 import { articlePath, formatDateTime } from "@/lib/format";
+import { renderMath } from "@/lib/math";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
+import { kickerOf } from "./article-card";
 import type { ArticleFull } from "@/lib/types";
 import { Cover } from "./cover";
 import { NewsletterInline } from "./newsletter-form";
@@ -12,13 +15,14 @@ import { ShareButtons } from "./share-buttons";
  */
 export function ArticleView({ article, url }: { article: ArticleFull; url: string }) {
   const published = article.published_at ?? new Date(0).toISOString();
+  const kicker = kickerOf(article);
   return (
     <article>
       <header className="mx-auto flex max-w-[860px] flex-col items-center gap-5 px-4 pt-10 pb-8 text-center sm:px-8 sm:pt-16">
-        {article.section && (
-          <Link href={`/editoria/${article.section.slug}`} className="kicker flex items-center gap-3 hover:underline">
+        {kicker && (
+          <Link href={kicker.href} className="kicker flex items-center gap-3 hover:underline">
             <span aria-hidden className="h-0.5 w-8 bg-accent" />
-            {article.section.name}
+            {kicker.name}
             <span aria-hidden className="h-0.5 w-8 bg-accent" />
           </Link>
         )}
@@ -72,7 +76,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         </aside>
 
         <div className="w-full max-w-[680px] min-w-0">
-          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.content_html) }} />
+          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: renderMath(sanitizeArticleHtml(article.content_html)) }} />
 
           {/* Textos assinados por colunistas e colaboradores: responsabilidade do autor */}
           {(article.author?.is_columnist || article.author?.is_contributor) && (

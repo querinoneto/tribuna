@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { ActionForm } from "@/components/admin/action-form";
+import { ColumnNameField } from "@/components/admin/column-name-field";
 import { NameBioFields } from "@/components/admin/name-bio-fields";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { useToast } from "@/components/admin/toast";
 import { uploadImage } from "@/lib/upload";
 import { saveMyProfile } from "./actions";
 
-export function ProfileForm({ initial }: { initial: { name: string; bio: string; avatar_url: string } }) {
+export function ProfileForm({ initial }: { initial: { name: string; bio: string; avatar_url: string; columnist: boolean; column_name: string } }) {
   const toast = useToast();
   const [photo, setPhoto] = useState(initial.avatar_url);
   const [uploading, setUploading] = useState(false);
@@ -52,6 +53,7 @@ export function ProfileForm({ initial }: { initial: { name: string; bio: string;
         </div>
       </div>
       <NameBioFields name={initial.name} bio={initial.bio} />
+      {initial.columnist && <ColumnNameField value={initial.column_name} />}
       <div>
         <SubmitButton className="btn-primary" disabled={uploading}>
           Salvar

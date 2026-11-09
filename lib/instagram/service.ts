@@ -194,10 +194,11 @@ type ArticleRow = {
   updated_at: string;
   cover_alt: string | null;
   section: { name: string } | null;
+  column?: { name: string } | null;
   author: { name: string } | null;
 };
 
-export function buildCaption(a: Pick<ArticleRow, "title" | "subtitle" | "section" | "author">): string {
+export function buildCaption(a: Pick<ArticleRow, "title" | "subtitle" | "section" | "column" | "author">): string {
   const tag = (s: string) =>
     "#" +
     s
@@ -210,9 +211,11 @@ export function buildCaption(a: Pick<ArticleRow, "title" | "subtitle" | "section
       .join("");
   const parts = [a.title.trim()];
   if (a.subtitle?.trim()) parts.push(a.subtitle.trim());
-  parts.push(`Por ${a.author?.name || "Redação"}.`);
+  parts.push(`Por ${a.author?.name || "Redação"}${a.column?.name ? `, na coluna ${a.column.name}` : ""}.`);
   parts.push("Leia o texto completo no site da Tribuna Socialista: link na bio.");
-  parts.push(["#TribunaSocialista", a.section?.name ? tag(a.section.name) : null, "#ImprensaPopular"].filter(Boolean).join(" "));
+  parts.push(
+    ["#TribunaSocialista", a.column?.name ? tag(a.column.name) : null, a.section?.name ? tag(a.section.name) : null, "#ImprensaPopular"].filter(Boolean).join(" "),
+  );
   const caption = parts.join("\n\n");
   return caption.length <= 2100 ? caption : `${caption.slice(0, 2099)}…`;
 }
@@ -256,7 +259,7 @@ export async function postArticle(articleId: string, opts: { force?: boolean } =
   const client = db();
   const { data: a } = await client
     .from("articles")
-    .select("id, title, subtitle, slug, status, published_at, updated_at, cover_alt, section:sections(name), author:authors(name)")
+    .select("id, title, subtitle, slug, status, published_at, updated_at, cover_alt, section:sections(name), column:columns(name), author:authors(name)")
     .eq("id", articleId)
     .maybeSingle<ArticleRow>();
   if (!a || !["published", "scheduled"].includes(a.status) || !a.published_at || new Date(a.published_at) > new Date()) {

@@ -2,6 +2,8 @@ export type Role = "admin" | "editor" | "colunista";
 export type ArticleStatus = "draft" | "published" | "scheduled" | "archived";
 
 export type Section = { id: string; name: string; slug: string; description: string | null; position: number };
+/** Coluna com nome próprio de um colunista (ex.: "Domingo no Parque"). */
+export type Column = { id: string; name: string; slug: string; description: string | null; author_id: string };
 export type Author = {
   id: string;
   name: string;
@@ -58,6 +60,7 @@ export type ArticleCard = Pick<
   | "pinned"
 > & {
   section: Pick<Section, "name" | "slug"> | null;
+  column?: Pick<Column, "name" | "slug"> | null;
   author: (Pick<Author, "name" | "slug" | "avatar_url"> & { is_columnist?: boolean; is_contributor?: boolean }) | null;
 };
 

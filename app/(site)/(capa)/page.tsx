@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getHomeData } from "@/lib/data/public";
 import { articlePath } from "@/lib/format";
-import { ArticleCard, ArticleRow, Byline, EmptyState, Kicker } from "@/components/site/article-card";
+import { ArticleCard, ArticleRow, Byline, EmptyState, Kicker, kickerOf } from "@/components/site/article-card";
 import { ClampedSnippet } from "@/components/site/clamped-snippet";
 import { Cover } from "@/components/site/cover";
 
@@ -80,7 +80,7 @@ export default async function HomePage() {
                     {i + 1}
                   </span>
                   <div className="flex flex-col gap-1">
-                    {a.section && <span className="kicker text-[10px] text-muted">{a.section.name}</span>}
+                    {kickerOf(a) && <span className="kicker text-[10px] text-muted">{kickerOf(a)?.name}</span>}
                     <Link href={articlePath(a)} className="headline-link font-sans text-[15px] leading-snug font-semibold">
                       {a.title}
                     </Link>
@@ -136,14 +136,21 @@ export default async function HomePage() {
                         {a.author?.name.charAt(0) ?? "T"}
                       </span>
                     )}
-                    {a.author &&
-                      (a.author.is_contributor ? (
-                        <span className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase">{a.author.name}</span>
-                      ) : (
-                        <Link href={`/autor/${a.author.slug}`} className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
-                          {a.author.name}
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      {a.author &&
+                        (a.author.is_contributor ? (
+                          <span className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase">{a.author.name}</span>
+                        ) : (
+                          <Link href={`/autor/${a.author.slug}`} className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
+                            {a.author.name}
+                          </Link>
+                        ))}
+                      {a.column && (
+                        <Link href={`/colunas/${a.column.slug}`} className="font-sans text-[13px] leading-snug text-band-muted italic hover:underline">
+                          {a.column.name}
                         </Link>
-                      ))}
+                      )}
+                    </div>
                   </div>
                   <h3 className="font-sans text-lg leading-snug font-semibold sm:text-xl">
                     <Link href={articlePath(a)} className="headline-link">
@@ -164,7 +171,7 @@ export default async function HomePage() {
           <div className="wrap flex flex-col items-center gap-8 py-10 sm:py-14 lg:flex-row lg:gap-12">
             <div className="flex flex-1 flex-col gap-4">
               <span className="text-xs font-bold tracking-[0.18em] uppercase">
-                Especial{special.section ? ` · ${special.section.name}` : ""}
+                Especial{kickerOf(special) ? ` · ${kickerOf(special)?.name}` : ""}
               </span>
               <h2 id="especial" className="font-display text-[30px] leading-[1.05] sm:text-[44px]">
                 {special.title}

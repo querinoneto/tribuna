@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { forgetSubscriber } from "@/lib/newsletter/service";
 import { dbErrorMessage } from "@/lib/publishing";
 import { revalidateContent } from "@/lib/revalidate";
+import { saveColumnName } from "@/lib/columns";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/server";
@@ -81,6 +82,10 @@ export async function saveAuthor(_: FormState, fd: FormData): Promise<FormState>
     .maybeSingle();
   if (error) return fail(error.code === "23505" ? "Já existe um autor com esse endereço. Escolha outro." : dbErrorMessage(error));
   if (!data) return fail("Autor não encontrado.");
+  if (current?.is_columnist) {
+    const col = await saveColumnName(supabase, id, fd.get("column_name"));
+    if (!col.ok) return fail(col.error);
+  }
   revalidateContent();
   revalidatePath("/admin/autores");
   return done("Autor atualizado.");

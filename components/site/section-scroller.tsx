@@ -12,10 +12,18 @@ const Arrow = ({ dir }: { dir: "left" | "right" }) => (
 );
 
 /**
- * Menu de editorias da capa. No celular, a lista rola para o lado e ganha
- * setas ‹ › nas pontas; no computador, as editorias cabem centralizadas.
+ * Menu da capa: as editorias (em preto) e, separadas por um filete, a área
+ * de Opinião e as colunas com nome próprio (em vermelho). No celular, a lista
+ * rola para o lado e ganha setas ‹ › nas pontas; no computador, cabe
+ * centralizada.
  */
-export function SectionScroller({ sections }: { sections: S[] }) {
+export function SectionScroller({ sections, columns = [] }: { sections: S[]; columns?: S[] }) {
+  const editorias = sections.filter((s) => s.slug !== "opiniao");
+  const opiniao = sections.find((s) => s.slug === "opiniao");
+  const opinionItems = [
+    ...(opiniao ? [{ name: opiniao.name, href: `/editoria/${opiniao.slug}` }] : []),
+    ...columns.map((c) => ({ name: c.name, href: `/colunas/${c.slug}` })),
+  ];
   const list = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
 
@@ -62,13 +70,27 @@ export function SectionScroller({ sections }: { sections: S[] }) {
         ref={list}
         className="flex gap-x-6 overflow-x-auto px-10 text-[12px] font-semibold tracking-[0.1em] whitespace-nowrap uppercase [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:gap-x-9 sm:overflow-visible sm:px-0 sm:text-[13px] [&::-webkit-scrollbar]:hidden"
       >
-        {sections.map((s) => (
+        {editorias.map((s) => (
           <li key={s.slug}>
-            <Link href={`/editoria/${s.slug}`} className={`block py-3.5 hover:text-accent ${s.slug === "opiniao" ? "text-accent" : ""}`}>
+            <Link href={`/editoria/${s.slug}`} className="block py-3.5 hover:text-accent">
               {s.name}
             </Link>
           </li>
         ))}
+        {opinionItems.length > 0 && (
+          <>
+            <li aria-hidden className="flex items-center">
+              <span className="h-4 w-px bg-rule-strong" />
+            </li>
+            {opinionItems.map((o) => (
+              <li key={o.href}>
+                <Link href={o.href} className="block py-3.5 text-accent hover:underline">
+                  {o.name}
+                </Link>
+              </li>
+            ))}
+          </>
+        )}
       </ul>
       <button
         type="button"

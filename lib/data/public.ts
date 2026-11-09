@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { CONTENT_TAG } from "@/lib/revalidate";
 import { createPublicClient } from "@/lib/supabase/public";
 import { stripHtml } from "@/lib/sanitize";
-import type { ArticleCard, ArticleFull, Author, Page, Section } from "@/lib/types";
+import type { ArticleCard, ArticleFull, Author, Column, Page, Section } from "@/lib/types";
 
 /*
  * Consultas do site público. Todas usam "use cache": o resultado entra na
@@ -16,7 +16,7 @@ import type { ArticleCard, ArticleFull, Author, Page, Section } from "@/lib/type
  */
 
 export const CARD_SELECT =
-  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), author:authors(name, slug, avatar_url, is_columnist, is_contributor)";
+  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), column:columns(name, slug), author:authors(name, slug, avatar_url, is_columnist, is_contributor)";
 
 function setup() {
   cacheTag(CONTENT_TAG);
@@ -37,6 +37,41 @@ export async function getSections(): Promise<Section[]> {
   const { data, error } = await db.from("sections").select("id, name, slug, description, position").order("position");
   log("editorias", error);
   return (data ?? []) as Section[];
+}
+
+/** Colunas com nome próprio, para o menu (em ordem alfabética). */
+export async function getColumns(): Promise<Column[]> {
+  "use cache";
+  const db = setup();
+  if (!db) return [];
+  const { data, error } = await db.from("columns").select("id, name, slug, description, author_id").order("name");
+  log("colunas", error);
+  return (data ?? []) as Column[];
+}
+
+export async function getColumnPage(slug: string, page: number) {
+  "use cache";
+  const db = setup();
+  if (!db) return null;
+  const { data: column } = await db
+    .from("columns")
+    .select("id, name, slug, description, author_id, author:authors(name, slug, bio, avatar_url)")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!column) return null;
+  const from = (page - 1) * PAGE_SIZE;
+  const { data, count, error } = await db
+    .from("articles")
+    .select(CARD_SELECT, { count: "exact" })
+    .eq("column_id", column.id)
+    .order("published_at", { ascending: false })
+    .range(from, from + PAGE_SIZE - 1);
+  log("coluna", error);
+  return {
+    column: column as unknown as Column & { author: Pick<Author, "name" | "slug" | "bio" | "avatar_url"> | null },
+    articles: asCards(data),
+    total: count ?? 0,
+  };
 }
 
 export type HomeData = {
@@ -87,9 +122,11 @@ export async function getHomeData(): Promise<HomeData> {
     return out;
   };
 
-  const notOpinion = (a: ArticleCard) => a.section?.slug !== "opiniao";
+  // Opinião = editoria "Opinião" ou textos de colunas com nome próprio
+  const isOpinion = (a: ArticleCard) => a.section?.slug === "opiniao" || Boolean(a.column);
+  const notOpinion = (a: ArticleCard) => !isOpinion(a);
   const side = pick([...pinned, ...recent], 3, notOpinion);
-  const opinion = recent.filter((a) => a.section?.slug === "opiniao" && !used.has(a.id)).slice(0, 4);
+  const opinion = recent.filter((a) => isOpinion(a) && !used.has(a.id)).slice(0, 4);
   opinion.forEach((a) => used.add(a.id));
 
   // Trecho inicial da manchete (para o "Ler mais" da capa)
@@ -191,7 +228,8 @@ export async function getAuthorPage(slug: string, page: number) {
     .order("published_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
   log("autor", error);
-  return { author: author as Author, articles: asCards(data), total: count ?? 0 };
+  const { data: column } = await db.from("columns").select("name, slug").eq("author_id", author.id).maybeSingle();
+  return { author: author as Author, column: (column ?? null) as { name: string; slug: string } | null, articles: asCards(data), total: count ?? 0 };
 }
 
 export async function getColumnists(): Promise<Author[]> {
@@ -204,6 +242,7 @@ export async function getColumnists(): Promise<Author[]> {
 }
 
 export type ColumnistSummary = Author & {
+  column: { name: string; slug: string } | null;
   total: number;
   latest: { title: string; slug: string; published_at: string } | null;
 };
@@ -229,9 +268,11 @@ export async function getColumnistsOverview(): Promise<ColumnistSummary[]> {
     .order("published_at", { ascending: false })
     .limit(2000);
   const rows = (arts ?? []) as { author_id: string; title: string; slug: string; published_at: string }[];
+  const { data: cols } = await db.from("columns").select("author_id, name, slug");
+  const colOf = new Map(((cols ?? []) as { author_id: string; name: string; slug: string }[]).map((c) => [c.author_id, { name: c.name, slug: c.slug }]));
   return list.map((a) => {
     const mine = rows.filter((r) => r.author_id === a.id);
-    return { ...a, total: mine.length, latest: mine[0] ? { title: mine[0].title, slug: mine[0].slug, published_at: mine[0].published_at } : null };
+    return { ...a, column: colOf.get(a.id) ?? null, total: mine.length, latest: mine[0] ? { title: mine[0].title, slug: mine[0].slug, published_at: mine[0].published_at } : null };
   });
 }
 
@@ -262,13 +303,15 @@ export async function getPage(slug: string): Promise<Page | null> {
 export async function getSitemapData() {
   "use cache";
   const db = setup();
-  if (!db) return { articles: [], sections: [], authors: [] };
-  const [a, s, au] = await Promise.all([
+  if (!db) return { articles: [], sections: [], authors: [], columns: [] };
+  const [a, s, au, co] = await Promise.all([
     db.from("articles").select("slug, published_at, updated_at").order("published_at", { ascending: false }).limit(5000),
     db.from("sections").select("slug"),
     db.from("authors").select("slug").eq("is_contributor", false),
+    db.from("columns").select("slug"),
   ]);
   return {
+    columns: (co.data ?? []) as { slug: string }[],
     articles: (a.data ?? []) as { slug: string; published_at: string; updated_at: string }[],
     sections: (s.data ?? []) as { slug: string }[],
     authors: (au.data ?? []) as { slug: string }[],

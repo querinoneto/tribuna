@@ -107,6 +107,7 @@ Escolha **um** dos dois caminhos.
 15. `supabase/migrations/20261109000015_envio_linha_fina.sql`
 16. `supabase/migrations/20261109000016_expediente.sql`
 17. `supabase/migrations/20261109000017_instagram.sql`
+18. `supabase/migrations/20261109000018_colunas.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -250,6 +251,11 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 - O cancelamento é feito pelo link do rodapé de cada e-mail (gerido pelo Resend) e sincronizado com o banco antes de cada envio.
 - No painel, em **Assinaturas**: situação de cada e-mail, prévia enviada para você, envio manual e histórico.
 - Variáveis na Vercel: `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_SEGMENT_ID`, `NEWSLETTER_FROM`, `CRON_SECRET` (e, opcional, `NEWSLETTER_REPLY_TO`). Veja `.env.example`.
+
+## 8.1.1. Colunas com nome e fórmulas
+
+- **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>` e entra no menu da capa, em vermelho, ao lado de **Opinião**; as editorias ficam em preto. No editor, o campo **Coluna** aparece para quem tem coluna; texto da coluna dispensa editoria. O nome da coluna não substitui a assinatura do colunista.
+- **Fórmulas (LaTeX).** Botão **∑** na barra do editor, ou digite `$$fórmula$$` (no meio da frase) ou `$$$fórmula$$$` (em destaque). Clique na fórmula para editar. No site, são desenhadas pelo KaTeX.
 
 ## 8.2. Instagram (card automático)
 

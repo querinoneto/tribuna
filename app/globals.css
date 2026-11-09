@@ -391,3 +391,29 @@ textarea.input {
 .prose-tribuna.prose-sans h3 {
   font-family: var(--font-sans);
 }
+
+/* Fórmulas (LaTeX, desenhadas pelo KaTeX) */
+.prose-tribuna .math-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em 0;
+  text-align: center;
+}
+.prose-tribuna .katex {
+  font-size: 1.08em;
+}
+.tiptap [data-type="inline-math"],
+.tiptap [data-type="block-math"] {
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tiptap [data-type="inline-math"]:hover,
+.tiptap [data-type="block-math"]:hover {
+  background: var(--color-paper-2);
+}
+.tiptap [data-type="block-math"] {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em 0;
+  text-align: center;
+}

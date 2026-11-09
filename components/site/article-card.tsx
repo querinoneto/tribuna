@@ -3,11 +3,19 @@ import { articlePath } from "@/lib/format";
 import type { ArticleCard as Card } from "@/lib/types";
 import { Cover } from "./cover";
 
+/** Rótulo acima do título: a coluna (quando o texto é de uma coluna com nome) ou a editoria. */
+export function kickerOf(article: Pick<Card, "section" | "column">): { name: string; href: string } | null {
+  if (article.column) return { name: article.column.name, href: `/colunas/${article.column.slug}` };
+  if (article.section) return { name: article.section.name, href: `/editoria/${article.section.slug}` };
+  return null;
+}
+
 export function Kicker({ article, className = "" }: { article: Card; className?: string }) {
-  if (!article.section) return null;
+  const k = kickerOf(article);
+  if (!k) return null;
   return (
-    <Link href={`/editoria/${article.section.slug}`} className={`kicker hover:underline ${className}`}>
-      {article.section.name}
+    <Link href={k.href} className={`kicker hover:underline ${className}`}>
+      {k.name}
     </Link>
   );
 }

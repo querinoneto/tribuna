@@ -12,7 +12,7 @@ export default async function Image({ params }: { params: Promise<{ ano: string;
   const a = await getArticle(slug);
   return articleOgImage({
     title: a?.title ?? SITE_NAME,
-    section: a?.section?.name ?? null,
+    section: a?.column?.name ?? a?.section?.name ?? null,
     author: a?.author?.name ?? null,
     cover_url: a?.cover_url ?? null,
     domain: new URL(SITE_URL).host.replace(/^www\./, ""),

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -42,6 +43,14 @@ async function Content({ params, searchParams }: Props) {
         <div className="min-w-0 flex-1">
           <p className="kicker mb-2">{author.is_columnist ? "Colunista" : author.is_contributor ? "Colaborador externo" : "Autor"}</p>
           <h1 className="font-display text-4xl leading-none sm:text-5xl">{author.name}</h1>
+          {data.column && (
+            <p className="mt-2 font-sans text-[15px] text-ink-soft">
+              Coluna{" "}
+              <Link href={`/colunas/${data.column.slug}`} className="font-semibold text-accent hover:underline">
+                {data.column.name}
+              </Link>
+            </p>
+          )}
           {author.bio && <p className="mt-3 font-sans text-[15px] leading-relaxed text-ink-soft sm:text-base">{author.bio}</p>}
         </div>
       </header>

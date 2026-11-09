@@ -8,6 +8,7 @@ type Row = {
   subtitle: string | null;
   cover_url: string | null;
   section: { name: string } | null;
+  column: { name: string } | null;
   author: { name: string } | null;
 };
 
@@ -16,7 +17,7 @@ export async function renderCardFor(client: SupabaseClient | null, id: string, c
   if (!client || !/^[0-9a-f-]{36}$/i.test(id)) return new Response("Não encontrado", { status: 404 });
   const { data } = await client
     .from("articles")
-    .select("title, subtitle, cover_url, section:sections(name), author:authors(name)")
+    .select("title, subtitle, cover_url, section:sections(name), column:columns(name), author:authors(name)")
     .eq("id", id)
     .maybeSingle<Row>();
   if (!data) return new Response("Não encontrado", { status: 404 });
@@ -24,7 +25,7 @@ export async function renderCardFor(client: SupabaseClient | null, id: string, c
   const jpg = await instagramCard({
     title: data.title || "Sem título",
     subtitle: data.subtitle,
-    section: data.section?.name ?? null,
+    section: data.column?.name ?? data.section?.name ?? null,
     author: data.author?.name ?? null,
     cover_url: data.cover_url,
     domain: new URL(SITE_URL).host.replace(/^www\./, ""),

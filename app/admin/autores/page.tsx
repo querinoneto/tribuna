@@ -38,6 +38,9 @@ export default async function AutoresPage({ searchParams }: PageProps<"/admin/au
     .from("authors")
     .select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile:profiles(email), articles(status)")
     .order("name");
+  // Consulta separada: sem a migração 18, a lista de autores continua aparecendo
+  const { data: cols } = await supabase.from("columns").select("author_id, name");
+  const columnOf = new Map((cols ?? []).map((c) => [c.author_id as string, c.name as string]));
 
   const all = (data ?? []) as unknown as Row[];
   const counts = {
@@ -110,7 +113,7 @@ export default async function AutoresPage({ searchParams }: PageProps<"/admin/au
                     <span className="btn-ghost hidden text-sm group-open:inline-flex">Fechar</span>
                   </summary>
                   <div className="mt-4 border-t border-rule pt-4">
-                    <AuthorForm author={{ id: a.id, name: a.name, slug: a.slug, bio: a.bio ?? "", avatar_url: a.avatar_url ?? "", columnist: a.is_columnist }} />
+                    <AuthorForm author={{ id: a.id, name: a.name, slug: a.slug, bio: a.bio ?? "", avatar_url: a.avatar_url ?? "", columnist: a.is_columnist, column_name: columnOf.get(a.id) ?? "" }} />
                   </div>
                 </details>
               </li>

@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "@tiptap/extension-image";
+import { Mathematics } from "@tiptap/extension-mathematics";
 import Youtube from "@tiptap/extension-youtube";
 import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import "katex/dist/katex.min.css";
 import { uploadImage } from "@/lib/upload";
 import { usePrompt } from "./prompt-dialog";
 import { useToast } from "./toast";
@@ -29,6 +31,8 @@ export function RichEditor({
   stickyTop?: string;
   editable?: boolean;
 }) {
+  // Clique numa fórmula abre a edição (a função é preenchida pela barra de ferramentas)
+  const editMath = useRef<MathEditor | null>(null);
   const editor = useEditor({
     immediatelyRender: false,
     editable,
@@ -42,6 +46,12 @@ export function RichEditor({
       Image.configure({ inline: false }),
       Youtube.configure({ nocookie: true, controls: true, modestBranding: true }),
       Placeholder.configure({ placeholder }),
+      // eslint-disable-next-line react-hooks/refs -- a ref só é lida no clique, não durante a renderização
+      Mathematics.configure({
+        katexOptions: { throwOnError: false, strict: "ignore" },
+        inlineOptions: { onClick: (node, pos) => editMath.current?.("inline", node.attrs.latex ?? "", pos) },
+        blockOptions: { onClick: (node, pos) => editMath.current?.("block", node.attrs.latex ?? "", pos) },
+      }),
     ],
     content: (initial as object) ?? "",
     editorProps: {
@@ -56,7 +66,7 @@ export function RichEditor({
 
   return (
     <div>
-      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} />}
+      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} editMath={editMath} />}
       <div className="px-1 py-6">
         <EditorContent editor={editor} />
       </div>
@@ -64,10 +74,56 @@ export function RichEditor({
   );
 }
 
-function Toolbar({ editor, stickyTop }: { editor: Editor; stickyTop: string }) {
+type MathEditor = (kind: "inline" | "block", latex: string, pos: number) => void;
+
+const MATH_HINT = "Escreva em LaTeX, sem cifrões. Ex.: \\frac{a}{b}, x^2, \\sqrt{2}, \\sum_{i=1}^{n} x_i";
+
+function Toolbar({ editor, stickyTop, editMath }: { editor: Editor; stickyTop: string; editMath: RefObject<MathEditor | null> }) {
   const [dialog, ask] = usePrompt();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function addFormula() {
+    const selected = editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " ").trim();
+    const v = await ask({
+      title: "Inserir fórmula",
+      fields: [
+        { name: "latex", label: "Fórmula (LaTeX)", placeholder: "E = mc^2", defaultValue: selected, type: "latex", required: true, hint: MATH_HINT },
+        {
+          name: "mode",
+          label: "Exibição",
+          defaultValue: "inline",
+          options: [
+            { value: "inline", label: "No meio da frase" },
+            { value: "block", label: "Em destaque, numa linha própria" },
+          ],
+        },
+      ],
+      confirmLabel: "Inserir",
+    });
+    if (!v?.latex) return;
+    const c = editor.chain().focus();
+    if (selected) c.deleteSelection();
+    if (v.mode === "block") c.insertBlockMath({ latex: v.latex }).run();
+    else c.insertInlineMath({ latex: v.latex }).run();
+  }
+
+  useEffect(() => {
+    editMath.current = async (kind, latex, pos) => {
+      const v = await ask({
+        title: "Editar fórmula",
+        fields: [{ name: "latex", label: "Fórmula (LaTeX)", defaultValue: latex, type: "latex", hint: `${MATH_HINT}. Deixe vazio para apagar.` }],
+        confirmLabel: "Aplicar",
+      });
+      if (v === null) return;
+      const c = editor.chain().setNodeSelection(pos);
+      if (!v.latex) (kind === "inline" ? c.deleteInlineMath({ pos }) : c.deleteBlockMath({ pos })).run();
+      else (kind === "inline" ? c.updateInlineMath({ latex: v.latex, pos }) : c.updateBlockMath({ latex: v.latex, pos })).run();
+    };
+    return () => {
+      editMath.current = null;
+    };
+  }, [editor, ask, editMath]);
 
   const s = useEditorState({
     editor,
@@ -200,6 +256,9 @@ function Toolbar({ editor, stickyTop }: { editor: Editor; stickyTop: string }) {
         </Btn>
         <Btn label="Vídeo do YouTube" onClick={addYoutube}>
           {svg(<><rect x="2.5" y="6" width="19" height="12" rx="3" /><path d="M10 9.5v5l4.5-2.5z" /></>)}
+        </Btn>
+        <Btn label="Fórmula (LaTeX)" onClick={addFormula}>
+          <span className="font-serif text-lg leading-none italic">∑</span>
         </Btn>
         <Btn label="Divisor" onClick={() => chain().setHorizontalRule().run()}>
           {svg(<path d="M4 12h16" />)}

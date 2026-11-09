@@ -13,10 +13,12 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
   const staff = await requireStaff();
   const supabase = await createClient();
 
-  const [{ data: article }, { data: sections }, { data: authors }] = await Promise.all([
+  const [{ data: article }, { data: sections }, { data: authors }, { data: columnRows }] = await Promise.all([
     supabase.from("articles").select("*").eq("id", id).maybeSingle(),
     supabase.from("sections").select("id, name").order("position"),
     supabase.from("authors").select("id, name, profile_id").order("name"),
+    // Sem a migração 18, a consulta falha e o editor simplesmente não mostra o campo Coluna
+    supabase.from("columns").select("id, name, author_id").order("name"),
   ]);
 
   if (!article) notFound();
@@ -40,6 +42,7 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
     cover_caption: article.cover_caption,
     cover_credit: article.cover_credit,
     section_id: article.section_id,
+    column_id: article.column_id ?? null,
     author_id: article.author_id,
     featured: article.featured,
     pinned: article.pinned,
@@ -58,6 +61,7 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
       article={editorArticle}
       sections={sections ?? []}
       authors={authorOptions.map((a) => ({ id: a.id, name: a.name }))}
+      columns={(columnRows ?? []) as { id: string; name: string; author_id: string }[]}
       role={staff.role}
       notice={preparedNotice(preparado)}
     />

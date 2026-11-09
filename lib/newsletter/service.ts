@@ -125,7 +125,7 @@ export async function forgetSubscriber(email: string) {
 }
 
 const DIGEST_SELECT =
-  "title, subtitle, slug, published_at, cover_url, cover_alt, reading_minutes, section:sections(name), author:authors(name)";
+  "title, subtitle, slug, published_at, cover_url, cover_alt, reading_minutes, section:sections(name), column:columns(name), author:authors(name)";
 
 /** Textos publicados nos últimos sete dias, do mais recente ao mais antigo. */
 export async function weekArticles(now = new Date()): Promise<DigestArticle[]> {

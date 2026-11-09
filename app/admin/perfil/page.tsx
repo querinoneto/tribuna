@@ -15,6 +15,9 @@ export default async function PerfilPage() {
     .select("id, name, slug, bio, avatar_url, is_columnist")
     .eq("profile_id", staff.id)
     .maybeSingle();
+  const { data: column } = author
+    ? await supabase.from("columns").select("name").eq("author_id", author.id).maybeSingle()
+    : { data: null };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
@@ -39,6 +42,9 @@ export default async function PerfilPage() {
             name: author?.name ?? staff.name,
             bio: author?.bio ?? "",
             avatar_url: author?.avatar_url ?? staff.avatarUrl ?? "",
+            // Coordenação também escreve como colunista
+            columnist: staff.role !== "admin" || Boolean(author?.is_columnist),
+            column_name: column?.name ?? "",
           }}
         />
       </section>

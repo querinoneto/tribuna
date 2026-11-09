@@ -16,6 +16,7 @@ export type DigestArticle = {
   cover_alt: string;
   reading_minutes: number;
   section: { name: string } | null;
+  column?: { name: string } | null;
   author: { name: string } | null;
 };
 
@@ -77,7 +78,7 @@ export function buildDigest(articles: DigestArticle[], opts: { now: Date; unsubs
           ? `<a href="${url}"><img src="${esc(a.cover_url)}" width="544" alt="${esc(a.cover_alt)}" style="display:block;width:100%;max-width:544px;height:auto;border:0;margin:0 0 14px;"></a>`
           : "";
       return `<tr><td style="padding:22px 28px;${i > 0 ? `border-top:1px solid ${C.rule};` : ""}">
-${img}${a.section ? `<div style="font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.accent};margin-bottom:6px;">${esc(a.section.name)}</div>` : ""}
+${img}${a.column || a.section ? `<div style="font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${C.accent};margin-bottom:6px;">${esc((a.column ?? a.section)!.name)}</div>` : ""}
 <a href="${url}" style="font-family:${SANS};font-size:${i === 0 ? 24 : 19}px;line-height:1.2;font-weight:700;color:${C.ink};text-decoration:none;">${esc(a.title)}</a>
 ${a.subtitle ? `<div style="font-family:${SANS};font-size:15px;line-height:1.45;color:${C.soft};margin-top:8px;">${esc(a.subtitle)}</div>` : ""}
 <div style="font-family:${SANS};font-size:12px;color:${C.muted};margin-top:8px;">${by}</div>
@@ -101,7 +102,7 @@ ${items}
     `${SITE_NAME} | Resumo da semana (${range})`,
     "",
     ...articles.flatMap((a) => [
-      `${a.section ? `[${a.section.name}] ` : ""}${a.title}`,
+      `${a.column || a.section ? `[${(a.column ?? a.section)!.name}] ` : ""}${a.title}`,
       ...(a.subtitle ? [a.subtitle] : []),
       `${SITE_URL}${articlePath(a)}`,
       "",

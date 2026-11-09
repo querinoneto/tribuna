@@ -62,6 +62,7 @@ function columns(v: ArticleInput) {
     cover_credit: v.cover_credit,
     section_id: v.section_id,
     author_id: v.author_id,
+    ...(v.column_id !== undefined ? { column_id: v.column_id } : {}),
     featured: v.featured,
     pinned: v.pinned,
     reading_minutes: readingTime(v.content_html),

@@ -55,6 +55,7 @@ export default async function ColumnistsPage() {
                       {c.name}
                     </Link>
                   </h2>
+                  {c.column && <p className="relative z-10 mt-0.5 font-sans text-[14px] font-semibold text-accent italic">{c.column.name}</p>}
                   {c.bio && <p className="mt-1.5 font-sans text-[14px] leading-relaxed text-ink-soft sm:text-[15px]">{c.bio}</p>}
 
                   <p className="mt-3 flex flex-col gap-y-1 text-[13px] text-muted sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2">

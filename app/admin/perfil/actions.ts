@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { dbErrorMessage } from "@/lib/publishing";
+import { saveColumnName } from "@/lib/columns";
 import { revalidateContent } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { authorSchema, firstError } from "@/lib/validation";
@@ -31,6 +32,8 @@ export async function saveMyProfile(_: FormState, fd: FormData): Promise<FormSta
   const { error } = await supabase.from("authors").update({ name, bio, avatar_url }).eq("id", authorId);
   if (error) return { ok: false, error: dbErrorMessage(error), key };
   await supabase.from("profiles").update({ name, avatar_url }).eq("id", staff.id);
+  const col = await saveColumnName(supabase, authorId as string, fd.get("column_name"));
+  if (!col.ok) return { ok: false, error: col.error, key };
 
   revalidateContent();
   revalidatePath("/admin", "layout");

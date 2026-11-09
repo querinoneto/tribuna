@@ -26,6 +26,8 @@ export const articleSchema = z.object({
   cover_caption: z.string().trim().max(400),
   cover_credit: z.string().trim().max(120),
   section_id: optionalUuid,
+  // Ausente quando o editor não oferece colunas (ex.: antes da migração 18)
+  column_id: optionalUuid.optional(),
   author_id: optionalUuid,
   featured: z.boolean(),
   pinned: z.boolean(),
@@ -36,7 +38,8 @@ export type ArticleInput = z.infer<typeof articleSchema>;
 export function publishProblems(a: ArticleInput): string[] {
   const p: string[] = [];
   if (a.title.length < 5) p.push("Escreva um título.");
-  if (!a.section_id) p.push("Escolha a editoria.");
+  // Texto de coluna com nome próprio dispensa a editoria
+  if (!a.section_id && !a.column_id) p.push("Escolha a editoria.");
   if (!a.author_id) p.push("Escolha o autor.");
   if (a.content_html.replace(/<[^>]+>/g, "").trim().length < 20) p.push("O texto está vazio ou muito curto.");
   if (a.cover_url && a.cover_alt.length < 3) p.push("Descreva a imagem de capa no campo “Texto alternativo”.");

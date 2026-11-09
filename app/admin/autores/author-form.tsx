@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { ActionForm } from "@/components/admin/action-form";
+import { ColumnNameField } from "@/components/admin/column-name-field";
 import { NameBioFields } from "@/components/admin/name-bio-fields";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { useToast } from "@/components/admin/toast";
 import { uploadImage } from "@/lib/upload";
 import { saveAuthor } from "../crud-actions";
 
-type A = { id: string; name: string; slug: string; bio: string; avatar_url: string; columnist: boolean };
+type A = { id: string; name: string; slug: string; bio: string; avatar_url: string; columnist: boolean; column_name?: string };
 
 export function AuthorForm({ author }: { author: A }) {
   const toast = useToast();
@@ -57,6 +58,7 @@ export function AuthorForm({ author }: { author: A }) {
       </div>
 
       <NameBioFields name={author.name} bio={author.bio} requireSurname={author.columnist} />
+      {author.columnist && <ColumnNameField value={author.column_name ?? ""} />}
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="field">
           Endereço da página
