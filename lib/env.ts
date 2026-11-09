@@ -9,7 +9,7 @@ export const SUPABASE_KEY =
 
 export const hasSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.NODE_ENV === "production" ? "https://tribunasocialista.com.br" : "http://localhost:3000")).replace(/\/$/, "");
 export const SITE_NAME = "Tribuna Socialista";
 export const SITE_TAGLINE = "Imprensa popular a serviço da classe trabalhadora brasileira";
 /** O mesmo slogan em duas linhas, para o cabeçalho da capa. */
