@@ -7,6 +7,7 @@ import type { ArticleStatus } from "@/lib/types";
 import { NewArticleButton } from "@/components/admin/new-article-button";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { AdminNotice } from "@/components/admin/notice";
+import { isOutdatedSchema, SchemaNotice } from "@/components/admin/schema-notice";
 
 export const metadata = { title: "Painel" };
 
@@ -40,11 +41,11 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
       ? await supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "draft").eq("in_review", false).neq("review_note", "")
       : { count: 0 };
 
-  const { data: recent } = await supabase
-    .from("articles")
-    .select("id, title, status, in_review, updated_at")
-    .order("updated_at", { ascending: false })
-    .limit(8);
+  const recentQuery = (cols: string) => supabase.from("articles").select(cols).order("updated_at", { ascending: false }).limit(8);
+  let recentRes = await recentQuery("id, title, status, in_review, updated_at");
+  const outdated = isOutdatedSchema(recentRes.error);
+  if (outdated) recentRes = await recentQuery("id, title, status, updated_at");
+  const recent = (recentRes.data ?? []) as unknown as { id: string; title: string; status: string; in_review?: boolean; updated_at: string }[];
 
   const stats = [
     { label: "Publicados", value: published, href: "/admin/textos?status=published" },
@@ -54,6 +55,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      {outdated && staff.role === "admin" && <SchemaNotice />}
       {sp.erro === "sem-permissao" && (
         <AdminNotice tone="error">Seu papel não tem permissão para abrir aquela página.</AdminNotice>
       )}
@@ -156,7 +158,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
                   <span className="min-w-0 flex-1 truncate font-sans text-lg font-semibold">
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
-                  <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} />
+                  <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review ?? false} />
                   <span className="text-xs text-muted tabular-nums">{formatShort(a.updated_at)}</span>
                 </Link>
               </li>

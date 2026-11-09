@@ -5,6 +5,7 @@ import { canEditArticle, STATUS_LABEL } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { ArticleStatus } from "@/lib/types";
 import { AdminNotice } from "@/components/admin/notice";
+import { isOutdatedSchema, SchemaNotice } from "@/components/admin/schema-notice";
 import { NewArticleButton } from "@/components/admin/new-article-button";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { ArticleRowActions } from "./row-actions";
@@ -23,20 +24,44 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
   const page = Math.max(1, Number(sp.pagina) || 1);
 
   const supabase = await createClient();
-  let query = supabase
-    .from("articles")
-    .select("id, title, slug, status, in_review, published_at, updated_at, created_by, sections(name), authors(name)", { count: "exact" })
-    .order("updated_at", { ascending: false })
-    .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
+  const listQuery = (withReview: boolean) => {
+    let query = supabase
+      .from("articles")
+      .select(
+        withReview
+          ? "id, title, slug, status, in_review, published_at, updated_at, created_by, sections(name), authors(name)"
+          : "id, title, slug, status, published_at, updated_at, created_by, sections(name), authors(name)",
+        { count: "exact" },
+      )
+      .order("updated_at", { ascending: false })
+      .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
+    if (q) query = query.ilike("title", `%${q.replace(/[%_]/g, "")}%`);
+    if (status === "revisao") query = withReview ? query.eq("in_review", true) : query.eq("status", "draft");
+    else if (status) query = query.eq("status", status);
+    if (secao) query = query.eq("section_id", secao);
+    if (autor) query = query.eq("author_id", autor);
+    return query;
+  };
 
-  if (q) query = query.ilike("title", `%${q.replace(/[%_]/g, "")}%`);
-  if (status === "revisao") query = query.eq("in_review", true);
-  else if (status) query = query.eq("status", status);
-  if (secao) query = query.eq("section_id", secao);
-  if (autor) query = query.eq("author_id", autor);
+  // Se o banco ainda não recebeu a atualização (coluna in_review), lista sem ela
+  let list = await listQuery(true);
+  const outdated = isOutdatedSchema(list.error);
+  if (outdated) list = (await listQuery(false)) as unknown as typeof list;
+  const rows = (list.data ?? []) as unknown as {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    in_review?: boolean;
+    published_at: string | null;
+    updated_at: string;
+    created_by: string | null;
+    sections: unknown;
+    authors: unknown;
+  }[];
+  const count = list.count;
 
-  const [{ data: rows, count }, { data: sections }, { data: authors }] = await Promise.all([
-    query,
+  const [{ data: sections }, { data: authors }] = await Promise.all([
     supabase.from("sections").select("id, name").order("position"),
     supabase.from("authors").select("id, name").order("name"),
   ]);
@@ -58,6 +83,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       {sp.aviso === "excluido" && <AdminNotice tone="success">Texto excluído.</AdminNotice>}
       {sp.erro && <AdminNotice tone="error">{sp.erro}</AdminNotice>}
+      {outdated && <SchemaNotice />}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -121,7 +147,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
         </div>
       </form>
 
-      {!rows || rows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-rule p-10 text-center">
           <p className="font-display text-2xl">{filtered ? "Nada encontrado" : "Nenhum texto ainda"}</p>
           <p className="mt-1 text-sm text-muted">
@@ -145,7 +171,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
               </thead>
               <tbody className="divide-y divide-rule">
                 {rows.map((a) => {
-                  const editable = canEditArticle(staff.role, staff.id, a);
+                  const editable = canEditArticle(staff.role, staff.id, { ...a, status: a.status as ArticleStatus });
                   return (
                     <tr key={a.id} className="hover:bg-paper-2/60">
                       <td className="max-w-md px-4 py-3">
@@ -153,7 +179,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
                           {a.title || <span className="text-muted italic">Sem título</span>}
                         </Link>
                       </td>
-                      <td className="px-4 py-3"><StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} /></td>
+                      <td className="px-4 py-3"><StatusBadge status={a.status as ArticleStatus} inReview={a.in_review ?? false} /></td>
                       <td className="px-4 py-3 text-ink-soft">{(a.sections as unknown as { name: string } | null)?.name ?? "—"}</td>
                       <td className="px-4 py-3 text-ink-soft">{(a.authors as unknown as { name: string } | null)?.name ?? "—"}</td>
                       <td className="px-4 py-3 text-muted tabular-nums">{formatShort(a.updated_at)}</td>
@@ -181,7 +207,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} />
+                    <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review ?? false} />
                     {(a.sections as unknown as { name: string } | null)?.name}
                     <span aria-hidden>·</span>
                     <span className="tabular-nums">{formatShort(a.updated_at)}</span>

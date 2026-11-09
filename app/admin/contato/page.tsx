@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { PageHeader } from "@/components/admin/page-header";
+import { SchemaNotice } from "@/components/admin/schema-notice";
 import { deleteMessage } from "./actions";
 import { ReadToggle } from "./read-toggle";
 
@@ -21,11 +22,13 @@ export default async function ContatoAdminPage({ searchParams }: PageProps<"/adm
     .order("created_at", { ascending: false })
     .limit(200);
   if (filtro === "nao-lidas") query = query.is("read_at", null);
-  const [{ data }, { count: unread }] = await Promise.all([
+  const [{ data, error }, { count: unread }] = await Promise.all([
     query,
     supabase.from("contact_messages").select("id", { count: "exact", head: true }).is("read_at", null),
   ]);
   const messages = (data ?? []) as Msg[];
+  // Tabela ainda não criada: o banco não recebeu a atualização
+  const outdated = Boolean(error && (error.code === "42P01" || error.code === "PGRST205" || /does not exist|could not find the table/i.test(error.message)));
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
@@ -34,6 +37,7 @@ export default async function ContatoAdminPage({ searchParams }: PageProps<"/adm
         description="Mensagens enviadas pelo formulário da página Contato. Só o administrador tem acesso a esta área."
       />
 
+      {outdated && <SchemaNotice />}
       <nav aria-label="Filtrar mensagens" className="flex gap-1">
         {[
           { key: "", label: "Todas" },

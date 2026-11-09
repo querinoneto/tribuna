@@ -13,6 +13,7 @@ import {
 } from "@/lib/production";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/admin/page-header";
+import { isOutdatedSchema, SchemaNotice } from "@/components/admin/schema-notice";
 
 export const metadata = { title: "Produção dos colunistas" };
 
@@ -29,15 +30,19 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
     .eq("is_columnist", true)
     .order("name");
   const ids = (authors ?? []).map((a) => a.id);
-  const { data: articles } = ids.length
-    ? await supabase
-        .from("articles")
-        .select("id, title, slug, status, in_review, review_note, submitted_at, published_at, created_at, views, reading_minutes, author_id")
-        .in("author_id", ids)
-        .limit(5000)
-    : { data: [] };
+  const load = (cols: string) => supabase.from("articles").select(cols).in("author_id", ids).limit(5000);
+  let outdated = false;
+  let articles: unknown[] = [];
+  if (ids.length) {
+    let res = await load("id, title, slug, status, in_review, review_note, submitted_at, published_at, created_at, views, reading_minutes, author_id");
+    if (isOutdatedSchema(res.error)) {
+      outdated = true;
+      res = await load("id, title, slug, status, published_at, created_at, views, reading_minutes, author_id");
+    }
+    articles = ((res.data ?? []) as unknown as Record<string, unknown>[]).map((a) => ({ in_review: false, review_note: "", submitted_at: null, ...a }));
+  }
 
-  const r = buildReport({ authors: (authors ?? []) as ProdAuthor[], articles: (articles ?? []) as ProdArticle[], period });
+  const r = buildReport({ authors: (authors ?? []) as ProdAuthor[], articles: articles as ProdArticle[], period });
   const maxMonth = Math.max(1, ...r.monthly.map((m) => m.count));
 
   const kpis = [
@@ -61,6 +66,7 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
         description="Indicadores de produtividade e resultado dos colunistas. Só o administrador vê esta página."
       />
 
+      {outdated && <SchemaNotice />}
       <nav aria-label="Período" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
         {PERIODS.map((p) => {
           const on = p.key === period;
