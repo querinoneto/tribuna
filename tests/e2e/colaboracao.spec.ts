@@ -23,6 +23,7 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
   await form.locator("input[name=last_name]").fill(nome.split(" ").slice(1).join(" "));
   await form.getByLabel("E-mail").fill(`joana.${k}@exemplo.test`);
   await form.getByLabel(/Título do texto/).fill(titulo);
+  await form.locator("textarea[name=subtitle]").fill("A cidade que abandona suas praças abandona a convivência.");
   await form.getByLabel("Não, é a primeira vez").check();
   await form.getByLabel(/^Sua foto/).setInputFiles({ name: "joana.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]) });
   await form.getByLabel(/^Seu texto/).setInputFiles({
@@ -47,6 +48,7 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
   await expect(admin.getByText(/cadastrada como colaboradora/)).toBeVisible();
   await expect(admin.getByText(/texto do arquivo Word já está no editor/)).toBeVisible();
   await expect(admin.getByRole("textbox", { name: "Título", exact: true })).toHaveValue(titulo);
+  await expect(admin.getByRole("textbox", { name: "Linha fina", exact: true })).toHaveValue("A cidade que abandona suas praças abandona a convivência.");
   const body = admin.getByRole("textbox", { name: "Corpo do texto" });
   await expect(body.getByRole("heading", { name: "Praças são infraestrutura" })).toBeVisible();
   await expect(body.locator("strong")).toHaveText("Espaço público é direito, não sobra de terreno.");

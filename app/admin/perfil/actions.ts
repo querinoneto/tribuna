@@ -12,8 +12,12 @@ import type { FormState } from "../crud-actions";
 export async function saveMyProfile(_: FormState, fd: FormData): Promise<FormState> {
   const staff = await requireStaff();
   const key = Date.now();
+  const first = String(fd.get("first_name") ?? "").trim();
+  const last = String(fd.get("last_name") ?? "").trim();
+  if (!first) return { ok: false, error: "Informe o nome.", key };
+  if (!last) return { ok: false, error: "Informe o sobrenome.", key };
   const parsed = authorSchema.omit({ slug: true }).safeParse({
-    name: String(fd.get("name") ?? "").trim(),
+    name: `${first} ${last}`.replace(/\s+/g, " "),
     bio: String(fd.get("bio") ?? "").trim(),
     avatar_url: String(fd.get("avatar_url") ?? "").trim(),
   });

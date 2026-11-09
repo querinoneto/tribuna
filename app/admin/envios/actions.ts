@@ -191,6 +191,7 @@ export async function prepareSubmission(id: string): Promise<EnvioResult> {
     .from("articles")
     .insert({
       title: s.title,
+      subtitle: s.subtitle ?? "",
       slug: `${slugify(s.title || s.name, 60) || "colaboracao"}-${Date.now().toString(36)}`,
       status: "draft",
       author_id: authorId,

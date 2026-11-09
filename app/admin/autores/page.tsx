@@ -110,7 +110,7 @@ export default async function AutoresPage({ searchParams }: PageProps<"/admin/au
                     <span className="btn-ghost hidden text-sm group-open:inline-flex">Fechar</span>
                   </summary>
                   <div className="mt-4 border-t border-rule pt-4">
-                    <AuthorForm author={{ id: a.id, name: a.name, slug: a.slug, bio: a.bio ?? "", avatar_url: a.avatar_url ?? "" }} />
+                    <AuthorForm author={{ id: a.id, name: a.name, slug: a.slug, bio: a.bio ?? "", avatar_url: a.avatar_url ?? "", columnist: a.is_columnist }} />
                   </div>
                 </details>
               </li>

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { ActionForm } from "@/components/admin/action-form";
+import { NameBioFields } from "@/components/admin/name-bio-fields";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { useToast } from "@/components/admin/toast";
 import { uploadImage } from "@/lib/upload";
 import { saveAuthor } from "../crud-actions";
 
-type A = { id: string; name: string; slug: string; bio: string; avatar_url: string };
+type A = { id: string; name: string; slug: string; bio: string; avatar_url: string; columnist: boolean };
 
 export function AuthorForm({ author }: { author: A }) {
   const toast = useToast();
@@ -55,11 +56,8 @@ export function AuthorForm({ author }: { author: A }) {
         </div>
       </div>
 
+      <NameBioFields name={author.name} bio={author.bio} requireSurname={author.columnist} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="field">
-          Nome
-          <input name="name" className="input" defaultValue={author.name} required maxLength={120} />
-        </label>
         <label className="field">
           Endereço da página
           <div className="flex items-center overflow-hidden rounded-md border border-rule focus-within:border-ink">
@@ -68,10 +66,7 @@ export function AuthorForm({ author }: { author: A }) {
           </div>
         </label>
       </div>
-      <label className="field">
-        Mini biografia
-        <textarea name="bio" rows={3} className="input" defaultValue={author.bio} maxLength={600} />
-      </label>
+
       <div>
         <SubmitButton className="btn-primary" disabled={uploading}>
           Salvar

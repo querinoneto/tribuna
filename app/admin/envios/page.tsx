@@ -73,6 +73,7 @@ export default async function EnviosPage({ searchParams }: PageProps<"/admin/env
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-lg leading-tight font-bold">{r.title || <span className="font-normal text-muted italic">Sem título</span>}</p>
+                  {r.subtitle && <p className="mt-1 text-sm text-ink-soft">{r.subtitle}</p>}
                   <p className="mt-1 text-sm">
                     {r.name} ·{" "}
                     <a href={`mailto:${r.email}?subject=${encodeURIComponent(`Seu texto para a Tribuna Socialista${r.title ? `: ${r.title}` : ""}`)}`} className="text-accent underline-offset-2 hover:underline">

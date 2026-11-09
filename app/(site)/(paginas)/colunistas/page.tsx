@@ -30,13 +30,13 @@ export default async function ColumnistsPage() {
                   {c.name.charAt(0)}
                 </span>
               )}
-              <div>
+              <div className="min-w-0 flex-1">
                 <h2 className="font-display text-2xl leading-tight">
                   <Link href={`/autor/${c.slug}`} className="hover:text-accent">
                     {c.name}
                   </Link>
                 </h2>
-                {c.bio && <p className="mt-1 line-clamp-3 font-sans text-base leading-snug text-ink-soft">{c.bio}</p>}
+                {c.bio && <p className="mt-1 font-sans text-base leading-snug text-ink-soft">{c.bio}</p>}
               </div>
             </li>
           ))}

@@ -15,6 +15,7 @@ test("visitante envia texto e foto; o envio aparece para a edição", async ({ p
   await form.locator("input[name=last_name]").fill(nome.split(" ").slice(1).join(" "));
   await form.getByLabel("E-mail").fill(`leitora.${Date.now().toString(36)}@exemplo.test`);
   await form.getByLabel(/Título do texto/).fill("Por que a cidade precisa de mais praças");
+  await form.locator("textarea[name=subtitle]").fill("Espaço público é direito.");
   await form.getByLabel("Não, é a primeira vez").check();
 
   // Sem foto, o formulário avisa
@@ -45,6 +46,7 @@ test("arquivo que não é PDF nem Word é recusado", async ({ page }) => {
   await form.locator("input[name=first_name]").fill("Fulano");
   await form.locator("input[name=last_name]").fill("de Tal");
   await form.getByLabel("E-mail").fill("fulano@exemplo.test");
+  await form.getByLabel(/Título do texto/).fill("Um título");
   await form.getByLabel("Sim, já publiquei").check();
   await form.getByLabel(/^Seu texto/).setInputFiles({ name: "virus.exe", mimeType: "application/octet-stream", buffer: Buffer.from("x") });
   await form.locator("input[name=terms]").check();

@@ -366,7 +366,7 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
   };
   const insert = (c: import("pg").PoolClient, e: ReturnType<typeof envio>) =>
     c.query(
-      "insert into submissions (name, email, file_path, photo_path, first_time, terms_version) values ($1, $2, $3, $4, $5, 'teste@1')",
+      "insert into submissions (name, email, title, file_path, photo_path, first_time, terms_version) values ($1, $2, 'Título', $3, $4, $5, 'teste@1')",
       [e.name, e.email, e.file_path, e.photo_path, e.first_time],
     );
 
@@ -381,7 +381,7 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
     const e = envio();
     await expectDenied(
       as(null, (c) =>
-        c.query("insert into submissions (name, email, file_path, photo_path, first_time) values ($1, $2, $3, $4, true)", [
+        c.query("insert into submissions (name, email, title, file_path, photo_path, first_time) values ($1, $2, 'Título', $3, $4, true)", [
           e.name, e.email, e.file_path, e.photo_path,
         ]),
       ),
@@ -391,12 +391,23 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
     const row = await asRoot(async (c) =>
       (
         await c.query(
-          "insert into submissions (name, email, file_path, photo_path, first_time, terms_version) values ('A B', 'a@b.test', $1, $2, true, 'v1') returning terms_accepted_at",
+          "insert into submissions (name, email, title, file_path, photo_path, first_time, terms_version) values ('A B', 'a@b.test', 'Título', $1, $2, true, 'v1') returning terms_accepted_at",
           [`recebidos/${k}/texto.pdf`, `recebidos/${k}/foto.jpg`],
         )
       ).rows[0],
     );
     expect(row.terms_accepted_at).not.toBeNull();
+  });
+
+  it("envio sem título é recusado", async () => {
+    const e = envio();
+    await expectDenied(
+      as(null, (c) =>
+        c.query("insert into submissions (name, email, title, file_path, photo_path, first_time, terms_version) values ($1, $2, '  ', $3, $4, true, 'v1')", [
+          e.name, e.email, e.file_path, e.photo_path,
+        ]),
+      ),
+    );
   });
 
   it("primeira vez exige foto", async () => {
@@ -413,7 +424,7 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
     const e = envio();
     await expectDenied(
       as(null, (c) =>
-        c.query("insert into submissions (name, email, file_path, photo_path, status) values ($1,$2,$3,$4,'lido')", [
+        c.query("insert into submissions (name, email, title, file_path, photo_path, status, terms_version) values ($1,$2,'Título',$3,$4,'lido','v1')", [
           e.name, e.email, e.file_path, e.photo_path,
         ]),
       ),
@@ -512,7 +523,7 @@ describe.runIf(DB)("reforço de segurança (revisão)", () => {
     await expectDenied(
       as(null, (c) =>
         c.query(
-          "insert into submissions (name, email, file_path, photo_path, author_id) values ('Falso', 'f@x.test', $1, $2, $3)",
+          "insert into submissions (name, email, title, file_path, photo_path, author_id, terms_version) values ('Falso', 'f@x.test', 'Título', $1, $2, $3, 'v1')",
           [`recebidos/${k}/texto.pdf`, `recebidos/${k}/foto.jpg`, autor],
         ),
       ),

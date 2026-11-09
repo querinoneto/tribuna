@@ -67,10 +67,18 @@ export const sectionSchema = z.object({
   position: z.coerce.number().int().min(0).max(999).default(0),
 });
 
+/** Tamanho máximo da minibiografia de autores e colunistas. */
+export const BIO_MAX = 280;
+
+/** Nome completo: ao menos nome e sobrenome. */
+export function hasFullName(name: string): boolean {
+  return name.trim().split(/\s+/).filter((w) => w.length > 0).length >= 2;
+}
+
 export const authorSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome.").max(120),
   slug,
-  bio: z.string().trim().max(600, "A biografia pode ter no máximo 600 caracteres.").optional().default(""),
+  bio: z.string().trim().max(BIO_MAX, `A minibiografia pode ter no máximo ${BIO_MAX} caracteres.`).optional().default(""),
   avatar_url: z
     .string()
     .url("Endereço da foto inválido.")
@@ -141,7 +149,8 @@ export const submissionSchema = z
     first_name: z.string().trim().min(1, "Informe seu nome.").max(60, "Nome muito longo."),
     last_name: z.string().trim().min(1, "Informe seu sobrenome.").max(60, "Sobrenome muito longo."),
     email: emailSchema,
-    title: z.string().trim().max(200, "Título muito longo.").default(""),
+    title: z.string().trim().min(1, "Informe o título do texto.").max(200, "Título muito longo."),
+    subtitle: z.string().trim().max(300, "A linha fina pode ter no máximo 300 caracteres.").default(""),
     message: z.string().trim().max(2000, "A mensagem pode ter no máximo 2.000 caracteres.").default(""),
     first_time: z.boolean(),
     file_path: z.string().regex(/^recebidos\/[0-9a-f-]{36}\/texto\.(pdf|doc|docx)$/, "Envie o arquivo do texto."),

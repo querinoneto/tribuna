@@ -39,10 +39,10 @@ async function Content({ params, searchParams }: Props) {
             {author.name.charAt(0)}
           </span>
         )}
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="kicker mb-2">{author.is_columnist ? "Colunista" : author.is_contributor ? "Colaborador externo" : "Autor"}</p>
           <h1 className="font-display text-4xl leading-none sm:text-5xl">{author.name}</h1>
-          {author.bio && <p className="mt-3 max-w-2xl font-sans text-lg leading-snug text-ink-soft">{author.bio}</p>}
+          {author.bio && <p className="mt-3 font-sans text-[15px] leading-relaxed text-ink-soft sm:text-base">{author.bio}</p>}
         </div>
       </header>
 

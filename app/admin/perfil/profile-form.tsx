@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ActionForm } from "@/components/admin/action-form";
+import { NameBioFields } from "@/components/admin/name-bio-fields";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { useToast } from "@/components/admin/toast";
 import { uploadImage } from "@/lib/upload";
@@ -50,14 +51,7 @@ export function ProfileForm({ initial }: { initial: { name: string; bio: string;
           )}
         </div>
       </div>
-      <label className="field">
-        Nome
-        <input name="name" className="input" defaultValue={initial.name} required maxLength={120} />
-      </label>
-      <label className="field">
-        Mini biografia
-        <textarea name="bio" rows={4} className="input" defaultValue={initial.bio} maxLength={600} placeholder="Ex.: Advogada, pesquisadora de direito do trabalho e militante sindical." />
-      </label>
+      <NameBioFields name={initial.name} bio={initial.bio} />
       <div>
         <SubmitButton className="btn-primary" disabled={uploading}>
           Salvar

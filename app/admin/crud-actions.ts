@@ -8,7 +8,7 @@ import { revalidateContent } from "@/lib/revalidate";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/server";
-import { authorSchema, firstError, inviteSchema, pageSchema, sectionSchema } from "@/lib/validation";
+import { authorSchema, firstError, hasFullName, inviteSchema, pageSchema, sectionSchema } from "@/lib/validation";
 
 export type FormState = { ok?: boolean; error?: string; message?: string; key?: number };
 
@@ -59,15 +59,20 @@ export async function saveAuthor(_: FormState, fd: FormData): Promise<FormState>
   await requireRole("admin");
   const id = str(fd, "id");
   if (!id) return fail("Autor não encontrado.");
+  const name = `${str(fd, "first_name")} ${str(fd, "last_name")}`.replace(/\s+/g, " ").trim();
+  const supabaseCheck = await createClient();
+  const { data: current } = await supabaseCheck.from("authors").select("is_columnist").eq("id", id).maybeSingle();
+  if (!str(fd, "first_name")) return fail("Informe o nome.");
+  if (current?.is_columnist && !hasFullName(name)) return fail("Colunistas precisam ter nome e sobrenome.");
   const parsed = authorSchema.safeParse({
-    name: str(fd, "name"),
-    slug: str(fd, "slug") || slugify(str(fd, "name")),
+    name,
+    slug: str(fd, "slug") || slugify(name),
     bio: str(fd, "bio"),
     avatar_url: str(fd, "avatar_url"),
   });
   if (!parsed.success) return fail(firstError(parsed.error));
-  const { name, slug, bio, avatar_url } = parsed.data;
-  const supabase = await createClient();
+  const { slug, bio, avatar_url } = parsed.data;
+  const supabase = supabaseCheck;
   const { data, error } = await supabase
     .from("authors")
     .update({ name, slug, bio, avatar_url })

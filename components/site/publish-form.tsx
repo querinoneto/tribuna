@@ -33,12 +33,14 @@ export function PublishForm() {
     const first_name = String(fd.get("first_name") ?? "").trim();
     const last_name = String(fd.get("last_name") ?? "").trim();
     const email = String(fd.get("email") ?? "").trim().toLowerCase();
+    const title = String(fd.get("title") ?? "").trim();
     const text = fd.get("texto") as File | null;
     const photo = fd.get("foto") as File | null;
 
     if (!first_name) return setError("Informe seu nome.");
     if (!last_name) return setError("Informe seu sobrenome.");
     if (!emailSchema.safeParse(email).success) return setError("Digite um e-mail válido.");
+    if (!title) return setError("Informe o título do texto.");
     if (firstTime === null) return setError("Diga se você já publicou na Tribuna Socialista.");
     if (!text || text.size === 0) return setError("Anexe o arquivo do seu texto (PDF ou Word).");
     const textProblem = validateTextFile(text);
@@ -80,7 +82,8 @@ export function PublishForm() {
         first_name,
         last_name,
         email,
-        title: String(fd.get("title") ?? ""),
+        title,
+        subtitle: String(fd.get("subtitle") ?? ""),
         message: String(fd.get("message") ?? ""),
         first_time: firstTime,
         file_path,
@@ -134,10 +137,15 @@ export function PublishForm() {
       </label>
 
       <label className="field">
+        Título do texto <span className="sr-only">(obrigatório)</span>
+        <input name="title" required maxLength={200} className="input" />
+      </label>
+
+      <label className="field">
         <span>
-          Título do texto <span className="font-normal text-muted">(opcional)</span>
+          Linha fina <span className="font-normal text-muted">(opcional: uma ou duas frases que resumem o texto)</span>
         </span>
-        <input name="title" maxLength={200} className="input" />
+        <textarea name="subtitle" rows={2} maxLength={300} className="input" />
       </label>
 
       <fieldset className="flex flex-col gap-2">
