@@ -11,7 +11,9 @@ export const hasSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 export const SITE_NAME = "Tribuna Socialista";
-export const SITE_TAGLINE = "Jornalismo independente, do lado de quem trabalha.";
+export const SITE_TAGLINE = "Imprensa popular a serviço da classe trabalhadora brasileira";
+/** O mesmo slogan em duas linhas, para o cabeçalho da capa. */
+export const SITE_TAGLINE_LINES = ["Imprensa popular a serviço", "da classe trabalhadora brasileira"] as const;
 export const SITE_DESCRIPTION =
   "Jornal digital independente com reportagens e opinião sobre política, economia, trabalho, meio ambiente, cultura e o mundo.";
 export const TIMEZONE = process.env.NEXT_PUBLIC_TIMEZONE ?? "America/Maceio";

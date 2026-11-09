@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IconClose, IconMenu, IconSearch } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { SITE_TAGLINE } from "@/lib/env";
+import { SITE_TAGLINE_LINES } from "@/lib/env";
 import { SectionScroller } from "./section-scroller";
 import { Wordmark } from "./wordmark";
 
@@ -95,8 +95,9 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
                 <IconMenu />
               </button>
               <p className="hidden text-xs leading-normal whitespace-nowrap text-muted xl:block">
-                {SITE_TAGLINE.split(", ")[0]},<br />
-                {SITE_TAGLINE.split(", ")[1]}
+                {SITE_TAGLINE_LINES[0]}
+                <br />
+                {SITE_TAGLINE_LINES[1]}
               </p>
             </div>
             <Link href="/" aria-label="Tribuna Socialista, página inicial">

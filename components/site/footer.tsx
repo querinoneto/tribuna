@@ -1,3 +1,5 @@
+import Image from "next/image";
+import { LOGO } from "@/lib/brand";
 import { SITE_TAGLINE } from "@/lib/env";
 import { SOCIAL_LABEL, SOCIAL_LINKS, type SocialNetwork } from "@/lib/social";
 import { SocialIcon } from "./social-icons";
@@ -10,12 +12,15 @@ export function SiteFooter() {
   return (
     <>
       <footer className="bg-band text-band-ink">
-        <div className="wrap flex flex-col items-center gap-3 py-6 text-center sm:flex-row sm:justify-between sm:py-5 sm:text-left">
-          <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+        <div className="wrap flex flex-col items-center gap-3 py-7 text-center">
+          {LOGO && (
+            <Image src={LOGO.src} alt="" width={LOGO.width} height={LOGO.height} className="h-14 w-auto sm:h-16" />
+          )}
+          <div className="flex flex-col items-center gap-1">
             <Wordmark className="text-[24px]" />
             <p className="font-serif text-[15px] text-band-muted italic">{SITE_TAGLINE}</p>
           </div>
-          <nav aria-label="Redes sociais">
+          <nav aria-label="Redes sociais" className="mt-1">
             <ul className="flex flex-wrap justify-center gap-2">
               {networks.map((n) => {
                 const url: string = SOCIAL_LINKS[n];
