@@ -49,15 +49,24 @@ test("colunista nomeia a coluna, publica sem editoria e com fórmula; a coluna a
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();
 
-  // 3. Menu da capa: editorias em preto, Opinião + colunas em vermelho
+  // 3. Menu da capa: editorias em preto; Opinião e o menu suspenso "Colunas" em vermelho
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Editorias" });
-  const coluna = nav.getByRole("link", { name: COLUNA });
-  await expect(coluna).toBeVisible();
-  const color = (name: string) => nav.getByRole("link", { name, exact: true }).evaluate((el) => getComputedStyle(el).color);
-  const red = await color(COLUNA);
-  expect(await color("Opinião")).toBe(red);
-  expect(await color("Política")).not.toBe(red);
+  const colunas = nav.getByRole("button", { name: "Colunas" });
+  await expect(nav.getByRole("link", { name: COLUNA })).toHaveCount(0);
+  const color = (loc: ReturnType<typeof nav.getByRole>) => loc.evaluate((el) => getComputedStyle(el).color);
+  const red = await color(colunas);
+  expect(await color(nav.getByRole("link", { name: "Opinião", exact: true }))).toBe(red);
+  expect(await color(nav.getByRole("link", { name: "Política", exact: true }))).not.toBe(red);
+  await colunas.hover();
+  await expect(colunas).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#menu-colunas").getByRole("link", { name: COLUNA })).toBeVisible();
+
+  // A faixa Opinião não mostra textos de colunas
+  await expect(page.locator("section[aria-labelledby=opiniao]").getByRole("link", { name: title })).toHaveCount(0);
+
+  // Texto da coluna (sem editoria) entra nas listas comuns da capa
+  await expect(page.getByRole("link", { name: title }).first()).toBeVisible();
 
   // 4. Matéria: rótulo da coluna, assinatura do colunista e fórmula desenhada
   await page.getByRole("link", { name: title }).first().click();

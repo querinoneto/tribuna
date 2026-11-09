@@ -254,7 +254,7 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 
 ## 8.1.1. Colunas com nome e fórmulas
 
-- **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>` e entra no menu da capa, em vermelho, ao lado de **Opinião**; as editorias ficam em preto. No editor, o campo **Coluna** aparece para quem tem coluna; texto da coluna dispensa editoria. O nome da coluna não substitui a assinatura do colunista.
+- **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>` e entra no menu suspenso **Colunas** da capa (em vermelho, ao lado de **Opinião**; as editorias ficam em preto). A faixa Opinião da capa mostra só textos da editoria Opinião, nunca de colunas. No editor, o campo **Coluna** aparece para quem tem coluna; texto da coluna dispensa editoria. O nome da coluna não substitui a assinatura do colunista.
 - **Fórmulas (LaTeX).** Botão **∑** na barra do editor, ou digite `$$fórmula$$` (no meio da frase) ou `$$$fórmula$$$` (em destaque). Clique na fórmula para editar. No site, são desenhadas pelo KaTeX.
 
 ## 8.2. Instagram (card automático)

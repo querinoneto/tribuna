@@ -122,9 +122,9 @@ export async function getHomeData(): Promise<HomeData> {
     return out;
   };
 
-  // Opinião = editoria "Opinião" ou textos de colunas com nome próprio
-  const isOpinion = (a: ArticleCard) => a.section?.slug === "opiniao" || Boolean(a.column);
-  const notOpinion = (a: ArticleCard) => !isOpinion(a);
+  // Faixa Opinião: só textos da editoria Opinião, nunca de colunas com nome
+  const isOpinion = (a: ArticleCard) => a.section?.slug === "opiniao" && !a.column;
+  const notOpinion = (a: ArticleCard) => a.section?.slug !== "opiniao";
   const side = pick([...pinned, ...recent], 3, notOpinion);
   const opinion = recent.filter((a) => isOpinion(a) && !used.has(a.id)).slice(0, 4);
   opinion.forEach((a) => used.add(a.id));
