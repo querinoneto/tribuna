@@ -14,7 +14,8 @@ import sharp from "sharp";
 
 export const CARD_SIZE = { width: 1080, height: 1350 };
 
-const C = { band: "#1a1a1a", ink: "#faf8f5", soft: "#d6d0c8", muted: "#b8b2aa", accent: "#f0716b", red: "#b3201f", rule: "#3a3734" };
+// Fundo branco, letra preta; o vermelho é o mesmo do logotipo (#970512)
+const C = { band: "#ffffff", ink: "#111111", soft: "#3d3a37", muted: "#6b6661", accent: "#970512", red: "#970512", rule: "#d9d4ce" };
 
 type Font = { name: string; data: Buffer; weight: 400 | 600 | 700; style: "normal" };
 let fontsPromise: Promise<Font[]> | null = null;
@@ -105,7 +106,7 @@ export async function instagramCard(a: {
             justifyContent: "center",
             flexGrow: 1,
             minHeight: 520,
-            background: cover ? C.band : "#2a2725",
+            background: cover ? C.band : "#f2efeb",
             borderBottom: `4px solid ${C.red}`,
             overflow: "hidden",
           }}

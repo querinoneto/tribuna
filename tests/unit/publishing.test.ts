@@ -15,8 +15,8 @@ const ready: ArticleInput = {
   excerpt: "",
   content_json: null,
   content_html: "<p>Texto com conteúdo suficiente para publicar.</p>",
-  cover_url: null,
-  cover_alt: "",
+  cover_url: "https://x.supabase.co/capa.jpg",
+  cover_alt: "Foto de manifestação",
   cover_caption: "",
   cover_credit: "",
   section_id: "00000000-0000-4000-8000-000000000001",
@@ -82,8 +82,15 @@ describe("fluxo de publicação e agendamento", () => {
   });
 
   it("capa sem texto alternativo impede a publicação", () => {
-    const r = planTransition({ role: "editor", target: "published", input: { ...ready, cover_url: "https://x.supabase.co/a.jpg" }, now: NOW });
+    const r = planTransition({ role: "editor", target: "published", input: { ...ready, cover_alt: "" }, now: NOW });
     expect(!r.ok && r.error).toMatch(/Texto alternativo/);
+  });
+
+  it("sem imagem de capa não publica nem agenda", () => {
+    for (const target of ["published", "scheduled"] as const) {
+      const r = planTransition({ role: "colunista", target, input: { ...ready, cover_url: null, cover_alt: "" }, scheduledAt: new Date(NOW.getTime() + 3600_000).toISOString(), now: NOW });
+      expect(!r.ok && r.error).toMatch(/imagem de capa/);
+    }
   });
 
   it("voltar para rascunho tira o texto do ar", () => {

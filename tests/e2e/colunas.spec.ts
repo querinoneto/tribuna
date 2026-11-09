@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { escolherCapa } from "./capa";
 
 /**
  * Colunas com nome próprio + fórmulas em LaTeX + links legais do rodapé.
@@ -57,6 +58,7 @@ test("colunista nomeia a coluna, publica sem editoria e com fórmula; a coluna n
   await expect(page.locator(".tiptap [data-type=inline-math] .katex")).toBeVisible();
   await expect(page.getByText(/Salvo às \d{2}:\d{2}/)).toBeVisible({ timeout: 10_000 });
 
+  await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();
 

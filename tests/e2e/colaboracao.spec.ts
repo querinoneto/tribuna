@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { escolherCapa } from "./capa";
 
 /**
  * Do envio à publicação: o leitor manda um Word; a edição clica em
@@ -60,6 +61,7 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
 
   // 3. Publica
   await details.getByLabel("Editoria").selectOption({ label: "Opinião" });
+  await escolherCapa(admin);
   await admin.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(admin.getByText("Texto publicado.")).toBeVisible();
 

@@ -295,7 +295,7 @@ export function ArticleEditor({
     <div className="flex flex-col gap-5">
       <section aria-labelledby="capa-t" className="flex flex-col gap-3">
         <h3 id="capa-t" className="text-sm font-semibold">
-          Imagem de capa
+          Imagem de capa <span className="font-normal text-accent">(obrigatória para publicar)</span>
         </h3>
         {form.cover_url ? (
           <div className="flex flex-col gap-2">
@@ -341,7 +341,7 @@ export function ArticleEditor({
         )}
         <label className="field">
           <span>
-            Texto alternativo <span className="text-accent">(obrigatório com capa)</span>
+            Texto alternativo <span className="text-accent">(obrigatório)</span>
           </span>
           <input className="input" value={form.cover_alt} onChange={(e) => set("cover_alt", e.target.value)} placeholder="Descreva a imagem para quem não pode vê-la" />
         </label>

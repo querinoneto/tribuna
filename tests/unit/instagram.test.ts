@@ -23,17 +23,26 @@ describe("card do Instagram", () => {
 });
 
 describe("legenda", () => {
-  it("traz título, linha fina, autor, chamada e hashtags sem acento", () => {
-    const c = buildCaption({ title: "Título", subtitle: "Linha fina", section: { name: "Meio Ambiente" }, author: { name: "Maria Souza" } });
-    expect(c).toContain("Título\n\nLinha fina\n\nPor Maria Souza.");
-    expect(c).toContain("link na bio");
-    expect(c).toContain("#TribunaSocialista #MeioAmbiente");
+  it("segue o formato: título: linha fina, primeiro parágrafo entre aspas e chamada", () => {
+    const c = buildCaption(
+      {
+        title: "Greve dos metroviários",
+        subtitle: "Categoria cobra reajuste.",
+        content_html: '<h2>Intertítulo</h2><p> </p><p>A paralisação <strong>afeta</strong> as quatro&nbsp;linhas.</p><p>Segundo parágrafo.</p>',
+      },
+      "tribunasocialista.com.br",
+    );
+    expect(c).toBe('Greve dos metroviários: Categoria cobra reajuste.\n\n"A paralisação afeta as quatro linhas."\n\nLeia na íntegra em tribunasocialista.com.br');
   });
 
-  it("assina como Redação quando não há autor e omite linha fina vazia", () => {
-    const c = buildCaption({ title: "T", subtitle: null, section: null, author: null });
-    expect(c.startsWith("T\n\nPor Redação.")).toBe(true);
-    expect(c).not.toContain("#MeioAmbiente");
+  it("sem linha fina nem parágrafo, fica só o título e a chamada", () => {
+    expect(buildCaption({ title: "T", subtitle: null, content_html: "" }, "x.br")).toBe("T\n\nLeia na íntegra em x.br");
+  });
+
+  it("encurta parágrafos longos para caber no limite do Instagram", () => {
+    const c = buildCaption({ title: "T", subtitle: "S", content_html: `<p>${"palavra ".repeat(600)}</p>` }, "x.br");
+    expect(c.length).toBeLessThanOrEqual(2200);
+    expect(c).toMatch(/…"\n\nLeia na íntegra em x\.br$/);
   });
 
   it("aponta o card para o endereço público do texto", () => {

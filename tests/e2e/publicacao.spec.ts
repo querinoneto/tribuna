@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { escolherCapa } from "./capa";
 
 /**
  * Fluxo completo de publicação e agendamento, pelo navegador.
@@ -38,6 +39,7 @@ test("coordenação escreve, salva automaticamente e publica; o texto aparece no
   await details.getByLabel("Editoria").selectOption({ label: "Política" });
   await details.getByLabel("Autor").selectOption({ label: "Redação" });
 
+  await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();
   await expect(page.locator("header").getByText("Publicado")).toBeVisible();
@@ -64,6 +66,7 @@ test("texto agendado não aparece no site antes da hora", async ({ page, context
   await details.getByLabel("Editoria").selectOption({ label: "Economia" });
   await details.getByLabel("Autor").selectOption({ label: "Redação" });
 
+  await escolherCapa(page);
   await page.getByRole("button", { name: "Agendar", exact: true }).first().click();
   const dialog = page.getByRole("dialog", { name: "Agendar publicação" });
   const tomorrow = new Date(Date.now() + 86_400_000);
@@ -101,6 +104,7 @@ test("colunista publica o próprio texto; coordenação pode tirar do ar", async
   if (await naColuna.count()) await naColuna.uncheck();
   await details.getByLabel("Editoria").selectOption({ label: "Política" });
 
+  await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();
 

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { escolherCapa } from "./capa";
 
 /**
  * Publicação automática no Instagram, contra um servidor falso da API
@@ -59,6 +60,7 @@ test("conecta a conta, liga a automação e o texto publicado vai para o Instagr
   const details = page.getByRole("complementary", { name: "Detalhes do texto" });
   await details.getByLabel("Editoria").selectOption({ label: "Trabalho" });
   await details.getByLabel("Autor").selectOption({ label: "Redação" });
+  await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();
 
@@ -68,8 +70,9 @@ test("conecta a conta, liga a automação e o texto publicado vai para o Instagr
     .toBe(true);
   const calls = readFileSync(LOG!, "utf8").trim().split("\n").map((l) => JSON.parse(l));
   const create = calls.find((c) => c.params?.image_url?.includes(id));
-  expect(create.params.caption).toContain(title);
-  expect(create.params.caption).toContain("#Trabalho");
+  expect(create.params.caption).toMatch(
+    new RegExp(`^${title}: Categoria cobra reajuste e contratação de pessoal\\.\\n\\n"A paralisação afeta as quatro linhas do sistema\\."\\n\\nLeia na íntegra em `),
+  );
   const fetched = calls.find((c) => c.fetched?.includes(id));
   expect(fetched).toMatchObject({ status: 200, type: "image/jpeg" });
 

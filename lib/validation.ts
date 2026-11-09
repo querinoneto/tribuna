@@ -43,7 +43,9 @@ export function publishProblems(a: ArticleInput): string[] {
   if (!a.section_id && !a.column_id) p.push("Escolha a editoria.");
   if (!a.author_id) p.push("Escolha o autor.");
   if (a.content_html.replace(/<[^>]+>/g, "").trim().length < 20) p.push("O texto está vazio ou muito curto.");
-  if (a.cover_url && a.cover_alt.length < 3) p.push("Descreva a imagem de capa no campo “Texto alternativo”.");
+  // Todo texto publicado ou agendado precisa de imagem de capa (o card do Instagram depende dela)
+  if (!a.cover_url) p.push("Insira uma imagem de capa.");
+  else if (a.cover_alt.length < 3) p.push("Descreva a imagem de capa no campo “Texto alternativo”.");
   return p;
 }
 

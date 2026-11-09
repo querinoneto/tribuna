@@ -188,6 +188,7 @@ type ArticleRow = {
   id: string;
   title: string;
   subtitle: string | null;
+  content_html: string | null;
   slug: string;
   status: string;
   published_at: string | null;
@@ -198,26 +199,48 @@ type ArticleRow = {
   author: { name: string } | null;
 };
 
-export function buildCaption(a: Pick<ArticleRow, "title" | "subtitle" | "section" | "column" | "author">): string {
-  const tag = (s: string) =>
-    "#" +
-    s
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[^A-Za-z0-9]+/g, " ")
-      .trim()
-      .split(" ")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join("");
-  const parts = [a.title.trim()];
-  if (a.subtitle?.trim()) parts.push(a.subtitle.trim());
-  parts.push(`Por ${a.author?.name || "Redação"}${a.column?.name ? `, na coluna ${a.column.name}` : ""}.`);
-  parts.push("Leia o texto completo no site da Tribuna Socialista: link na bio.");
-  parts.push(
-    ["#TribunaSocialista", a.column?.name ? tag(a.column.name) : null, a.section?.name ? tag(a.section.name) : null, "#ImprensaPopular"].filter(Boolean).join(" "),
-  );
-  const caption = parts.join("\n\n");
-  return caption.length <= 2100 ? caption : `${caption.slice(0, 2099)}…`;
+/** Primeiro parágrafo com texto do corpo da matéria, em texto puro. */
+export function firstParagraph(html: string | null | undefined): string {
+  const decode = (t: string) =>
+    t
+      .replace(/&nbsp;/g, " ")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&#x27;|&apos;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&amp;/g, "&");
+  for (const m of (html ?? "").matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const inner = m[1]
+      // fórmulas: usa o LaTeX como texto
+      .replace(/<span\b[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, (_, l) => l)
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<[^>]+>/g, "");
+    const text = decode(inner).replace(/\s+/g, " ").trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+/**
+ * Legenda do post, no formato da redação:
+ *
+ *   Título: linha fina.
+ *
+ *   "Primeiro parágrafo do texto."
+ *
+ *   Leia na íntegra em <domínio>
+ */
+export function buildCaption(a: Pick<ArticleRow, "title" | "subtitle" | "content_html">, domain = new URL(SITE_URL).host.replace(/^www\./, "")): string {
+  const title = a.title.trim();
+  const sub = a.subtitle?.trim();
+  const head = sub ? `${title.replace(/[:.]\s*$/, "")}: ${sub}` : title;
+  const tail = `Leia na íntegra em ${domain}`;
+  const p = firstParagraph(a.content_html);
+  // Limite do Instagram: 2.200 caracteres; o parágrafo é encurtado se preciso
+  const room = 2150 - head.length - tail.length - 8;
+  const para = p ? `"${p.length > room ? `${p.slice(0, Math.max(0, room - 1)).trimEnd()}…` : p}"` : "";
+  return [head, para, tail].filter(Boolean).join("\n\n");
 }
 
 export function cardUrl(a: Pick<ArticleRow, "id" | "updated_at">) {
@@ -259,7 +282,7 @@ export async function postArticle(articleId: string, opts: { force?: boolean } =
   const client = db();
   const { data: a } = await client
     .from("articles")
-    .select("id, title, subtitle, slug, status, published_at, updated_at, cover_alt, section:sections(name), column:columns(name), author:authors(name)")
+    .select("id, title, subtitle, content_html, slug, status, published_at, updated_at, cover_alt, section:sections(name), column:columns(name), author:authors(name)")
     .eq("id", articleId)
     .maybeSingle<ArticleRow>();
   if (!a || !["published", "scheduled"].includes(a.status) || !a.published_at || new Date(a.published_at) > new Date()) {
