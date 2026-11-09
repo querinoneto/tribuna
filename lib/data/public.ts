@@ -45,14 +45,16 @@ export type HomeData = {
   latest: ArticleCard[];
   special: ArticleCard | null;
   mostRead: ArticleCard[];
-  opinion: (ArticleCard & { snippet: string })[];
+  opinion: ArticleCard[];
+  /** Trecho inicial da manchete, para preencher a coluna central da capa. */
+  heroSnippet: string;
   blocks: { section: Section; articles: ArticleCard[] }[];
 };
 
 export async function getHomeData(): Promise<HomeData> {
   "use cache";
   const db = setup();
-  const empty: HomeData = { hero: null, side: [], latest: [], special: null, mostRead: [], opinion: [], blocks: [] };
+  const empty: HomeData = { hero: null, heroSnippet: "", side: [], latest: [], special: null, mostRead: [], opinion: [], blocks: [] };
   if (!db) return empty;
 
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
@@ -87,22 +89,18 @@ export async function getHomeData(): Promise<HomeData> {
 
   const notOpinion = (a: ArticleCard) => a.section?.slug !== "opiniao";
   const side = pick([...pinned, ...recent], 3, notOpinion);
-  const opinionCards = recent.filter((a) => a.section?.slug === "opiniao" && !used.has(a.id)).slice(0, 4);
-  opinionCards.forEach((a) => used.add(a.id));
+  const opinion = recent.filter((a) => a.section?.slug === "opiniao" && !used.has(a.id)).slice(0, 4);
+  opinion.forEach((a) => used.add(a.id));
 
-  // Trecho inicial de cada texto de opinião, para o convite "Ler mais"
-  const bodies = new Map<string, string>();
-  if (opinionCards.length) {
-    const { data } = await db.from("articles").select("id, content_html").in("id", opinionCards.map((a) => a.id));
-    for (const r of (data ?? []) as { id: string; content_html: string }[]) bodies.set(r.id, stripHtml(r.content_html ?? ""));
-  }
-  const opinion = opinionCards.map((a) => {
-    let text = bodies.get(a.id) || a.excerpt || a.subtitle || "";
+  // Trecho inicial da manchete (para o "Ler mais" da capa)
+  let heroSnippet = "";
+  if (hero) {
+    const { data } = await db.from("articles").select("content_html").eq("id", hero.id).maybeSingle();
+    let text = stripHtml((data as { content_html?: string } | null)?.content_html ?? "") || hero.excerpt || "";
     // Textos importados do Word às vezes repetem o título no início
-    if (a.title && text.toLowerCase().startsWith(a.title.toLowerCase())) text = text.slice(a.title.length).trim();
-    const snippet = text.length > 240 ? `${text.slice(0, 240).replace(/\s+\S*$/, "")}…` : text;
-    return { ...a, snippet };
-  });
+    if (text.toLowerCase().startsWith(hero.title.toLowerCase())) text = text.slice(hero.title.length).trim();
+    heroSnippet = text.length > 600 ? `${text.slice(0, 600).replace(/\s+\S*$/, "")}…` : text;
+  }
   const latest = pick(recent, 4, notOpinion);
 
   const sections = (sectionsQ.data ?? []) as Section[];
@@ -115,7 +113,7 @@ export async function getHomeData(): Promise<HomeData> {
   let mostRead = asCards(readQ.data);
   if (mostRead.length < 3) mostRead = recent.slice(0, 5);
 
-  return { hero, side, latest, special, mostRead, opinion, blocks };
+  return { hero, heroSnippet, side, latest, special, mostRead, opinion, blocks };
 }
 
 export async function getArticle(slug: string): Promise<ArticleFull | null> {

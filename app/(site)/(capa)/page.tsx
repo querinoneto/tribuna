@@ -5,7 +5,7 @@ import { ArticleCard, ArticleRow, Byline, EmptyState, Kicker } from "@/component
 import { Cover } from "@/components/site/cover";
 
 export default async function HomePage() {
-  const { hero, side, latest, special, mostRead, opinion, blocks } = await getHomeData();
+  const { hero, heroSnippet, side, latest, special, mostRead, opinion, blocks } = await getHomeData();
 
   if (!hero) {
     return (
@@ -60,6 +60,14 @@ export default async function HomePage() {
             </h2>
             {hero.subtitle && <p className="mt-3.5 font-sans text-[17px] leading-snug text-ink-soft sm:text-[19px]">{hero.subtitle}</p>}
             <Byline article={hero} className="mt-3.5 text-[13px]" />
+            {heroSnippet && (
+              <div className="mt-5 border-t border-rule pt-5">
+                <p className="line-clamp-6 font-sans text-[15px] leading-relaxed text-ink-soft lg:line-clamp-7">{heroSnippet}</p>
+                <Link href={articlePath(hero)} aria-label={`Ler mais: ${hero.title}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                  Ler mais →
+                </Link>
+              </div>
+            )}
           </article>
 
           {/* Mais lidas */}
@@ -144,14 +152,7 @@ export default async function HomePage() {
                       {a.title}
                     </Link>
                   </h3>
-                  {a.snippet && <p className="line-clamp-5 font-sans text-[14px] leading-relaxed text-band-muted">{a.snippet}</p>}
-                  <Link
-                    href={articlePath(a)}
-                    aria-label={`Ler mais: ${a.title}`}
-                    className="mt-auto self-start text-[13px] font-semibold text-band-accent hover:underline"
-                  >
-                    Ler mais →
-                  </Link>
+                  {a.subtitle && <p className="font-sans text-[14px] leading-relaxed text-band-muted">{a.subtitle}</p>}
                 </article>
               ))}
             </div>
