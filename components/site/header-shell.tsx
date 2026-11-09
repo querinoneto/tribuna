@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IconClose, IconMenu, IconSearch } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LOGO } from "@/lib/brand";
 import { SITE_TAGLINE_LINES } from "@/lib/env";
 import { SectionScroller } from "./section-scroller";
 import { Wordmark } from "./wordmark";
@@ -100,7 +102,21 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
                 {SITE_TAGLINE_LINES[1]}
               </p>
             </div>
-            <Link href="/" aria-label="Tribuna Socialista, página inicial">
+            <Link
+              href="/"
+              aria-label="Tribuna Socialista, página inicial"
+              className="flex flex-col items-center gap-1.5 sm:gap-2.5"
+            >
+              {LOGO && (
+                <Image
+                  src={LOGO.src}
+                  width={LOGO.width}
+                  height={LOGO.height}
+                  alt=""
+                  priority
+                  className="size-10 sm:size-14 lg:size-[68px]"
+                />
+              )}
               <h1 className="m-0">
                 <Wordmark className="text-[30px] sm:text-[60px] lg:text-[80px] xl:text-[88px]" />
               </h1>

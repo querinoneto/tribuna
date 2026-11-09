@@ -112,8 +112,8 @@ export function AdminShell({ staff, children }: { staff: Staff; children: React.
       {!focusMode && !collapsed && (
         <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-rule bg-paper p-3 lg:flex">
           <div className="flex items-center justify-between px-2 pt-1">
-            <Link href="/admin" className="font-display text-2xl">
-              Tribuna
+            <Link href="/admin" className="font-display text-xl leading-tight">
+              Tribuna Socialista
             </Link>
             <button type="button" onClick={toggle} className="btn-ghost size-9 p-0" aria-label="Recolher barra lateral">
               <IconSidebar />
@@ -135,7 +135,7 @@ export function AdminShell({ staff, children }: { staff: Staff; children: React.
           />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col gap-4 bg-paper p-3">
             <div className="flex items-center justify-between px-2 pt-1">
-              <span className="font-display text-2xl">Tribuna</span>
+              <span className="font-display text-xl leading-tight">Tribuna Socialista</span>
               <button type="button" onClick={() => setDrawer(false)} className="btn-ghost size-10 p-0" aria-label="Fechar menu">
                 <IconClose />
               </button>
@@ -153,7 +153,7 @@ export function AdminShell({ staff, children }: { staff: Staff; children: React.
               <IconMenu />
             </button>
             <Link href="/admin" className="font-display text-xl">
-              Tribuna
+              Tribuna Socialista
             </Link>
           </header>
         )}

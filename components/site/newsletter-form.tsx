@@ -90,7 +90,7 @@ export function NewsletterInline() {
       <div className="wrap flex flex-wrap items-center gap-x-12 gap-y-5 py-10">
         <div className="flex-[1_1_320px]">
           <p className="font-display text-2xl leading-tight text-balance sm:text-3xl">
-            Gostou? Receba a Tribuna no seu <span className="whitespace-nowrap">e-mail</span>.
+            Gostou? Receba a Tribuna Socialista no seu <span className="whitespace-nowrap">e-mail</span>.
           </p>
           <p className="mt-1.5 text-sm text-band-muted">Uma seleção semanal, sem algoritmo.</p>
         </div>

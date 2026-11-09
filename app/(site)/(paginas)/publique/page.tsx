@@ -14,7 +14,7 @@ export default function PubliquePage() {
           <p className="kicker mb-2">Colabore</p>
           <h1 className="font-display text-4xl leading-none sm:text-5xl">Escreva e publique conosco</h1>
           <p className="mt-4 font-serif text-lg leading-snug text-ink-soft sm:text-xl">
-            A Tribuna é feita também por quem lê. Envie sua análise, reportagem, crônica ou artigo de opinião: a redação
+            A Tribuna Socialista é feita também por quem lê. Envie sua análise, reportagem, crônica ou artigo de opinião: a redação
             avalia cada texto e responde por e-mail.
           </p>
         </header>

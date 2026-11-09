@@ -17,7 +17,7 @@ export default async function ColumnistsPage() {
         <p className="mt-3 font-serif text-lg text-ink-soft sm:text-xl">Vozes que disputam o debate público.</p>
       </header>
       {columnists.length === 0 ? (
-        <EmptyState title="Em breve">Os colunistas da Tribuna aparecerão aqui.</EmptyState>
+        <EmptyState title="Em breve">Os colunistas da Tribuna Socialista aparecerão aqui.</EmptyState>
       ) : (
         <ul className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {columnists.map((c) => (

@@ -11,7 +11,7 @@ export function PublishCta() {
             Escreva e publique conosco
           </h2>
           <p className="font-serif text-lg text-ink-soft">
-            Tem uma análise, uma denúncia ou uma reflexão que precisa ser lida? Envie seu texto para a redação da Tribuna.
+            Tem uma análise, uma denúncia ou uma reflexão que precisa ser lida? Envie seu texto para a redação da Tribuna Socialista.
           </p>
         </div>
         <div className="flex-[0_1_auto]">

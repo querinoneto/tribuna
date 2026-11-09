@@ -37,7 +37,7 @@ export function PublishForm() {
 
     if (name.length < 2) return setError("Informe seu nome.");
     if (!emailSchema.safeParse(email).success) return setError("Digite um e-mail válido.");
-    if (firstTime === null) return setError("Diga se você já publicou na Tribuna.");
+    if (firstTime === null) return setError("Diga se você já publicou na Tribuna Socialista.");
     if (!text || text.size === 0) return setError("Anexe o arquivo do seu texto (PDF ou Word).");
     const textProblem = validateTextFile(text);
     if (textProblem) return setError(textProblem);
@@ -100,7 +100,7 @@ export function PublishForm() {
         </span>
         <h2 className="font-sans text-2xl font-bold tracking-tight">Recebemos seu texto!</h2>
         <p className="font-serif text-lg text-ink-soft">
-          Obrigado por escrever para a Tribuna. Nossa equipe vai ler com atenção e responder pelo e-mail informado.
+          Obrigado por escrever para a Tribuna Socialista. Nossa equipe vai ler com atenção e responder pelo e-mail informado.
         </p>
         <Link href="/" className="btn-secondary mt-2">
           Voltar à capa
@@ -132,7 +132,7 @@ export function PublishForm() {
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium">Você já publicou na Tribuna?</legend>
+        <legend className="mb-1.5 text-sm font-medium">Você já publicou na Tribuna Socialista?</legend>
         <div className="flex flex-wrap gap-3">
           {[
             { v: false, label: "Sim, já publiquei" },
