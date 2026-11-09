@@ -26,9 +26,17 @@ test("conecta a conta, liga a automação e o texto publicado vai para o Instagr
   await page.getByRole("button", { name: /Conectar|Trocar token/ }).click();
   await expect(page.getByText(/token de acesso do Instagram expirou ou foi revogado/)).toBeVisible();
 
+  // Token do login do Instagram ("IG…", renovável)
   await token.fill("IGteste-token-de-acesso-valido");
   await page.getByRole("button", { name: /Conectar|Trocar token/ }).click();
   await expect(page.getByText("Conta @tribunasocialista_teste conectada.")).toBeVisible();
+  await expect(page.getByText(/O token é renovado sozinho/)).toBeVisible();
+
+  // Token do login unificado ("EAA…", usuário do sistema, não expira)
+  await token.fill("EAAteste-token-do-usuario-do-sistema");
+  await page.getByRole("button", { name: /Conectar|Trocar token/ }).click();
+  await expect(page.getByText("Conta @tribunasocialista_teste conectada.").last()).toBeVisible();
+  await expect(page.getByText(/O token não expira/)).toBeVisible();
 
   const ligar = page.getByRole("button", { name: "Ligar publicação automática", exact: true });
   if (await ligar.isVisible()) {

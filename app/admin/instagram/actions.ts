@@ -6,11 +6,12 @@ import { connectAccount, disconnect, postArticle, setEnabled } from "@/lib/insta
 
 type Result = { ok: boolean; message: string };
 
-export async function saveToken(token: string): Promise<Result> {
+export async function saveToken(token: string, accountId = ""): Promise<Result> {
   await requireRole("admin");
   const t = token.trim();
   if (t.length < 20) return { ok: false, message: "Cole o token de acesso completo." };
-  const r = await connectAccount(t);
+  const id = accountId.replace(/\D/g, "");
+  const r = await connectAccount(t, id || undefined);
   revalidatePath("/admin/instagram");
   return r.ok ? { ok: true, message: `Conta @${r.username} conectada.` } : { ok: false, message: r.error };
 }

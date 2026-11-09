@@ -4,8 +4,13 @@ import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { clip } from "./card";
 
 /**
- * Publicação automática no feed do Instagram (API do Instagram com login
- * do Instagram, graph.instagram.com).
+ * Publicação automática no feed do Instagram.
+ *
+ * Aceita os dois tipos de token que a Meta emite:
+ * - login do Instagram: token "IG…" (60 dias, renovável), em graph.instagram.com;
+ * - login unificado / do Facebook: token "EAA…" (o de usuário do sistema não
+ *   expira), em graph.facebook.com.
+ * Os endereços de publicação são os mesmos nos dois casos.
  *
  * Fluxo: quando um texto entra no ar, o site gera o card em
  * /instagram/card/<id> (JPEG público), pede ao Instagram que crie a mídia a
@@ -16,7 +21,11 @@ import { clip } from "./card";
  * texto é postado uma única vez (tabela instagram_posts).
  */
 
-const API = process.env.INSTAGRAM_API_URL ?? "https://graph.instagram.com";
+const IG_API = process.env.INSTAGRAM_API_URL ?? "https://graph.instagram.com";
+const FB_API = process.env.FACEBOOK_API_URL ?? "https://graph.facebook.com";
+
+/** Tokens do login do Instagram começam com "IG"; os demais vão ao graph.facebook.com. */
+export const isInstagramLoginToken = (token: string) => token.startsWith("IG");
 const VERSION = "v25.0";
 
 export type InstagramConfig = {
@@ -45,7 +54,9 @@ export async function getConfig(): Promise<InstagramConfig | null> {
 class InstagramError extends Error {}
 
 async function ig<T>(path: string, init: { method?: "GET" | "POST"; params: Record<string, string> }): Promise<T> {
-  const url = new URL(`${API}/${path.startsWith("refresh_access_token") ? "" : `${VERSION}/`}${path}`);
+  const token = init.params.access_token ?? "";
+  const base = isInstagramLoginToken(token) ? IG_API : FB_API;
+  const url = new URL(`${base}/${path.startsWith("refresh_access_token") ? "" : `${VERSION}/`}${path}`);
   const body = new URLSearchParams(init.params);
   const method = init.method ?? "GET";
   if (method === "GET") url.search = body.toString();
@@ -64,22 +75,76 @@ async function ig<T>(path: string, init: { method?: "GET" | "POST"; params: Reco
   return json;
 }
 
+type Account = { id: string; username: string | null };
+
+/** Descobre a conta do Instagram ligada a um token do login unificado/Facebook. */
+async function findFacebookLoginAccount(token: string, accountId?: string): Promise<Account | null> {
+  if (accountId) {
+    const a = await ig<{ id: string; username?: string }>(accountId, { params: { fields: "id,username", access_token: token } });
+    return { id: a.id, username: a.username ?? null };
+  }
+  const attempts: (() => Promise<Account | null>)[] = [
+    async () => {
+      const r = await ig<{ data?: { id: string; username?: string }[] }>("me/assigned_instagram_accounts", {
+        params: { fields: "id,username", access_token: token },
+      });
+      const a = r.data?.[0];
+      return a ? { id: a.id, username: a.username ?? null } : null;
+    },
+    async () => {
+      const r = await ig<{ data?: { instagram_business_account?: { id: string; username?: string } }[] }>("me/accounts", {
+        params: { fields: "instagram_business_account{id,username}", access_token: token },
+      });
+      const a = r.data?.find((p) => p.instagram_business_account)?.instagram_business_account;
+      return a ? { id: a.id, username: a.username ?? null } : null;
+    },
+    async () => {
+      // Em alguns fluxos o próprio token já responde pela conta do Instagram
+      const a = await ig<{ id?: string; username?: string }>("me", { params: { fields: "id,username", access_token: token } });
+      return a.id && a.username ? { id: a.id, username: a.username } : null;
+    },
+  ];
+  for (const attempt of attempts) {
+    try {
+      const a = await attempt();
+      if (a) return a;
+    } catch {}
+  }
+  return null;
+}
+
 /** Confere o token e descobre a conta (ID e @). Usado ao salvar o token. */
-export async function connectAccount(token: string): Promise<{ ok: true; username: string } | { ok: false; error: string }> {
+export async function connectAccount(token: string, accountId?: string): Promise<{ ok: true; username: string } | { ok: false; error: string }> {
   try {
-    const me = await ig<{ user_id?: string; id?: string; username?: string; account_type?: string }>("me", {
-      params: { fields: "user_id,username,account_type", access_token: token },
-    });
-    const id = me.user_id ?? me.id;
-    if (!id) return { ok: false, error: "Não foi possível identificar a conta do Instagram com este token." };
-    if (me.account_type && !["BUSINESS", "MEDIA_CREATOR", "CREATOR"].includes(me.account_type)) {
-      return { ok: false, error: "A conta precisa ser profissional (Empresa ou Criador de conteúdo). Mude isso nas configurações do Instagram." };
+    let account: Account | null;
+    if (isInstagramLoginToken(token)) {
+      const me = await ig<{ user_id?: string; id?: string; username?: string; account_type?: string }>("me", {
+        params: { fields: "user_id,username,account_type", access_token: token },
+      });
+      const id = me.user_id ?? me.id;
+      if (me.account_type && !["BUSINESS", "MEDIA_CREATOR", "CREATOR"].includes(me.account_type)) {
+        return { ok: false, error: "A conta precisa ser profissional (Empresa ou Criador de conteúdo). Mude isso nas configurações do Instagram." };
+      }
+      account = id ? { id, username: me.username ?? null } : null;
+    } else {
+      account = await findFacebookLoginAccount(token, accountId?.trim() || undefined);
     }
-    const { error } = await db()
-      .from("instagram_config")
-      .upsert({ id: true, access_token: token, ig_user_id: id, username: me.username ?? null, token_refreshed_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    if (!account) {
+      return {
+        ok: false,
+        error: "O token é válido, mas não foi possível descobrir a conta do Instagram. Preencha também o ID da conta do Instagram (aparece no painel da Meta, ao lado da conta).",
+      };
+    }
+    const { error } = await db().from("instagram_config").upsert({
+      id: true,
+      access_token: token,
+      ig_user_id: account.id,
+      username: account.username,
+      token_refreshed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
     if (error) return { ok: false, error: error.message };
-    return { ok: true, username: me.username ?? id };
+    return { ok: true, username: account.username ?? account.id };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
@@ -105,9 +170,11 @@ export async function disconnect() {
  * O token "de longa duração" vale 60 dias e pode ser renovado depois de 24h.
  * A rotina diária renova quando ele tem mais de 7 dias.
  */
-export async function refreshTokenIfNeeded(): Promise<"renovado" | "em-dia" | "sem-token"> {
+export async function refreshTokenIfNeeded(): Promise<"renovado" | "em-dia" | "sem-token" | "nao-expira"> {
   const cfg = await getConfig();
   if (!cfg?.access_token) return "sem-token";
+  // Token de usuário do sistema (login unificado) não expira
+  if (!isInstagramLoginToken(cfg.access_token)) return "nao-expira";
   const age = Date.now() - new Date(cfg.token_refreshed_at ?? 0).getTime();
   if (age < 7 * 86_400_000) return "em-dia";
   const r = await ig<{ access_token: string }>("refresh_access_token", {

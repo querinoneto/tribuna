@@ -25,27 +25,45 @@ function useRun() {
 export function TokenForm({ connected }: { connected: boolean }) {
   const { pending, run } = useRun();
   const [token, setToken] = useState("");
+  const [accountId, setAccountId] = useState("");
   return (
     <form
-      className="flex flex-col gap-2 sm:flex-row"
+      className="flex flex-col gap-2"
       onSubmit={(e) => {
         e.preventDefault();
-        run(() => saveToken(token), (r) => r.ok && setToken(""));
+        run(() => saveToken(token, accountId), (r) => {
+          if (r.ok) {
+            setToken("");
+            setAccountId("");
+          }
+        });
       }}
     >
-      <label htmlFor="ig-token" className="sr-only">
+      <label htmlFor="ig-token" className="text-sm font-semibold">
         Token de acesso do Instagram
       </label>
       <input
         id="ig-token"
         type="password"
         autoComplete="off"
-        className="input flex-1"
-        placeholder={connected ? "Colar um token novo (opcional)" : "Cole aqui o token de acesso (começa com IG…)"}
+        className="input"
+        placeholder={connected ? "Colar um token novo (opcional)" : "Cole aqui o token gerado no painel da Meta"}
         value={token}
         onChange={(e) => setToken(e.target.value)}
       />
-      <button type="submit" className="btn-primary" disabled={pending || token.trim().length < 20}>
+      <label htmlFor="ig-account" className="mt-1 text-sm font-semibold">
+        ID da conta do Instagram <span className="font-normal text-muted">(opcional; só se o site pedir)</span>
+      </label>
+      <input
+        id="ig-account"
+        inputMode="numeric"
+        autoComplete="off"
+        className="input"
+        placeholder="Ex.: 17841400000000000"
+        value={accountId}
+        onChange={(e) => setAccountId(e.target.value)}
+      />
+      <button type="submit" className="btn-primary mt-1 self-start" disabled={pending || token.trim().length < 20}>
         {pending ? "Conectando…" : connected ? "Trocar token" : "Conectar"}
       </button>
     </form>

@@ -68,9 +68,11 @@ export default async function InstagramPage() {
               Conectado a <strong className="text-ink">@{cfg?.username}</strong>. Publicação automática{" "}
               <strong className={cfg?.enabled ? "text-ink" : "text-accent"}>{cfg?.enabled ? "ligada" : "desligada"}</strong>
               {cfg?.enabled && cfg.enabled_at && <> desde {formatShort(cfg.enabled_at)}</>}.
-              {tokenAgeDays !== null && (
-                <> O token é renovado sozinho (última renovação {tokenAgeDays === 0 ? "hoje" : `há ${tokenAgeDays} ${tokenAgeDays === 1 ? "dia" : "dias"}`}).</>
-              )}
+              {cfg?.access_token?.startsWith("IG")
+                ? tokenAgeDays !== null && (
+                    <> O token é renovado sozinho (última renovação {tokenAgeDays === 0 ? "hoje" : `há ${tokenAgeDays} ${tokenAgeDays === 1 ? "dia" : "dias"}`}).</>
+                  )
+                : " O token não expira."}
             </>
           ) : (
             "Nenhuma conta conectada."

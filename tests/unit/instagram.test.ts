@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/admin", () => ({ hasAdminClient: false, createAdminClient: () => null }));
 
 const { clip, cardSizes } = await import("@/lib/instagram/card");
-const { buildCaption, cardUrl } = await import("@/lib/instagram/service");
+const { buildCaption, cardUrl, isInstagramLoginToken } = await import("@/lib/instagram/service");
 
 describe("card do Instagram", () => {
   it("corta textos longos na palavra, com reticências", () => {
@@ -38,5 +38,12 @@ describe("legenda", () => {
 
   it("aponta o card para o endereço público do texto", () => {
     expect(cardUrl({ id: "abc", updated_at: "2026-11-09T10:00:00Z" })).toMatch(/\/instagram\/card\/abc\?v=/);
+  });
+});
+
+describe("tipo de token", () => {
+  it("separa o login do Instagram (IG…) do login unificado/Facebook (EAA…)", () => {
+    expect(isInstagramLoginToken("IGQWRk123")).toBe(true);
+    expect(isInstagramLoginToken("EAAGm0PX4ZCps")).toBe(false);
   });
 });

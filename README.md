@@ -256,7 +256,7 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 - Ao **publicar** um texto, o site gera o card no modelo do jornal (1080 × 1350, JPEG) em `/instagram/card/<id>` e o posta no feed pela API oficial do Instagram (`graph.instagram.com`), com legenda de título, linha fina, autor, chamada para o site e hashtags. Cada texto vai uma única vez.
 - Textos **agendados** vão ao Instagram quando alguém abre o Painel depois da hora marcada ou, no máximo, na rotina diária (`/api/cron/instagram`, 9h30 de Maceió), que também renova o token de acesso.
 - Painel → **Instagram**: conectar a conta (colar o token), ligar/desligar a automação, ver a prévia do card de cada texto, "Postar agora" e "Tentar de novo". Só textos publicados **depois** de ligar a automação são postados sozinhos.
-- Requisitos: conta do Instagram **profissional** (Empresa ou Criador), um app na Meta (developers.facebook.com) com o produto Instagram e as permissões `instagram_business_basic` e `instagram_business_content_publish`, e `SUPABASE_SECRET_KEY` e `CRON_SECRET` na Vercel.
+- Requisitos: conta do Instagram **profissional** (Empresa ou Criador) e um app na Meta (developers.facebook.com) com o caso de uso do Instagram. Funciona com os dois tipos de token: login do Instagram (`IG…`, 60 dias, renovado sozinho, em graph.instagram.com) ou login unificado (`EAA…`, usuário do sistema, não expira, em graph.facebook.com; exige portfólio empresarial e a permissão `instagram_content_publish`). Também precisa de `SUPABASE_SECRET_KEY` e `CRON_SECRET` na Vercel.
 
 ## 9. Testes
 
