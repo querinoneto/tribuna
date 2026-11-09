@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ArticleEditor, type EditorArticle } from "@/components/admin/article-editor";
 
 export const metadata = { title: "Editar texto" };
+// Ao publicar, o envio do card ao Instagram roda em segundo plano e pode levar alguns segundos
+export const maxDuration = 120;
 
 export default async function EditArticlePage({ params, searchParams }: PageProps<"/admin/textos/[id]">) {
   const { id } = await params;

@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { postArticle, postDueArticles } from "@/lib/instagram/service";
 import { getStaff, requireStaff } from "@/lib/auth";
 import { readingTime } from "@/lib/format";
 import { dbErrorMessage, planTransition } from "@/lib/publishing";
@@ -141,6 +143,13 @@ export async function changeStatus(
   if (!data) return { ok: false, error: "Você não tem permissão para alterar o estado deste texto." };
 
   revalidateContent();
+  // Texto no ar: o card vai para o Instagram em segundo plano (se a automação estiver ligada)
+  if (data.status === "published") {
+    after(async () => {
+      await postArticle(id).catch(() => undefined);
+      await postDueArticles().catch(() => undefined);
+    });
+  }
   return { ok: true, savedAt: data.updated_at, status: data.status, publishedAt: data.published_at };
 }
 

@@ -106,6 +106,7 @@ Escolha **um** dos dois caminhos.
 14. `supabase/migrations/20261109000014_assinaturas_resumo_semanal.sql`
 15. `supabase/migrations/20261109000015_envio_linha_fina.sql`
 16. `supabase/migrations/20261109000016_expediente.sql`
+17. `supabase/migrations/20261109000017_instagram.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -249,6 +250,13 @@ Os botões de X, Instagram e YouTube ficam em `lib/social.ts`. Preencha o endere
 - O cancelamento é feito pelo link do rodapé de cada e-mail (gerido pelo Resend) e sincronizado com o banco antes de cada envio.
 - No painel, em **Assinaturas**: situação de cada e-mail, prévia enviada para você, envio manual e histórico.
 - Variáveis na Vercel: `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_SEGMENT_ID`, `NEWSLETTER_FROM`, `CRON_SECRET` (e, opcional, `NEWSLETTER_REPLY_TO`). Veja `.env.example`.
+
+## 8.2. Instagram (card automático)
+
+- Ao **publicar** um texto, o site gera o card no modelo do jornal (1080 × 1350, JPEG) em `/instagram/card/<id>` e o posta no feed pela API oficial do Instagram (`graph.instagram.com`), com legenda de título, linha fina, autor, chamada para o site e hashtags. Cada texto vai uma única vez.
+- Textos **agendados** vão ao Instagram quando alguém abre o Painel depois da hora marcada ou, no máximo, na rotina diária (`/api/cron/instagram`, 9h30 de Maceió), que também renova o token de acesso.
+- Painel → **Instagram**: conectar a conta (colar o token), ligar/desligar a automação, ver a prévia do card de cada texto, "Postar agora" e "Tentar de novo". Só textos publicados **depois** de ligar a automação são postados sozinhos.
+- Requisitos: conta do Instagram **profissional** (Empresa ou Criador), um app na Meta (developers.facebook.com) com o produto Instagram e as permissões `instagram_business_basic` e `instagram_business_content_publish`, e `SUPABASE_SECRET_KEY` e `CRON_SECRET` na Vercel.
 
 ## 9. Testes
 

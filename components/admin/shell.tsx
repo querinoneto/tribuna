@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { href: "/admin/paginas", label: "Páginas", roles: ["admin"] },
   { href: "/admin/contato", label: "Contato", roles: ["admin", "editor"] },
   { href: "/admin/newsletter", label: "Assinaturas", roles: ["admin"] },
+  { href: "/admin/instagram", label: "Instagram", roles: ["admin", "editor"] },
   { href: "/admin/usuarios", label: "Usuários", roles: ["admin"] },
 ]
 

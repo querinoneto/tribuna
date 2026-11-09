@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { after } from "next/server";
+import { postDueArticles } from "@/lib/instagram/service";
 import { requireStaff } from "@/lib/auth";
 import { formatShort } from "@/lib/format";
 import { isCoordination, STATUS_LABEL } from "@/lib/permissions";
@@ -13,6 +15,8 @@ export const metadata = { title: "Painel" };
 
 export default async function DashboardPage({ searchParams }: PageProps<"/admin">) {
   const staff = await requireStaff();
+  // Textos agendados que já entraram no ar e ainda não foram ao Instagram
+  after(() => postDueArticles().catch(() => undefined));
   const sp = (await searchParams) as { erro?: string };
   const supabase = await createClient();
 
