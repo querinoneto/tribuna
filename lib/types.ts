@@ -2,7 +2,6 @@ export type Role = "admin" | "editor" | "colunista";
 export type ArticleStatus = "draft" | "published" | "scheduled" | "archived";
 
 export type Section = { id: string; name: string; slug: string; description: string | null; position: number };
-export type Tag = { id: string; name: string; slug: string };
 export type Author = {
   id: string;
   name: string;
@@ -36,11 +35,14 @@ export type Article = {
   created_by: string | null;
   views: number;
   reading_minutes: number;
+  in_review: boolean;
+  submitted_at: string | null;
+  review_note: string;
   created_at: string;
   updated_at: string;
 };
 
-/** Matéria pronta para exibição no site, com editoria, autor e tags. */
+/** Matéria pronta para exibição no site, com editoria e autor. */
 export type ArticleCard = Pick<
   Article,
   | "id"
@@ -60,8 +62,6 @@ export type ArticleCard = Pick<
 };
 
 export type ArticleFull = ArticleCard &
-  Pick<Article, "content_html" | "cover_caption" | "cover_credit" | "updated_at" | "status"> & {
-    tags: Pick<Tag, "name" | "slug">[];
-  };
+  Pick<Article, "content_html" | "cover_caption" | "cover_credit" | "updated_at" | "status">;
 
 export type Page = { slug: string; title: string; content_html: string; content_json: unknown; updated_at: string };

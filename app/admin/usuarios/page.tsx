@@ -38,15 +38,15 @@ export default async function UsuariosPage() {
             Papel
             <select name="role" className="input" defaultValue="colunista">
               <option value="colunista">Colunista</option>
-              <option value="editor">Editor</option>
+              <option value="editor">Coordenador</option>
               <option value="admin">Administrador</option>
             </select>
           </label>
           <SubmitButton className="btn-primary">Autorizar</SubmitButton>
         </ActionForm>
         <dl className="mt-4 grid gap-2 text-xs text-muted sm:grid-cols-3">
-          <div><dt className="font-semibold text-ink-soft">Colunista</dt><dd>Escreve rascunhos e edita só os próprios.</dd></div>
-          <div><dt className="font-semibold text-ink-soft">Editor</dt><dd>Edita e publica qualquer texto.</dd></div>
+          <div><dt className="font-semibold text-ink-soft">Colunista</dt><dd>Escreve e edita os próprios textos e os envia para revisão. Não publica. Aparece em Autores ao entrar pela primeira vez.</dd></div>
+          <div><dt className="font-semibold text-ink-soft">Coordenador</dt><dd>Revisa, edita e publica textos, e aprova envios de leitores.</dd></div>
           <div><dt className="font-semibold text-ink-soft">Administrador</dt><dd>Tudo, inclusive gerenciar usuários.</dd></div>
         </dl>
       </section>

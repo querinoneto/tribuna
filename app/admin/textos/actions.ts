@@ -46,27 +46,6 @@ function normalize(raw: unknown): { ok: true; value: ArticleInput } | { ok: fals
   return { ok: true, value };
 }
 
-async function syncTags(supabase: Awaited<ReturnType<typeof createClient>>, articleId: string, names: string[]) {
-  const unique = [...new Map(names.map((n) => [slugify(n), n.trim()])).entries()].filter(([s]) => s);
-  const slugs = unique.map(([s]) => s);
-
-  if (unique.length) {
-    const { data: existing } = await supabase.from("tags").select("id, slug").in("slug", slugs);
-    const have = new Set((existing ?? []).map((t) => t.slug));
-    const missing = unique.filter(([s]) => !have.has(s)).map(([slug, name]) => ({ slug, name }));
-    if (missing.length) await supabase.from("tags").insert(missing);
-  }
-
-  const { data: tags } = slugs.length
-    ? await supabase.from("tags").select("id").in("slug", slugs)
-    : { data: [] as { id: string }[] };
-
-  await supabase.from("article_tags").delete().eq("article_id", articleId);
-  if (tags && tags.length) {
-    await supabase.from("article_tags").insert(tags.map((t) => ({ article_id: articleId, tag_id: t.id })));
-  }
-}
-
 function columns(v: ArticleInput) {
   return {
     title: v.title,
@@ -112,8 +91,6 @@ export async function saveArticle(id: string, raw: unknown): Promise<SaveResult>
 
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
-
-  await syncTags(supabase, id, n.value.tags);
 
   // Se o texto já está no ar, a edição aparece no site imediatamente
   if (data.status === "published" || data.status === "scheduled") revalidateContent();
@@ -163,7 +140,6 @@ export async function changeStatus(
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não tem permissão para alterar o estado deste texto." };
 
-  await syncTags(supabase, id, n.value.tags);
   revalidateContent();
   return { ok: true, savedAt: data.updated_at, status: data.status, publishedAt: data.published_at };
 }
@@ -182,4 +158,64 @@ export async function deleteArticleAndRedirect(id: string) {
   const r = await deleteArticle(id);
   if (!r.ok) redirect(`/admin/textos?erro=${encodeURIComponent(r.error ?? "Erro ao excluir.")}`);
   redirect("/admin/textos?aviso=excluido");
+}
+
+/* -------------------------------- Revisão -------------------------------- */
+
+/** Colunista salva e envia o texto para a coordenação revisar e publicar. */
+export async function submitForReview(id: string, raw: unknown): Promise<SaveResult> {
+  const staff = await getStaff();
+  if (!staff) return { ok: false, error: "Sua sessão expirou. Entre de novo para continuar." };
+
+  const n = normalize(raw);
+  if (!n.ok) return n;
+  if (!n.value.title.trim()) return { ok: false, error: "Dê um título ao texto antes de enviar." };
+  if (n.value.content_html.replace(/<[^>]+>/g, "").trim().length < 20) {
+    return { ok: false, error: "Escreva o texto antes de enviar para revisão." };
+  }
+
+  const cols = columns(n.value);
+  cols.featured = false;
+  cols.pinned = false;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("articles")
+    .update({ ...cols, in_review: true })
+    .eq("id", id)
+    .eq("status", "draft")
+    .select("status, published_at, updated_at")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: dbErrorMessage(error) };
+  if (!data) return { ok: false, error: "Não foi possível enviar este texto para revisão." };
+  return { ok: true, savedAt: data.updated_at, status: data.status, publishedAt: data.published_at };
+}
+
+/** Tira o texto da revisão para continuar escrevendo. */
+export async function withdrawReview(id: string): Promise<{ ok: boolean; error?: string }> {
+  const staff = await getStaff();
+  if (!staff) return { ok: false, error: "Sua sessão expirou. Entre de novo para continuar." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("withdraw_review", { p_article: id });
+  if (error) return { ok: false, error: dbErrorMessage(error) };
+  if (!data) return { ok: false, error: "Este texto não está mais em revisão." };
+  return { ok: true };
+}
+
+/** Coordenação devolve o texto ao colunista, com um recado. */
+export async function returnToAuthor(id: string, note: string): Promise<{ ok: boolean; error?: string }> {
+  const staff = await getStaff();
+  if (!staff || (staff.role !== "admin" && staff.role !== "editor")) return { ok: false, error: "Você não tem permissão para fazer isso." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("articles")
+    .update({ in_review: false, review_note: note.trim().slice(0, 2000) })
+    .eq("id", id)
+    .eq("in_review", true)
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, error: dbErrorMessage(error) };
+  if (!data) return { ok: false, error: "Este texto não está mais em revisão." };
+  return { ok: true };
 }

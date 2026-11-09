@@ -17,7 +17,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
   const staff = await requireStaff();
   const sp = (await searchParams) as Record<string, string | undefined>;
   const q = sp.q?.trim() ?? "";
-  const status = (["draft", "published", "scheduled", "archived"] as const).find((s) => s === sp.status);
+  const status = (["draft", "published", "scheduled", "archived", "revisao"] as const).find((s) => s === sp.status);
   const secao = sp.secao ?? "";
   const autor = sp.autor ?? "";
   const page = Math.max(1, Number(sp.pagina) || 1);
@@ -25,12 +25,13 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
   const supabase = await createClient();
   let query = supabase
     .from("articles")
-    .select("id, title, slug, status, published_at, updated_at, created_by, sections(name), authors(name)", { count: "exact" })
+    .select("id, title, slug, status, in_review, published_at, updated_at, created_by, sections(name), authors(name)", { count: "exact" })
     .order("updated_at", { ascending: false })
     .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
 
   if (q) query = query.ilike("title", `%${q.replace(/[%_]/g, "")}%`);
-  if (status) query = query.eq("status", status);
+  if (status === "revisao") query = query.eq("in_review", true);
+  else if (status) query = query.eq("status", status);
   if (secao) query = query.eq("section_id", secao);
   if (autor) query = query.eq("author_id", autor);
 
@@ -78,6 +79,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
           <span className="sr-only">Estado</span>
           <select name="status" defaultValue={status ?? ""} className="input">
             <option value="">Todos os estados</option>
+            <option value="revisao">Em revisão</option>
             {(Object.keys(STATUS_LABEL) as ArticleStatus[]).map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABEL[s]}
@@ -151,7 +153,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
                           {a.title || <span className="text-muted italic">Sem título</span>}
                         </Link>
                       </td>
-                      <td className="px-4 py-3"><StatusBadge status={a.status as ArticleStatus} /></td>
+                      <td className="px-4 py-3"><StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} /></td>
                       <td className="px-4 py-3 text-ink-soft">{(a.sections as unknown as { name: string } | null)?.name ?? "—"}</td>
                       <td className="px-4 py-3 text-ink-soft">{(a.authors as unknown as { name: string } | null)?.name ?? "—"}</td>
                       <td className="px-4 py-3 text-muted tabular-nums">{formatShort(a.updated_at)}</td>
@@ -179,7 +181,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <StatusBadge status={a.status as ArticleStatus} />
+                    <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} />
                     {(a.sections as unknown as { name: string } | null)?.name}
                     <span aria-hidden>·</span>
                     <span className="tabular-nums">{formatShort(a.updated_at)}</span>

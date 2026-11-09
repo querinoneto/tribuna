@@ -11,11 +11,10 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
   const staff = await requireStaff();
   const supabase = await createClient();
 
-  const [{ data: article }, { data: sections }, { data: authors }, { data: tagRows }] = await Promise.all([
+  const [{ data: article }, { data: sections }, { data: authors }] = await Promise.all([
     supabase.from("articles").select("*").eq("id", id).maybeSingle(),
     supabase.from("sections").select("id, name").order("position"),
     supabase.from("authors").select("id, name, profile_id").order("name"),
-    supabase.from("article_tags").select("tags(name)").eq("article_id", id),
   ]);
 
   if (!article) notFound();
@@ -25,10 +24,6 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
     staff.role === "colunista"
       ? (authors ?? []).filter((a) => a.profile_id === staff.id || a.id === article.author_id)
       : (authors ?? []);
-
-  const tags = (tagRows ?? [])
-    .map((r) => (r.tags as unknown as { name: string } | null)?.name)
-    .filter((n): n is string => Boolean(n));
 
   const editorArticle: EditorArticle = {
     id: article.id,
@@ -50,7 +45,9 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
     published_at: article.published_at,
     scheduled_at: article.scheduled_at,
     updated_at: article.updated_at,
-    tags,
+    in_review: article.in_review ?? false,
+    submitted_at: article.submitted_at ?? null,
+    review_note: article.review_note ?? "",
   };
 
   return (

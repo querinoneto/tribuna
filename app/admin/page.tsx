@@ -21,13 +21,28 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
   };
   const [published, drafts, scheduled] = await Promise.all([count("published"), count("draft"), count("scheduled")]);
 
-  const { count: newSubmissions } = canPublish(staff.role)
-    ? await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo")
-    : { count: 0 };
+  const [{ count: newSubmissions }, { count: inReview }] = canPublish(staff.role)
+    ? await Promise.all([
+        supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo"),
+        supabase.from("articles").select("id", { count: "exact", head: true }).eq("in_review", true),
+      ])
+    : [{ count: 0 }, { count: 0 }];
+
+  // Para o administrador: mensagens novas do formulário de contato
+  const { count: unreadContact } =
+    staff.role === "admin"
+      ? await supabase.from("contact_messages").select("id", { count: "exact", head: true }).is("read_at", null)
+      : { count: 0 };
+
+  // Para o colunista: textos devolvidos pela coordenação com recado
+  const { count: returned } =
+    staff.role === "colunista"
+      ? await supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "draft").eq("in_review", false).neq("review_note", "")
+      : { count: 0 };
 
   const { data: recent } = await supabase
     .from("articles")
-    .select("id, title, status, updated_at")
+    .select("id, title, status, in_review, updated_at")
     .order("updated_at", { ascending: false })
     .limit(8);
 
@@ -49,6 +64,47 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         </div>
         <NewArticleButton />
       </div>
+
+      {(inReview ?? 0) > 0 && (
+        <Link
+          href="/admin/textos?status=revisao"
+          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-[#e0b45c] bg-[#fbeed3]/60 p-4 hover:border-[#7a4b06] dark:bg-[#3a2c12]/60"
+        >
+          <span>
+            <strong className="font-semibold">
+              {inReview} {inReview === 1 ? "texto de colunista aguardando" : "textos de colunistas aguardando"} revisão
+            </strong>
+          </span>
+          <span className="text-sm font-semibold">Revisar →</span>
+        </Link>
+      )}
+
+      {(returned ?? 0) > 0 && (
+        <Link
+          href="/admin/textos?status=draft"
+          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/5 p-4 hover:border-accent"
+        >
+          <span>
+            <strong className="font-semibold">
+              {returned} {returned === 1 ? "texto devolvido" : "textos devolvidos"} pela coordenação
+            </strong>{" "}
+            <span className="text-sm text-muted">com recado para ajustes</span>
+          </span>
+          <span className="text-sm font-semibold text-accent">Ver →</span>
+        </Link>
+      )}
+
+      {(unreadContact ?? 0) > 0 && (
+        <Link
+          href="/admin/contato?filtro=nao-lidas"
+          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-rule bg-paper p-4 hover:border-ink"
+        >
+          <strong className="font-semibold">
+            {unreadContact} {unreadContact === 1 ? "mensagem nova" : "mensagens novas"} no Contato
+          </strong>
+          <span className="text-sm font-semibold">Ler →</span>
+        </Link>
+      )}
 
       {(newSubmissions ?? 0) > 0 && (
         <Link
@@ -100,7 +156,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
                   <span className="min-w-0 flex-1 truncate font-sans text-lg font-semibold">
                     {a.title || <span className="text-muted italic">Sem título</span>}
                   </span>
-                  <StatusBadge status={a.status as ArticleStatus} />
+                  <StatusBadge status={a.status as ArticleStatus} inReview={a.in_review} />
                   <span className="text-xs text-muted tabular-nums">{formatShort(a.updated_at)}</span>
                 </Link>
               </li>

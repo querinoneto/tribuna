@@ -44,7 +44,6 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       publishedTime: a.published_at ?? undefined,
       modifiedTime: a.updated_at,
       section: a.section?.name,
-      tags: a.tags.map((t) => t.name),
       authors: a.author ? [a.author.name] : undefined,
       images,
     },
@@ -73,7 +72,6 @@ async function Article({ params }: { params: Promise<Params> }) {
     datePublished: article.published_at,
     dateModified: article.updated_at,
     articleSection: article.section?.name,
-    keywords: article.tags.map((t) => t.name).join(", ") || undefined,
     inLanguage: "pt-BR",
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     author: article.author

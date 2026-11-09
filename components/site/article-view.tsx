@@ -80,16 +80,6 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         <div className="w-full max-w-[680px] min-w-0">
           <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.content_html) }} />
 
-          {article.tags.length > 0 && (
-            <div className="mt-10 flex flex-wrap items-center gap-2 border-t border-rule pt-6">
-              <span className="kicker mr-1 text-muted">Tags</span>
-              {article.tags.map((t) => (
-                <Link key={t.slug} href={`/tag/${t.slug}`} className="bg-paper-2 px-3.5 py-2 text-[13px] font-medium hover:bg-ink hover:text-paper">
-                  {t.name}
-                </Link>
-              ))}
-            </div>
-          )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3 lg:hidden">
             <span className="kicker text-muted">Compartilhe</span>

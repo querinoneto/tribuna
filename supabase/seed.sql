@@ -22,12 +22,6 @@ insert into public.authors (name, slug, bio, is_columnist) values
   ('Redação', 'redacao', 'Equipe de reportagem da Tribuna Socialista.', false)
 on conflict (slug) do nothing;
 
-insert into public.tags (name, slug) values
-  ('trabalho por aplicativo', 'trabalho-por-aplicativo'),
-  ('educação', 'educacao'),
-  ('água', 'agua')
-on conflict (slug) do nothing;
-
 -- Páginas institucionais (edite pelo painel em /admin/paginas)
 insert into public.pages (slug, title, content_html, content_json) values
   ('sobre', 'Sobre',
@@ -81,10 +75,3 @@ values
   (select id from s where slug = 'meio-ambiente'), (select id from a), 1, ''
 )
 on conflict (slug) do nothing;
-
-insert into public.article_tags (article_id, tag_id)
-select ar.id, t.id from public.articles ar, public.tags t
-where (ar.slug = 'entregadores-param-as-capitais' and t.slug = 'trabalho-por-aplicativo')
-   or (ar.slug = 'professores-aprovam-estado-de-greve' and t.slug = 'educacao')
-   or (ar.slug = 'ribeirinhos-cobram-plano-para-o-sao-francisco' and t.slug = 'agua')
-on conflict do nothing;

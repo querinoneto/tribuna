@@ -456,7 +456,7 @@ describe.runIf(DB)("reforço de segurança (revisão)", () => {
 
   it("colunista assina com a própria assinatura", async () => {
     const minha = await asRoot(async (c) =>
-      (await c.query("insert into authors (name, slug, profile_id) values ('Eu Mesma', $1, $2) returning id", [uniqueSlug("eu"), colunista.id])).rows[0].id,
+      (await c.query("select id from authors where profile_id = $1", [colunista.id])).rows[0].id,
     );
     await as(colunista, (c) =>
       c.query("insert into articles (title, slug, author_id) values ('x', $1, $2)", [uniqueSlug(), minha]),
@@ -465,12 +465,12 @@ describe.runIf(DB)("reforço de segurança (revisão)", () => {
 
   it("colunista não muda tipo nem endereço da própria assinatura", async () => {
     const minha = await asRoot(async (c) =>
-      (await c.query("insert into authors (name, slug, profile_id) values ('Assinatura', $1, $2) returning id", [uniqueSlug("ass"), colunista2.id])).rows[0].id,
+      (await c.query("select id from authors where profile_id = $1", [colunista2.id])).rows[0].id,
     );
     await as(colunista2, async (c) => {
       expect((await c.query("update authors set bio = 'Minha bio' where id = $1", [minha])).rowCount).toBe(1);
     });
-    await expectDenied(as(colunista2, (c) => c.query("update authors set is_columnist = true where id = $1", [minha])));
+    await expectDenied(as(colunista2, (c) => c.query("update authors set is_columnist = false where id = $1", [minha])));
   });
 
   it("ninguém troca o e-mail do próprio perfil", async () => {
@@ -490,6 +490,96 @@ describe.runIf(DB)("reforço de segurança (revisão)", () => {
           [`recebidos/${k}/texto.pdf`, `recebidos/${k}/foto.jpg`, autor],
         ),
       ),
+    );
+  });
+});
+
+describe.runIf(DB)("revisão, autores e contato", () => {
+  async function draftOf(user: TestUser, inReview = false) {
+    return asRoot(async (c) =>
+      (
+        await c.query("insert into articles (title, slug, created_by, in_review) values ('Rascunho', $1, $2, $3) returning id", [
+          uniqueSlug(),
+          user.id,
+          inReview,
+        ])
+      ).rows[0].id as string,
+    );
+  }
+
+  it("colunista convidado já tem a própria assinatura de colunista", async () => {
+    const rows = await asRoot(async (c) => (await c.query("select is_columnist, is_contributor from authors where profile_id = $1", [colunista.id])).rows);
+    expect(rows).toEqual([{ is_columnist: true, is_contributor: false }]);
+  });
+
+  it("colunista envia o próprio rascunho para revisão e a data é carimbada", async () => {
+    const id = await draftOf(colunista);
+    await as(colunista, async (c) => {
+      expect((await c.query("update articles set in_review = true, review_note = 'eu mesmo' where id = $1", [id])).rowCount).toBe(1);
+      const { rows } = await c.query("select in_review, submitted_at, review_note from articles where id = $1", [id]);
+      expect(rows[0].in_review).toBe(true);
+      expect(rows[0].submitted_at).not.toBeNull();
+      expect(rows[0].review_note).toBe("");
+    });
+  });
+
+  it("colunista não edita nem apaga texto que está em revisão", async () => {
+    const id = await draftOf(colunista, true);
+    await as(colunista, async (c) => {
+      expect((await c.query("update articles set title = 'Mudei' where id = $1", [id])).rowCount).toBe(0);
+      expect((await c.query("delete from articles where id = $1", [id])).rowCount).toBe(0);
+    });
+  });
+
+  it("colunista retira o próprio texto da revisão, mas não o de outra pessoa", async () => {
+    const meu = await draftOf(colunista, true);
+    const alheio = await draftOf(colunista2, true);
+    await as(colunista, async (c) => {
+      expect((await c.query("select public.withdraw_review($1) as ok", [meu])).rows[0].ok).toBe(true);
+      expect((await c.query("select public.withdraw_review($1) as ok", [alheio])).rows[0].ok).toBe(false);
+    });
+  });
+
+  it("coordenação publica texto em revisão e a revisão termina", async () => {
+    const id = await draftOf(colunista, true);
+    await as(editor, async (c) => {
+      await c.query("update articles set status = 'published', content_html = '<p>x</p>' where id = $1", [id]);
+      const { rows } = await c.query("select status, in_review from articles where id = $1", [id]);
+      expect(rows[0]).toEqual({ status: "published", in_review: false });
+    });
+  });
+
+  it("coordenação devolve o texto com recado", async () => {
+    const id = await draftOf(colunista, true);
+    await as(editor, async (c) => {
+      expect((await c.query("update articles set in_review = false, review_note = 'Ajuste o título' where id = $1", [id])).rowCount).toBe(1);
+    });
+  });
+
+  it("visitante envia mensagem de contato, mas não lê nenhuma", async () => {
+    await as(null, async (c) => {
+      await c.query("insert into contact_messages (first_name, last_name, email, message) values ('Ana', 'Souza', 'ana@exemplo.com', 'Olá')");
+      expect((await c.query("select * from contact_messages")).rowCount).toBe(0);
+    });
+  });
+
+  it("só o administrador lê as mensagens de contato", async () => {
+    await asRoot((c) =>
+      c.query("insert into contact_messages (first_name, last_name, email, message) values ('Bia', 'Lima', $1, 'Oi')", [`${uniqueSlug("b")}@exemplo.com`]),
+    );
+    await as(editor, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBe(0));
+    await as(colunista, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBe(0));
+    await as(admin, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBeGreaterThan(0));
+  });
+
+  it("limita mensagens de contato repetidas", async () => {
+    const email = `${uniqueSlug("spam")}@exemplo.com`;
+    await expectDenied(
+      as(null, async (c) => {
+        for (let i = 0; i < 6; i++) {
+          await c.query("insert into contact_messages (first_name, last_name, email, message) values ('A', 'B', $1, 'x')", [email]);
+        }
+      }),
     );
   });
 });

@@ -35,7 +35,7 @@ function Fields({ s }: { s?: { id: string; name: string; slug: string; descripti
 }
 
 export default async function EditoriasPage() {
-  await requireRole("admin", "editor");
+  await requireRole("admin");
   const supabase = await createClient();
   const { data: sections } = await supabase.from("sections").select("*").order("position");
 

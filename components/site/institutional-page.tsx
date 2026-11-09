@@ -4,7 +4,7 @@ import { formatDate } from "@/lib/format";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
 
 /** Página institucional (Sobre, Contato, Expediente, Privacidade), editável no painel. */
-export async function InstitutionalPage({ slug }: { slug: string }) {
+export async function InstitutionalPage({ slug, children }: { slug: string; children?: React.ReactNode }) {
   const page = await getPage(slug);
   if (!page) notFound();
   return (
@@ -13,6 +13,7 @@ export async function InstitutionalPage({ slug }: { slug: string }) {
         <h1 className="font-display text-4xl leading-none sm:text-5xl">{page.title}</h1>
       </header>
       <div className="prose-tribuna mx-auto" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(page.content_html) }} />
+      {children && <div className="mx-auto mt-12 max-w-[680px]">{children}</div>}
       <p className="mx-auto mt-12 max-w-[680px] text-xs text-muted">Atualizado em {formatDate(page.updated_at)}.</p>
     </article>
   );

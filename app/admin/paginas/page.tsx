@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/admin/page-header";
 export const metadata = { title: "Páginas institucionais" };
 
 export default async function PaginasPage() {
-  await requireRole("admin", "editor");
+  await requireRole("admin");
   const supabase = await createClient();
   const { data: pages } = await supabase.from("pages").select("slug, title, updated_at").order("title");
 

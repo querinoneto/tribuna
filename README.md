@@ -47,7 +47,7 @@ As fontes (Newsreader e Inter Tight, licença SIL OFL) ficam no próprio projeto
 app/
   (site)/(capa)/          capa (cabeçalho grande)
   (site)/(paginas)/       matéria /ano/mês/slug, editoria, autor, busca, tag, colunistas, páginas institucionais
-  admin/                  painel: textos, mídia, editorias, tags, colunistas, páginas, newsletter, usuários
+  admin/                  painel: textos, envios, produção, autores, editorias, páginas, contato, newsletter, usuários
   entrar/                 login (Google ou link por e-mail)
   auth/                   retorno do login e saída
   materia/[slug]/         endereço curto, que redireciona para /ano/mês/slug
@@ -96,6 +96,7 @@ Escolha **um** dos dois caminhos.
 4. `supabase/migrations/20261108000004_submissions.sql`
 5. `supabase/migrations/20261108000005_contributors.sql`
 6. `supabase/migrations/20261108000006_security_hardening.sql`
+7. `supabase/migrations/20261108000007_autores_revisao_contato.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -195,9 +196,9 @@ Resumo abaixo. O passo a passo completo está no [checklist](docs/CHECKLIST-DEPL
 
 | Papel | O que pode fazer |
 | --- | --- |
-| **admin** | tudo, inclusive convidar e remover pessoas e exportar a newsletter |
-| **editor** | criar, editar, publicar, agendar e arquivar qualquer texto; gerenciar editorias, tags, colunistas e páginas |
-| **colunista** | criar rascunhos e editar **só os próprios** rascunhos (um editor revisa e publica) |
+| **admin** | tudo, inclusive convidar pessoas, editar autores, ler o Contato, ver a Produção e exportar a newsletter |
+| **coordenador** (`editor` no banco) | revisar, editar, publicar, agendar e arquivar qualquer texto; devolver textos aos colunistas; aprovar envios de leitores |
+| **colunista** | escrever e editar **só os próprios** rascunhos e enviá-los para revisão; não publica |
 | **visitante** | ler o que está publicado (não precisa de conta) |
 
 A proteção funciona em três camadas:

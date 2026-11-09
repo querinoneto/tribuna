@@ -8,7 +8,7 @@ import type { ArticleStatus, Role } from "./types";
 
 export const ROLE_LABEL: Record<Role, string> = {
   admin: "Administrador",
-  editor: "Editor",
+  editor: "Coordenador",
   colunista: "Colunista",
 };
 
@@ -27,8 +27,9 @@ export function canManageUsers(role: Role | null): boolean {
   return role === "admin";
 }
 
+/** Editorias, páginas institucionais e autores: só o administrador. */
 export function canManageTaxonomy(role: Role | null): boolean {
-  return role === "admin" || role === "editor";
+  return role === "admin";
 }
 
 export function canSeeSubscribers(role: Role | null): boolean {
@@ -38,17 +39,17 @@ export function canSeeSubscribers(role: Role | null): boolean {
 export function canEditArticle(
   role: Role | null,
   userId: string | null,
-  article: { created_by: string | null; status: ArticleStatus },
+  article: { created_by: string | null; status: ArticleStatus; in_review?: boolean },
 ): boolean {
   if (!role || !userId) return false;
   if (role === "admin" || role === "editor") return true;
-  return article.created_by === userId && article.status === "draft";
+  return article.created_by === userId && article.status === "draft" && !article.in_review;
 }
 
 export function canDeleteArticle(
   role: Role | null,
   userId: string | null,
-  article: { created_by: string | null; status: ArticleStatus },
+  article: { created_by: string | null; status: ArticleStatus; in_review?: boolean },
 ): boolean {
   return canEditArticle(role, userId, article);
 }
@@ -71,7 +72,7 @@ export function validateTransition(
   now: Date = new Date(),
 ): string | null {
   if (!allowedStatuses(role).includes(target)) {
-    return "Seu papel não permite publicar, agendar ou arquivar textos. Salve como rascunho e peça a revisão de um editor.";
+    return "Seu papel não permite publicar, agendar ou arquivar textos. Quando terminar, envie o texto para a revisão da coordenação.";
   }
   if (target === "scheduled") {
     if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) return "Escolha a data e a hora da publicação.";

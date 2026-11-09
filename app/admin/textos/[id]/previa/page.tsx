@@ -19,16 +19,15 @@ export default async function PreviewPage({ params }: PageProps<"/admin/textos/[
   const supabase = await createClient();
   const { data } = await supabase
     .from("articles")
-    .select(`${CARD_SELECT}, content_html, cover_caption, cover_credit, updated_at, status, tags:article_tags(tag:tags(name, slug))`)
+    .select(`${CARD_SELECT}, content_html, cover_caption, cover_credit, updated_at, status`)
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
 
-  const raw = data as unknown as Omit<ArticleFull, "tags"> & { tags: { tag: { name: string; slug: string } | null }[] };
+  const raw = data as unknown as ArticleFull;
   const article: ArticleFull = {
     ...raw,
     published_at: raw.published_at ?? new Date().toISOString(),
-    tags: raw.tags.map((t) => t.tag).filter((t): t is { name: string; slug: string } => Boolean(t)),
   };
 
   return (

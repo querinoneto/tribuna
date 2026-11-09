@@ -27,7 +27,6 @@ export const articleSchema = z.object({
   cover_credit: z.string().trim().max(120),
   section_id: optionalUuid,
   author_id: optionalUuid,
-  tags: z.array(z.string().trim().min(1).max(60)).max(15, "Use no máximo 15 tags."),
   featured: z.boolean(),
   pinned: z.boolean(),
 });
@@ -68,11 +67,6 @@ export const sectionSchema = z.object({
   position: z.coerce.number().int().min(0).max(999).default(0),
 });
 
-export const tagSchema = z.object({
-  name: z.string().trim().min(1, "Dê um nome à tag.").max(60),
-  slug,
-});
-
 export const authorSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome.").max(120),
   slug,
@@ -84,7 +78,6 @@ export const authorSchema = z.object({
     .nullable()
     .or(z.literal("").transform(() => null))
     .optional(),
-  is_columnist: z.boolean().default(false),
 });
 
 export const pageSchema = z.object({
@@ -159,3 +152,10 @@ export const submissionSchema = z
     consent: z.literal(true, { message: "Para enviar, marque que concorda com a Política de privacidade." }),
   })
   .refine((v) => !v.first_time || v.photo_path, { message: "Como é sua primeira publicação, envie uma foto.", path: ["photo_path"] });
+
+export const contactSchema = z.object({
+  first_name: z.string().trim().min(1, "Informe seu nome.").max(80, "Nome muito longo."),
+  last_name: z.string().trim().min(1, "Informe seu sobrenome.").max(120, "Sobrenome muito longo."),
+  email: z.string().trim().toLowerCase().email("Digite um e-mail válido.").max(254),
+  message: z.string().trim().min(5, "Escreva sua mensagem.").max(5000, "A mensagem pode ter no máximo 5.000 caracteres."),
+});

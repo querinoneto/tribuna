@@ -5,7 +5,7 @@ import Youtube from "@tiptap/extension-youtube";
 import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { uploadImage } from "@/lib/upload";
 import { usePrompt } from "./prompt-dialog";
 import { useToast } from "./toast";
@@ -21,14 +21,17 @@ export function RichEditor({
   onChange,
   placeholder = "Comece a escrever…",
   stickyTop = "top-0",
+  editable = true,
 }: {
   initial: unknown;
   onChange: (v: RichValue) => void;
   placeholder?: string;
   stickyTop?: string;
+  editable?: boolean;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
+    editable,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
@@ -47,9 +50,13 @@ export function RichEditor({
     onUpdate: ({ editor }) => onChange({ json: editor.getJSON(), html: editor.getHTML() }),
   });
 
+  useEffect(() => {
+    if (editor && editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editor, editable]);
+
   return (
     <div>
-      {editor && <Toolbar editor={editor} stickyTop={stickyTop} />}
+      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} />}
       <div className="px-1 py-6">
         <EditorContent editor={editor} />
       </div>

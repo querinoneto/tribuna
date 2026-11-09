@@ -12,15 +12,15 @@ type NavItem = { href: string; label: string; roles?: Role[] };
 const NAV: NavItem[] = [
   { href: "/admin", label: "Painel" },
   { href: "/admin/textos", label: "Textos" },
-  { href: "/admin/midia", label: "Mídia" },
   { href: "/admin/envios", label: "Envios de leitores", roles: ["admin", "editor"] },
-  { href: "/admin/editorias", label: "Editorias", roles: ["admin", "editor"] },
-  { href: "/admin/tags", label: "Tags", roles: ["admin", "editor"] },
-  { href: "/admin/colunistas", label: "Colunistas", roles: ["admin", "editor"] },
-  { href: "/admin/paginas", label: "Páginas", roles: ["admin", "editor"] },
+  { href: "/admin/producao", label: "Produção", roles: ["admin"] },
+  { href: "/admin/autores", label: "Autores", roles: ["admin"] },
+  { href: "/admin/editorias", label: "Editorias", roles: ["admin"] },
+  { href: "/admin/paginas", label: "Páginas", roles: ["admin"] },
+  { href: "/admin/contato", label: "Contato", roles: ["admin"] },
   { href: "/admin/newsletter", label: "Newsletter", roles: ["admin"] },
   { href: "/admin/usuarios", label: "Usuários", roles: ["admin"] },
-];
+]
 
 type Staff = { name: string; email: string; role: Role; avatarUrl: string | null };
 

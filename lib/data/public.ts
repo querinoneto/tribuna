@@ -109,13 +109,12 @@ export async function getArticle(slug: string): Promise<ArticleFull | null> {
   if (!db) return null;
   const { data, error } = await db
     .from("articles")
-    .select(`${CARD_SELECT}, content_html, cover_caption, cover_credit, updated_at, status, tags:article_tags(tag:tags(name, slug))`)
+    .select(`${CARD_SELECT}, content_html, cover_caption, cover_credit, updated_at, status`)
     .eq("slug", slug)
     .maybeSingle();
   log("matéria", error);
   if (!data) return null;
-  const raw = data as unknown as Omit<ArticleFull, "tags"> & { tags: { tag: { name: string; slug: string } | null }[] };
-  return { ...raw, tags: raw.tags.map((t) => t.tag).filter((t): t is { name: string; slug: string } => Boolean(t)) };
+  return data as unknown as ArticleFull;
 }
 
 export async function getRelated(articleId: string, sectionSlug: string | null): Promise<ArticleCard[]> {
@@ -188,22 +187,6 @@ export async function getColumnists(): Promise<Author[]> {
   const { data, error } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id").eq("is_columnist", true).order("name");
   log("colunistas", error);
   return (data ?? []) as Author[];
-}
-
-export async function getTagPage(slug: string) {
-  "use cache";
-  const db = setup();
-  if (!db) return null;
-  const { data: tag } = await db.from("tags").select("id, name, slug").eq("slug", slug).maybeSingle();
-  if (!tag) return null;
-  const { data, error } = await db
-    .from("articles")
-    .select(`${CARD_SELECT}, article_tags!inner(tag_id)`)
-    .eq("article_tags.tag_id", tag.id)
-    .order("published_at", { ascending: false })
-    .limit(30);
-  log("tag", error);
-  return { tag, articles: asCards(data) };
 }
 
 export async function searchArticles(q: string, page: number) {

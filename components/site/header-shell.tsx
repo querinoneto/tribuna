@@ -129,29 +129,22 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
         inert={isHome && !pastMasthead ? true : undefined}
       >
         <div className="wrap flex h-14 items-center gap-3 sm:h-16">
-          <button type="button" className="-ml-2 inline-flex size-11 items-center justify-center" aria-label="Abrir menu" onClick={() => setMenu(true)}>
-            <IconMenu />
-          </button>
-          <nav aria-label="Editorias (atalho)" className="hidden flex-1 xl:block">
-            <ul className="flex gap-5 text-[12px] font-semibold tracking-[0.08em] uppercase">
-              {sections.slice(0, 4).map((s) => (
-                <li key={s.slug}>
-                  <Link href={`/editoria/${s.slug}`} className="hover:text-accent">
-                    {s.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <Link href="/" className="flex-1 text-center xl:flex-none" aria-label="Tribuna Socialista, página inicial">
+          <div className="flex-1">
+            <button type="button" className="-ml-2 inline-flex size-11 items-center justify-center" aria-label="Abrir menu" onClick={() => setMenu(true)}>
+              <IconMenu />
+            </button>
+          </div>
+          <Link href="/" className="text-center" aria-label="Tribuna Socialista, página inicial">
             <Wordmark className="text-[24px] sm:text-[30px]" />
           </Link>
-          <div className="hidden flex-1 justify-end xl:flex">
-            <SearchForm className="w-48" />
+          <div className="flex flex-1 justify-end">
+            <div className="hidden xl:block">
+              <SearchForm className="w-48" />
+            </div>
+            <Link href="/busca" className="-mr-2 inline-flex size-11 items-center justify-center xl:hidden" aria-label="Buscar">
+              <IconSearch size={20} />
+            </Link>
           </div>
-          <Link href="/busca" className="-mr-2 inline-flex size-11 items-center justify-center xl:hidden" aria-label="Buscar">
-            <IconSearch size={20} />
-          </Link>
         </div>
       </div>
 
