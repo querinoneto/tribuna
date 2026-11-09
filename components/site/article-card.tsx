@@ -17,9 +17,13 @@ export function Byline({ article, className = "" }: { article: Card; className?:
     <p className={`text-xs text-muted ${className}`}>
       {article.author && (
         <>
-          <Link href={`/autor/${article.author.slug}`} className="font-semibold text-ink-soft hover:text-accent">
-            {article.author.name}
-          </Link>
+          {article.author.is_contributor ? (
+            <span className="font-semibold text-ink-soft">{article.author.name}</span>
+          ) : (
+            <Link href={`/autor/${article.author.slug}`} className="font-semibold text-ink-soft hover:text-accent">
+              {article.author.name}
+            </Link>
+          )}
           <span aria-hidden> · </span>
         </>
       )}

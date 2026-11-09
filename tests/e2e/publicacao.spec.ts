@@ -78,34 +78,40 @@ test("texto agendado não aparece no site antes da hora", async ({ page, context
   await expect(page.getByText(title)).toHaveCount(0);
 });
 
-test("colunista não publica: envia para revisão e a coordenação recebe", async ({ page, context, browser }) => {
+test("colunista publica o próprio texto; coordenação pode tirar do ar", async ({ page, context, browser }) => {
   await login(context, process.env.E2E_COLUNISTA_COOKIE);
   await page.goto("/admin");
   await page.getByRole("button", { name: "Novo texto" }).click();
   await page.waitForURL(/\/admin\/textos\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole("button", { name: "Salvar rascunho" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Publicar", exact: true })).toHaveCount(0);
+  const url = page.url();
 
   const title = `Saneamento nas periferias ${unique()}`;
   await page.getByRole("textbox", { name: "Título", exact: true }).fill(title);
+  await page.getByRole("textbox", { name: "Linha fina", exact: true }).fill("Bairros pobres concentram a falta de esgoto.");
   const body = page.getByRole("textbox", { name: "Corpo do texto" });
   await body.click();
   await body.pressSequentially("A falta de saneamento atinge principalmente os bairros mais pobres da cidade.");
   await expect(page.getByText(/Salvo às \d{2}:\d{2}/)).toBeVisible({ timeout: 10_000 });
 
-  await page.getByRole("button", { name: "Enviar para revisão" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Enviar" }).click();
-  await expect(page.locator("header").getByText("Em revisão")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Retirar da revisão" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Título", exact: true })).toHaveAttribute("readonly", "");
+  // Destaque na capa continua sendo da coordenação
+  await expect(page.getByText("Manchete principal da home")).toHaveCount(0);
+  const details = page.getByRole("complementary", { name: "Detalhes do texto" });
+  await details.getByLabel("Editoria").selectOption({ label: "Política" });
 
-  // A coordenação vê o texto na lista "Em revisão"
+  await page.getByRole("button", { name: "Publicar", exact: true }).click();
+  await expect(page.getByText("Texto publicado.")).toBeVisible();
+
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: title }).first()).toBeVisible();
+
+  // Coordenação/administração tira do ar
   test.skip(!process.env.E2E_ADMIN_COOKIE, "Sessão de admin não configurada");
   const ctx = await browser.newContext();
   await ctx.addCookies([{ name: COOKIE_NAME, value: process.env.E2E_ADMIN_COOKIE!, domain: host, path: "/" }]);
   const coord = await ctx.newPage();
-  await coord.goto("/admin/textos?status=revisao");
-  await expect(coord.getByRole("link", { name: title }).first()).toBeVisible();
+  await coord.goto(url);
+  await coord.getByRole("complementary", { name: "Detalhes do texto" }).getByRole("button", { name: "Voltar para rascunho" }).click();
+  await expect(coord.getByText("O texto voltou a ser rascunho e saiu do site.")).toBeVisible();
   await ctx.close();
 
   await page.goto("/admin/usuarios");

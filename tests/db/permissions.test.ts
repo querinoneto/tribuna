@@ -166,23 +166,25 @@ describe.runIf(DB)("colunista", () => {
     });
   });
 
-  it("não publica nem agenda", async () => {
-    await expectDenied(
-      as(colunista, (c) =>
-        c.query("insert into articles (title, slug, status) values ('x', $1, 'published')", [uniqueSlug()]),
-      ),
-    );
+  it("publica, agenda e tira do ar o próprio texto", async () => {
     const meu = await seedArticle({ createdBy: colunista.id });
-    await expectDenied(
-      as(colunista, (c) => c.query("update articles set status = 'published' where id = $1", [meu.id])),
-    );
-    await expectDenied(
-      as(colunista, (c) =>
-        c.query("update articles set status = 'scheduled', scheduled_at = now() + interval '1 day' where id = $1", [
-          meu.id,
-        ]),
-      ),
-    );
+    await as(colunista, async (c) => {
+      expect((await c.query("update articles set status = 'published' where id = $1", [meu.id])).rowCount).toBe(1);
+      const { rows } = await c.query("select status, published_at from articles where id = $1", [meu.id]);
+      expect(rows[0].status).toBe("published");
+      expect(rows[0].published_at).not.toBeNull();
+    });
+    await as(colunista, async (c) => {
+      expect(
+        (await c.query("update articles set status = 'scheduled', scheduled_at = now() + interval '1 day' where id = $1", [meu.id])).rowCount,
+      ).toBe(1);
+    });
+  });
+
+  it("não publica o texto de outra pessoa", async () => {
+    const alheio = await seedArticle({ createdBy: colunista2.id });
+    const n = await as(colunista, async (c) => (await c.query("update articles set status = 'published' where id = $1", [alheio.id])).rowCount);
+    expect(n).toBe(0);
   });
 
   it("não destaca texto na home", async () => {
@@ -205,15 +207,17 @@ describe.runIf(DB)("colunista", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("não edita o próprio texto depois de publicado pela edição", async () => {
+  it("edita e tira do ar o próprio texto publicado, mas não o apaga", async () => {
     const publicado = await seedArticle({
       status: "published",
       createdBy: colunista.id,
       publishedAt: new Date(Date.now() - 1000).toISOString(),
     });
-    const n = await as(colunista, async (c) =>
-      (await c.query("update articles set title = 'Mudança' where id = $1", [publicado.id])).rowCount,
-    );
+    await as(colunista, async (c) => {
+      expect((await c.query("update articles set title = 'Mudança' where id = $1", [publicado.id])).rowCount).toBe(1);
+      expect((await c.query("update articles set status = 'draft' where id = $1", [publicado.id])).rowCount).toBe(1);
+    });
+    const n = await as(colunista, async (c) => (await c.query("delete from articles where id = $1", [publicado.id])).rowCount);
     expect(n).toBe(0);
   });
 
@@ -494,66 +498,34 @@ describe.runIf(DB)("reforço de segurança (revisão)", () => {
   });
 });
 
-describe.runIf(DB)("revisão, autores e contato", () => {
-  async function draftOf(user: TestUser, inReview = false) {
-    return asRoot(async (c) =>
-      (
-        await c.query("insert into articles (title, slug, created_by, in_review) values ('Rascunho', $1, $2, $3) returning id", [
-          uniqueSlug(),
-          user.id,
-          inReview,
-        ])
-      ).rows[0].id as string,
-    );
-  }
-
+describe.runIf(DB)("assinaturas e contato", () => {
   it("colunista convidado já tem a própria assinatura de colunista", async () => {
     const rows = await asRoot(async (c) => (await c.query("select is_columnist, is_contributor from authors where profile_id = $1", [colunista.id])).rows);
     expect(rows).toEqual([{ is_columnist: true, is_contributor: false }]);
   });
 
-  it("colunista envia o próprio rascunho para revisão e a data é carimbada", async () => {
-    const id = await draftOf(colunista);
+  it("coordenador convidado também ganha assinatura", async () => {
+    const rows = await asRoot(async (c) => (await c.query("select is_columnist from authors where profile_id = $1", [editor.id])).rows);
+    expect(rows).toEqual([{ is_columnist: true }]);
+  });
+
+  it("administrador cria a própria assinatura pelo Meu perfil e edita foto, nome e bio", async () => {
+    await as(admin, async (c) => {
+      const id = (await c.query("select public.ensure_my_author() as id")).rows[0].id;
+      expect(id).toBeTruthy();
+      expect((await c.query("update authors set name = 'Querino', bio = 'Advogado' where id = $1", [id])).rowCount).toBe(1);
+    });
+  });
+
+  it("colunista edita a própria assinatura, mas não a de outra pessoa", async () => {
     await as(colunista, async (c) => {
-      expect((await c.query("update articles set in_review = true, review_note = 'eu mesmo' where id = $1", [id])).rowCount).toBe(1);
-      const { rows } = await c.query("select in_review, submitted_at, review_note from articles where id = $1", [id]);
-      expect(rows[0].in_review).toBe(true);
-      expect(rows[0].submitted_at).not.toBeNull();
-      expect(rows[0].review_note).toBe("");
+      expect((await c.query("update authors set bio = 'Nova bio' where profile_id = $1", [colunista.id])).rowCount).toBe(1);
+      expect((await c.query("update authors set bio = 'Invasão' where profile_id = $1", [colunista2.id])).rowCount).toBe(0);
     });
   });
 
-  it("colunista não edita nem apaga texto que está em revisão", async () => {
-    const id = await draftOf(colunista, true);
-    await as(colunista, async (c) => {
-      expect((await c.query("update articles set title = 'Mudei' where id = $1", [id])).rowCount).toBe(0);
-      expect((await c.query("delete from articles where id = $1", [id])).rowCount).toBe(0);
-    });
-  });
-
-  it("colunista retira o próprio texto da revisão, mas não o de outra pessoa", async () => {
-    const meu = await draftOf(colunista, true);
-    const alheio = await draftOf(colunista2, true);
-    await as(colunista, async (c) => {
-      expect((await c.query("select public.withdraw_review($1) as ok", [meu])).rows[0].ok).toBe(true);
-      expect((await c.query("select public.withdraw_review($1) as ok", [alheio])).rows[0].ok).toBe(false);
-    });
-  });
-
-  it("coordenação publica texto em revisão e a revisão termina", async () => {
-    const id = await draftOf(colunista, true);
-    await as(editor, async (c) => {
-      await c.query("update articles set status = 'published', content_html = '<p>x</p>' where id = $1", [id]);
-      const { rows } = await c.query("select status, in_review from articles where id = $1", [id]);
-      expect(rows[0]).toEqual({ status: "published", in_review: false });
-    });
-  });
-
-  it("coordenação devolve o texto com recado", async () => {
-    const id = await draftOf(colunista, true);
-    await as(editor, async (c) => {
-      expect((await c.query("update articles set in_review = false, review_note = 'Ajuste o título' where id = $1", [id])).rowCount).toBe(1);
-    });
+  it("visitante não chama as funções de assinatura", async () => {
+    await expectDenied(as(null, (c) => c.query("select public.ensure_my_author()")));
   });
 
   it("visitante envia mensagem de contato, mas não lê nenhuma", async () => {
@@ -563,13 +535,21 @@ describe.runIf(DB)("revisão, autores e contato", () => {
     });
   });
 
-  it("só o administrador lê as mensagens de contato", async () => {
-    await asRoot((c) =>
-      c.query("insert into contact_messages (first_name, last_name, email, message) values ('Bia', 'Lima', $1, 'Oi')", [`${uniqueSlug("b")}@exemplo.com`]),
+  it("coordenação e administrador leem o Contato; só o administrador apaga", async () => {
+    const id = await asRoot(async (c) =>
+      (
+        await c.query("insert into contact_messages (first_name, last_name, email, message) values ('Bia', 'Lima', $1, 'Oi') returning id", [
+          `${uniqueSlug("b")}@exemplo.com`,
+        ])
+      ).rows[0].id,
     );
-    await as(editor, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBe(0));
     await as(colunista, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBe(0));
-    await as(admin, async (c) => expect((await c.query("select * from contact_messages")).rowCount).toBeGreaterThan(0));
+    await as(editor, async (c) => {
+      expect((await c.query("select * from contact_messages where id = $1", [id])).rowCount).toBe(1);
+      expect((await c.query("update contact_messages set read_at = now() where id = $1", [id])).rowCount).toBe(1);
+      expect((await c.query("delete from contact_messages where id = $1", [id])).rowCount).toBe(0);
+    });
+    await as(admin, async (c) => expect((await c.query("delete from contact_messages where id = $1", [id])).rowCount).toBe(1));
   });
 
   it("limita mensagens de contato repetidas", async () => {

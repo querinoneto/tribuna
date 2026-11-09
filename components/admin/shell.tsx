@@ -12,12 +12,13 @@ type NavItem = { href: string; label: string; roles?: Role[] };
 const NAV: NavItem[] = [
   { href: "/admin", label: "Painel" },
   { href: "/admin/textos", label: "Textos" },
+  { href: "/admin/perfil", label: "Meu perfil" },
   { href: "/admin/envios", label: "Envios de leitores", roles: ["admin", "editor"] },
-  { href: "/admin/producao", label: "Produção", roles: ["admin"] },
+  { href: "/admin/producao", label: "Produção", roles: ["admin", "editor"] },
   { href: "/admin/autores", label: "Autores", roles: ["admin"] },
-  { href: "/admin/editorias", label: "Editorias", roles: ["admin"] },
+  { href: "/admin/editorias", label: "Editorias", roles: ["admin", "editor"] },
   { href: "/admin/paginas", label: "Páginas", roles: ["admin"] },
-  { href: "/admin/contato", label: "Contato", roles: ["admin"] },
+  { href: "/admin/contato", label: "Contato", roles: ["admin", "editor"] },
   { href: "/admin/newsletter", label: "Newsletter", roles: ["admin"] },
   { href: "/admin/usuarios", label: "Usuários", roles: ["admin"] },
 ]

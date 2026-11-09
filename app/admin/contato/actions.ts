@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "../crud-actions";
 
 export async function setMessageRead(id: string, read: boolean): Promise<FormState> {
-  await requireRole("admin");
+  await requireRole("admin", "editor");
   const supabase = await createClient();
   const { error } = await supabase
     .from("contact_messages")

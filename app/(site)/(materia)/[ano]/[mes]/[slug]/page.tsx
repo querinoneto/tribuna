@@ -33,7 +33,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     title: a.title,
     description,
     alternates: { canonical: url },
-    authors: a.author ? [{ name: a.author.name, url: `${SITE_URL}/autor/${a.author.slug}` }] : undefined,
+    authors: a.author
+      ? [a.author.is_contributor ? { name: a.author.name } : { name: a.author.name, url: `${SITE_URL}/autor/${a.author.slug}` }]
+      : undefined,
     openGraph: {
       type: "article",
       url,
@@ -75,7 +77,11 @@ async function Article({ params }: { params: Promise<Params> }) {
     inLanguage: "pt-BR",
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     author: article.author
-      ? { "@type": "Person", name: article.author.name, url: `${SITE_URL}/autor/${article.author.slug}` }
+      ? {
+          "@type": "Person",
+          name: article.author.name,
+          ...(article.author.is_contributor ? {} : { url: `${SITE_URL}/autor/${article.author.slug}` }),
+        }
       : { "@type": "Organization", name: SITE_NAME },
     publisher: { "@type": "NewsMediaOrganization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` } },
   };

@@ -45,8 +45,8 @@ export default async function UsuariosPage() {
           <SubmitButton className="btn-primary">Autorizar</SubmitButton>
         </ActionForm>
         <dl className="mt-4 grid gap-2 text-xs text-muted sm:grid-cols-3">
-          <div><dt className="font-semibold text-ink-soft">Colunista</dt><dd>Escreve e edita os próprios textos e os envia para revisão. Não publica. Aparece em Autores ao entrar pela primeira vez.</dd></div>
-          <div><dt className="font-semibold text-ink-soft">Coordenador</dt><dd>Revisa, edita e publica textos, e aprova envios de leitores.</dd></div>
+          <div><dt className="font-semibold text-ink-soft">Colunista</dt><dd>Escreve, publica e edita os próprios textos. Ganha a assinatura em Autores ao entrar pela primeira vez.</dd></div>
+          <div><dt className="font-semibold text-ink-soft">Coordenador</dt><dd>Tudo o que o colunista faz, mais: edita e tira do ar qualquer texto, aprova envios de leitores e acessa Produção, Editorias e Contato.</dd></div>
           <div><dt className="font-semibold text-ink-soft">Administrador</dt><dd>Tudo, inclusive gerenciar usuários.</dd></div>
         </dl>
       </section>

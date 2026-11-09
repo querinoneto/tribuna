@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { changeStatus, deleteArticle, returnToAuthor, saveArticle, submitForReview, withdrawReview, type SaveResult } from "@/app/admin/textos/actions";
+import { changeStatus, deleteArticle, saveArticle, type SaveResult } from "@/app/admin/textos/actions";
 import { IconArrowLeft, IconClose, IconExternal, IconImage, IconSliders, IconTrash } from "@/components/icons";
 import { articlePath, formatShort, formatTime } from "@/lib/format";
-import { canPublish } from "@/lib/permissions";
+import { canPublish, isCoordination } from "@/lib/permissions";
 import { slugify } from "@/lib/slug";
 import type { ArticleStatus, Role } from "@/lib/types";
 import { uploadImage } from "@/lib/upload";
 import { ConfirmButton } from "./confirm";
-import { usePrompt } from "./prompt-dialog";
 import { MediaPicker } from "./media-picker";
 import { RichEditor, type RichValue } from "./rich-editor";
 import { StatusBadge } from "./status-badge";
@@ -69,6 +68,7 @@ export function ArticleEditor({
   const router = useRouter();
   const toast = useToast();
   const editorCanPublish = canPublish(role);
+  const coordination = isCoordination(role);
 
   const [form, setForm] = useState(() => ({
     title: article.title,
@@ -86,16 +86,6 @@ export function ArticleEditor({
   }));
   const content = useRef<RichValue>({ json: article.content_json, html: article.content_html });
   const [status, setStatus] = useState<ArticleStatus>(article.status);
-  const [inReview, setInReview] = useState(article.in_review);
-  const [submittedAt, setSubmittedAt] = useState(article.submitted_at);
-  const [reviewNote, setReviewNote] = useState(article.review_note);
-  const [promptDialog, ask] = usePrompt();
-  // Colunista não altera texto que está com a coordenação ou já saiu do rascunho
-  const locked = !editorCanPublish && (status !== "draft" || inReview);
-  const lockedRef = useRef(locked);
-  useEffect(() => {
-    lockedRef.current = locked;
-  }, [locked]);
   const [publishedAt, setPublishedAt] = useState<string | null>(article.published_at);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "saved", at: article.updated_at });
   const [panel, setPanel] = useState(false);
@@ -168,7 +158,6 @@ export function ArticleEditor({
   }, [save]);
 
   const touch = useCallback(() => {
-    if (lockedRef.current) return;
     dirty.current = true;
     setSaveState((s) => (s.kind === "saving" ? s : { kind: "dirty" }));
     schedule();
@@ -211,65 +200,15 @@ export function ArticleEditor({
       dirty.current = false;
       const r = await changeStatus(article.id, payload(), target, when ?? null);
       if (applyResult(r, message)) {
-        if (target !== "draft") setInReview(false);
         setScheduleOpen(false);
         router.refresh();
       }
     });
   }
 
-  function sendToReview() {
-    if (timer.current) clearTimeout(timer.current);
-    return new Promise<void>((resolve) => {
-      start(async () => {
-        setSaveState({ kind: "saving" });
-        dirty.current = false;
-        const r = await submitForReview(article.id, payload());
-        if (applyResult(r, "Texto enviado para a coordenação. Você será avisado pelo painel quando ele for publicado ou devolvido.")) {
-          setInReview(true);
-          setSubmittedAt(new Date().toISOString());
-          setReviewNote("");
-          router.refresh();
-        }
-        resolve();
-      });
-    });
-  }
-
-  function withdraw() {
-    start(async () => {
-      const r = await withdrawReview(article.id);
-      if (r.ok) {
-        setInReview(false);
-        toast("success", "Texto retirado da revisão. Você pode continuar escrevendo.");
-        router.refresh();
-      } else toast("error", r.error ?? "Não foi possível retirar da revisão.");
-    });
-  }
-
-  async function giveBack() {
-    const v = await ask({
-      title: "Devolver ao colunista",
-      fields: [{ name: "note", label: "Recado para o colunista", placeholder: "Ex.: ajuste o título e confira os dados do 3º parágrafo", required: true }],
-      confirmLabel: "Devolver",
-    });
-    if (!v) return;
-    if (timer.current) clearTimeout(timer.current);
-    if (dirty.current) await save();
-    start(async () => {
-      const r = await returnToAuthor(article.id, v.note ?? "");
-      if (r.ok) {
-        setInReview(false);
-        setReviewNote(v.note ?? "");
-        toast("success", "Texto devolvido ao colunista com o seu recado.");
-        router.refresh();
-      } else toast("error", r.error ?? "Não foi possível devolver o texto.");
-    });
-  }
-
   async function preview() {
     if (timer.current) clearTimeout(timer.current);
-    if (!locked) await save();
+    await save();
     window.open(`/admin/textos/${article.id}/previa`, "_blank", "noopener");
   }
 
@@ -334,42 +273,7 @@ export function ArticleEditor({
         </button>
       )}
     </>
-  ) : inReview ? (
-    <button type="button" className="btn-secondary" onClick={withdraw} disabled={pending}>
-      Retirar da revisão
-    </button>
-  ) : status === "draft" ? (
-    <>
-      <button
-        type="button"
-        className="btn-secondary hidden sm:inline-flex"
-        onClick={() => {
-          if (timer.current) clearTimeout(timer.current);
-          save().then(() => toast("success", "Rascunho salvo."));
-        }}
-        disabled={pending}
-      >
-        Salvar rascunho
-      </button>
-      <ConfirmButton
-        className="btn-primary"
-        title="Enviar para revisão?"
-        description="A coordenação vai revisar e publicar o texto. Enquanto ele estiver em revisão, você não poderá editá-lo, mas pode retirá-lo da revisão a qualquer momento."
-        confirmLabel="Enviar"
-        onConfirm={sendToReview}
-      >
-        Enviar para revisão
-      </ConfirmButton>
-    </>
   ) : null;
-
-  /** Coordenação: botão para devolver o texto ao colunista. */
-  const returnButton =
-    editorCanPublish && inReview && status === "draft" ? (
-      <button type="button" className="btn-secondary hidden sm:inline-flex" onClick={giveBack} disabled={pending}>
-        Devolver
-      </button>
-    ) : null;
 
   /* ------------------------------ Painel de detalhes ------------------------------ */
   const details = (
@@ -490,7 +394,7 @@ export function ArticleEditor({
         <span className="text-right text-xs font-normal text-muted tabular-nums">{form.excerpt.length}/300</span>
       </label>
 
-      {editorCanPublish && (
+      {coordination && (
         <fieldset className="flex flex-col gap-1 border-t border-rule pt-4">
           <legend className="sr-only">Destaque na home</legend>
           <label className="flex min-h-11 items-center gap-3 text-sm">
@@ -537,7 +441,7 @@ export function ArticleEditor({
         </section>
       )}
 
-      {(editorCanPublish || (status === "draft" && !inReview)) && (
+      {(coordination || status === "draft") && (
         <div className="border-t border-rule pt-4">
           <ConfirmButton
             className="btn-ghost text-accent"
@@ -567,7 +471,7 @@ export function ArticleEditor({
           <IconArrowLeft />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col items-start text-xs sm:flex-row sm:items-center sm:gap-3 sm:text-sm" aria-live="polite">
-          <StatusBadge status={status} inReview={inReview} />
+          <StatusBadge status={status} />
           <span className="truncate">{indicator}</span>
         </div>
         <button type="button" className="btn-ghost size-11 p-0 xl:hidden" onClick={() => setPanel(true)} aria-label="Detalhes do texto">
@@ -581,42 +485,15 @@ export function ArticleEditor({
             <IconExternal />
           </a>
         )}
-        {returnButton}
         {actions}
       </header>
 
-      {promptDialog}
       {notice && (
         <p role="status" className="border-b border-rule bg-[#e6edf8] px-4 py-3 text-center text-sm text-[#1f4170] dark:bg-[#1c2a40] dark:text-[#a9c4ec]">
           {notice}
         </p>
       )}
 
-      {!editorCanPublish && status !== "draft" && (
-        <p role="status" className="border-b border-rule bg-paper-2 px-4 py-3 text-center text-sm">
-          Este texto já foi {status === "archived" ? "arquivado" : "publicado pela coordenação"} e só pode ser alterado por ela.
-        </p>
-      )}
-
-      {inReview && status === "draft" && (
-        <p role="status" className="border-b border-rule bg-[#fbeed3] px-4 py-3 text-center text-sm text-[#5c3a06] dark:bg-[#3a2c12] dark:text-[#f0c879]">
-          {editorCanPublish
-            ? `Enviado para revisão${submittedAt ? ` em ${formatShort(submittedAt)}` : ""}. Revise, edite e publique, ou devolva ao colunista com um recado.`
-            : `Enviado para revisão${submittedAt ? ` em ${formatShort(submittedAt)}` : ""}. A coordenação vai revisar e publicar. Para mudar algo, retire o texto da revisão.`}
-          {editorCanPublish && (
-            <button type="button" className="ml-2 font-semibold underline sm:hidden" onClick={giveBack}>
-              Devolver
-            </button>
-          )}
-        </p>
-      )}
-
-      {!inReview && status === "draft" && reviewNote && (
-        <div role="status" className="border-b border-rule bg-accent/5 px-4 py-3 text-center text-sm">
-          <strong className="font-semibold">{editorCanPublish ? "Recado enviado ao colunista:" : "A coordenação devolveu este texto:"}</strong>{" "}
-          {reviewNote}
-        </div>
-      )}
 
       <div className="flex flex-1">
         {/* Área de escrita */}
@@ -627,7 +504,6 @@ export function ArticleEditor({
             </label>
             <textarea
               id="titulo"
-              readOnly={locked}
               rows={2}
               value={form.title}
               onChange={(e) => set("title", e.target.value.replace(/\n/g, " "))}
@@ -639,7 +515,6 @@ export function ArticleEditor({
             </label>
             <textarea
               id="linha-fina"
-              readOnly={locked}
               rows={2}
               value={form.subtitle}
               onChange={(e) => set("subtitle", e.target.value.replace(/\n/g, " "))}
@@ -648,7 +523,6 @@ export function ArticleEditor({
             />
             <div className="mt-4 border-t border-rule" />
             <RichEditor
-              editable={!locked}
               initial={article.content_json ?? article.content_html}
               onChange={(v) => {
                 content.current = v;
@@ -661,9 +535,7 @@ export function ArticleEditor({
 
         {/* Detalhes: barra lateral no computador */}
         <aside aria-label="Detalhes do texto" className="hidden w-[22rem] shrink-0 overflow-y-auto border-l border-rule p-5 xl:block">
-          <fieldset disabled={locked} className="m-0 min-w-0 border-0 p-0">
-            {details}
-          </fieldset>
+          {details}
         </aside>
       </div>
 
@@ -680,9 +552,7 @@ export function ArticleEditor({
             <button type="button" className="btn-secondary mb-5 w-full sm:hidden" onClick={preview}>
               Pré-visualizar
             </button>
-            <fieldset disabled={locked} className="m-0 min-w-0 border-0 p-0">
-              {details}
-            </fieldset>
+            {details}
           </div>
         </div>
       )}

@@ -4,7 +4,6 @@ import { articlePath, formatDate } from "@/lib/format";
 import {
   buildReport,
   formatDec,
-  formatDuration,
   formatInt,
   PERIODS,
   type PeriodKey,
@@ -18,7 +17,7 @@ import { isOutdatedSchema, SchemaNotice } from "@/components/admin/schema-notice
 export const metadata = { title: "Produção dos colunistas" };
 
 export default async function ProducaoPage({ searchParams }: PageProps<"/admin/producao">) {
-  await requireRole("admin");
+  await requireRole("admin", "editor");
   const sp = (await searchParams) as { periodo?: string };
   const period = (PERIODS.find((p) => p.key === sp.periodo)?.key ?? "90") as PeriodKey;
   const periodLabel = PERIODS.find((p) => p.key === period)!.label;
@@ -45,7 +44,7 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
   const r = buildReport({ authors: (authors ?? []) as ProdAuthor[], articles: articles as ProdArticle[], period });
   const maxMonth = Math.max(1, ...r.monthly.map((m) => m.count));
 
-  const kpis = [
+  const kpis: { label: string; value: string; hint: string; href?: string }[] = [
     { label: "Textos publicados", value: formatInt(r.totals.published), hint: periodLabel === "Tudo" ? "desde o início" : `nos últimos ${periodLabel}` },
     { label: "Leituras", value: formatInt(r.totals.views), hint: "dos textos publicados no período" },
     { label: "Leituras por texto", value: formatInt(r.totals.avgViews), hint: "média" },
@@ -55,15 +54,14 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
       hint: "publicaram no período",
     },
     { label: "Textos por colunista", value: formatDec(r.totals.perColumnist), hint: "média no período" },
-    { label: "Tempo de revisão", value: formatDuration(r.totals.avgReviewHours), hint: "do envio à publicação" },
-    { label: "Em revisão agora", value: formatInt(r.totals.inReview), hint: "aguardando a coordenação", href: "/admin/textos?status=revisao" },
+    { label: "Rascunhos", value: formatInt(r.columnists.reduce((n, c) => n + c.drafts, 0)), hint: "ainda não publicados" },
   ];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <PageHeader
         title="Produção"
-        description="Indicadores de produtividade e resultado dos colunistas. Só o administrador vê esta página."
+        description="Indicadores de produtividade e resultado dos colunistas. Visível para o administrador e a coordenação."
       />
 
       {outdated && <SchemaNotice />}
@@ -144,9 +142,8 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
                     <th scope="col" className="px-3 py-3 text-right font-semibold">Publicados</th>
                     <th scope="col" className="px-3 py-3 text-right font-semibold">Leituras</th>
                     <th scope="col" className="px-3 py-3 text-right font-semibold">Média</th>
-                    <th scope="col" className="px-3 py-3 text-right font-semibold">Em revisão</th>
                     <th scope="col" className="px-3 py-3 text-right font-semibold">Rascunhos</th>
-                    <th scope="col" className="px-3 py-3 text-right font-semibold">Revisão leva</th>
+                    <th scope="col" className="px-3 py-3 text-right font-semibold">Leitura média</th>
                     <th scope="col" className="px-4 py-3 font-semibold">Última publicação</th>
                   </tr>
                 </thead>
@@ -171,12 +168,8 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
                       <td className="px-3 py-3 text-right text-base font-semibold tabular-nums">{c.publishedInPeriod}</td>
                       <td className="px-3 py-3 text-right tabular-nums">{formatInt(c.viewsInPeriod)}</td>
                       <td className="px-3 py-3 text-right tabular-nums">{formatInt(c.avgViews)}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">{c.inReview || "—"}</td>
-                      <td className="px-3 py-3 text-right tabular-nums">
-                        {c.drafts || "—"}
-                        {c.returned > 0 && <span className="block text-xs text-accent">{c.returned} devolvido{c.returned > 1 ? "s" : ""}</span>}
-                      </td>
-                      <td className="px-3 py-3 text-right tabular-nums">{formatDuration(c.avgReviewHours)}</td>
+                      <td className="px-3 py-3 text-right tabular-nums">{c.drafts || "—"}</td>
+                      <td className="px-3 py-3 text-right tabular-nums">{c.avgReadingMinutes ? `${formatDec(c.avgReadingMinutes)} min` : "—"}</td>
                       <td className="px-4 py-3">
                         {c.lastPublished ? (
                           <>
@@ -207,9 +200,9 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
                     <Stat label="Publicados" value={String(c.publishedInPeriod)} />
                     <Stat label="Leituras" value={formatInt(c.viewsInPeriod)} />
                     <Stat label="Média" value={formatInt(c.avgViews)} />
-                    <Stat label="Em revisão" value={String(c.inReview)} />
                     <Stat label="Rascunhos" value={String(c.drafts)} />
-                    <Stat label="Revisão leva" value={formatDuration(c.avgReviewHours)} />
+                    <Stat label="Leitura média" value={c.avgReadingMinutes ? `${formatDec(c.avgReadingMinutes)} min` : "—"} />
+                    <Stat label="No total" value={String(c.publishedTotal)} />
                   </dl>
                   <p className="mt-3 text-xs text-muted">
                     {c.lastPublished ? (
@@ -220,7 +213,6 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
                     ) : (
                       "Nunca publicou"
                     )}
-                    {c.returned > 0 && <span className="block text-accent">{c.returned} texto(s) devolvido(s) aguardando ajuste</span>}
                   </p>
                 </li>
               ))}
@@ -253,7 +245,7 @@ export default async function ProducaoPage({ searchParams }: PageProps<"/admin/p
 
           <p className="mt-8 text-xs text-muted">
             As leituras são contadas desde a publicação de cada texto (cada abertura da matéria no site soma uma). Por isso, textos mais antigos tendem a
-            ter mais leituras. “Revisão leva” é o tempo médio entre o envio do colunista e a publicação.
+            ter mais leituras. “Leitura média” é o tempo estimado para ler os textos do colunista.
           </p>
         </>
       )}

@@ -19,7 +19,8 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
   // 1. Visitante envia
   await page.goto("/publique");
   const form = page.getByRole("main");
-  await form.getByLabel("Nome completo").fill(nome);
+  await form.locator("input[name=first_name]").fill(nome.split(" ")[0]);
+  await form.locator("input[name=last_name]").fill(nome.split(" ").slice(1).join(" "));
   await form.getByLabel("E-mail").fill(`joana.${k}@exemplo.test`);
   await form.getByLabel(/Título do texto/).fill(titulo);
   await form.getByLabel("Não, é a primeira vez").check();
@@ -69,9 +70,14 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
   await page.getByRole("link", { name: titulo }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: titulo })).toBeVisible();
   const byline = page.locator("article header").first();
-  await expect(byline.getByRole("link", { name: nome })).toBeVisible();
-  await expect(byline.getByText("Colaboração", { exact: true })).toBeVisible();
+  // Colaborador externo: nome sem link e sem página de histórico
+  await expect(byline.getByText(nome, { exact: true })).toBeVisible();
+  await expect(byline.getByRole("link", { name: nome })).toHaveCount(0);
+  await expect(byline.getByText("Colaborador externo", { exact: true })).toBeVisible();
 
   await page.goto("/colunistas");
   await expect(page.getByText(nome)).toHaveCount(0);
+  const slug = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  await page.goto(`/autor/${slug}`);
+  await expect(page).toHaveTitle(/não encontrado/);
 });

@@ -138,7 +138,8 @@ export function validatePhotoFile(file: { name: string; size: number }): string 
 
 export const submissionSchema = z
   .object({
-    name: z.string().trim().min(2, "Informe seu nome.").max(120, "Nome muito longo."),
+    first_name: z.string().trim().min(1, "Informe seu nome.").max(60, "Nome muito longo."),
+    last_name: z.string().trim().min(1, "Informe seu sobrenome.").max(60, "Sobrenome muito longo."),
     email: emailSchema,
     title: z.string().trim().max(200, "Título muito longo.").default(""),
     message: z.string().trim().max(2000, "A mensagem pode ter no máximo 2.000 caracteres.").default(""),

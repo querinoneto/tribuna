@@ -13,7 +13,7 @@ export const metadata = { title: "Contato" };
 type Msg = { id: string; first_name: string; last_name: string; email: string; message: string; read_at: string | null; created_at: string };
 
 export default async function ContatoAdminPage({ searchParams }: PageProps<"/admin/contato">) {
-  await requireRole("admin");
+  const staff = await requireRole("admin", "editor");
   const { filtro = "" } = (await searchParams) as { filtro?: string };
   const supabase = await createClient();
   let query = supabase
@@ -34,7 +34,7 @@ export default async function ContatoAdminPage({ searchParams }: PageProps<"/adm
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
       <PageHeader
         title="Contato"
-        description="Mensagens enviadas pelo formulário da página Contato. Só o administrador tem acesso a esta área."
+        description="Mensagens enviadas pelo formulário da página Contato. Administrador e coordenação leem; só o administrador apaga."
       />
 
       {outdated && <SchemaNotice />}
@@ -78,7 +78,9 @@ export default async function ContatoAdminPage({ searchParams }: PageProps<"/adm
                       · {formatDateTime(m.created_at)}
                     </p>
                   </div>
-                  <DeleteButton action={deleteMessage.bind(null, m.id)} label={`Apagar a mensagem de ${name}`} title="Apagar esta mensagem?" description="Ela não poderá ser recuperada." />
+                  {staff.role === "admin" && (
+                    <DeleteButton action={deleteMessage.bind(null, m.id)} label={`Apagar a mensagem de ${name}`} title="Apagar esta mensagem?" description="Ela não poderá ser recuperada." />
+                  )}
                 </div>
                 <p className="mt-3 font-serif text-[17px] leading-relaxed whitespace-pre-wrap">{m.message}</p>
                 <div className="mt-3 flex flex-wrap gap-2 border-t border-rule pt-3">

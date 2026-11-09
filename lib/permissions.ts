@@ -19,7 +19,13 @@ export const STATUS_LABEL: Record<ArticleStatus, string> = {
   archived: "Arquivado",
 };
 
+/** Publicar, agendar e tirar do ar: toda a equipe (colunista, só os próprios textos). */
 export function canPublish(role: Role | null): boolean {
+  return role === "admin" || role === "editor" || role === "colunista";
+}
+
+/** Coordenação: edita e tira do ar qualquer texto, destaca na capa. */
+export function isCoordination(role: Role | null): boolean {
   return role === "admin" || role === "editor";
 }
 
@@ -27,9 +33,9 @@ export function canManageUsers(role: Role | null): boolean {
   return role === "admin";
 }
 
-/** Editorias, páginas institucionais e autores: só o administrador. */
+/** Editorias: administrador e coordenação. */
 export function canManageTaxonomy(role: Role | null): boolean {
-  return role === "admin";
+  return role === "admin" || role === "editor";
 }
 
 export function canSeeSubscribers(role: Role | null): boolean {
@@ -39,25 +45,26 @@ export function canSeeSubscribers(role: Role | null): boolean {
 export function canEditArticle(
   role: Role | null,
   userId: string | null,
-  article: { created_by: string | null; status: ArticleStatus; in_review?: boolean },
+  article: { created_by: string | null; status: ArticleStatus },
 ): boolean {
   if (!role || !userId) return false;
   if (role === "admin" || role === "editor") return true;
-  return article.created_by === userId && article.status === "draft" && !article.in_review;
+  return article.created_by === userId;
 }
 
 export function canDeleteArticle(
   role: Role | null,
   userId: string | null,
-  article: { created_by: string | null; status: ArticleStatus; in_review?: boolean },
+  article: { created_by: string | null; status: ArticleStatus },
 ): boolean {
-  return canEditArticle(role, userId, article);
+  if (!role || !userId) return false;
+  if (role === "admin" || role === "editor") return true;
+  return article.created_by === userId && article.status === "draft";
 }
 
 /** Estados para os quais cada papel pode levar um texto. */
 export function allowedStatuses(role: Role | null): ArticleStatus[] {
-  if (role === "admin" || role === "editor") return ["draft", "published", "scheduled", "archived"];
-  if (role === "colunista") return ["draft"];
+  if (role === "admin" || role === "editor" || role === "colunista") return ["draft", "published", "scheduled", "archived"];
   return [];
 }
 
@@ -72,7 +79,7 @@ export function validateTransition(
   now: Date = new Date(),
 ): string | null {
   if (!allowedStatuses(role).includes(target)) {
-    return "Seu papel não permite publicar, agendar ou arquivar textos. Quando terminar, envie o texto para a revisão da coordenação.";
+    return "Seu papel não permite publicar, agendar ou arquivar textos.";
   }
   if (target === "scheduled") {
     if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) return "Escolha a data e a hora da publicação.";

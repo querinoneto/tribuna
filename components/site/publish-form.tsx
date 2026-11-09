@@ -30,12 +30,14 @@ export function PublishForm() {
     const fd = new FormData(e.currentTarget);
     if (String(fd.get("site") ?? "")) return setStatus("sent"); // armadilha para robôs
 
-    const name = String(fd.get("name") ?? "").trim();
+    const first_name = String(fd.get("first_name") ?? "").trim();
+    const last_name = String(fd.get("last_name") ?? "").trim();
     const email = String(fd.get("email") ?? "").trim().toLowerCase();
     const text = fd.get("texto") as File | null;
     const photo = fd.get("foto") as File | null;
 
-    if (name.length < 2) return setError("Informe seu nome.");
+    if (!first_name) return setError("Informe seu nome.");
+    if (!last_name) return setError("Informe seu sobrenome.");
     if (!emailSchema.safeParse(email).success) return setError("Digite um e-mail válido.");
     if (firstTime === null) return setError("Diga se você já publicou na Tribuna Socialista.");
     if (!text || text.size === 0) return setError("Anexe o arquivo do seu texto (PDF ou Word).");
@@ -74,7 +76,8 @@ export function PublishForm() {
 
       setStep("Finalizando…");
       const r = await submitText({
-        name,
+        first_name,
+        last_name,
         email,
         title: String(fd.get("title") ?? ""),
         message: String(fd.get("message") ?? ""),
@@ -115,14 +118,18 @@ export function PublishForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate aria-describedby={error ? `${id}-erro` : undefined}>
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="field">
-          Nome completo <span className="sr-only">(obrigatório)</span>
-          <input name="name" required autoComplete="name" maxLength={120} className="input" />
+          Nome <span className="sr-only">(obrigatório)</span>
+          <input name="first_name" required autoComplete="given-name" maxLength={60} className="input" />
         </label>
         <label className="field">
-          E-mail <span className="sr-only">(obrigatório)</span>
-          <input name="email" type="email" inputMode="email" required autoComplete="email" maxLength={254} className="input" />
+          Sobrenome <span className="sr-only">(obrigatório)</span>
+          <input name="last_name" required autoComplete="family-name" maxLength={60} className="input" />
         </label>
       </div>
+      <label className="field">
+        E-mail <span className="sr-only">(obrigatório)</span>
+        <input name="email" type="email" inputMode="email" required autoComplete="email" maxLength={254} className="input" />
+      </label>
 
       <label className="field">
         <span>

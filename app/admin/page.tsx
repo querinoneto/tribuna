@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { formatShort } from "@/lib/format";
-import { canPublish, STATUS_LABEL } from "@/lib/permissions";
+import { isCoordination, STATUS_LABEL } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { ArticleStatus } from "@/lib/types";
 import { NewArticleButton } from "@/components/admin/new-article-button";
@@ -22,23 +22,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
   };
   const [published, drafts, scheduled] = await Promise.all([count("published"), count("draft"), count("scheduled")]);
 
-  const [{ count: newSubmissions }, { count: inReview }] = canPublish(staff.role)
-    ? await Promise.all([
-        supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo"),
-        supabase.from("articles").select("id", { count: "exact", head: true }).eq("in_review", true),
-      ])
-    : [{ count: 0 }, { count: 0 }];
+  const { count: newSubmissions } = isCoordination(staff.role)
+    ? await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo")
+    : { count: 0 };
 
-  // Para o administrador: mensagens novas do formulário de contato
+  // Coordenação: mensagens novas do formulário de contato
   const { count: unreadContact } =
-    staff.role === "admin"
+    isCoordination(staff.role)
       ? await supabase.from("contact_messages").select("id", { count: "exact", head: true }).is("read_at", null)
-      : { count: 0 };
-
-  // Para o colunista: textos devolvidos pela coordenação com recado
-  const { count: returned } =
-    staff.role === "colunista"
-      ? await supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "draft").eq("in_review", false).neq("review_note", "")
       : { count: 0 };
 
   const recentQuery = (cols: string) => supabase.from("articles").select(cols).order("updated_at", { ascending: false }).limit(8);
@@ -66,35 +57,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         </div>
         <NewArticleButton />
       </div>
-
-      {(inReview ?? 0) > 0 && (
-        <Link
-          href="/admin/textos?status=revisao"
-          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-[#e0b45c] bg-[#fbeed3]/60 p-4 hover:border-[#7a4b06] dark:bg-[#3a2c12]/60"
-        >
-          <span>
-            <strong className="font-semibold">
-              {inReview} {inReview === 1 ? "texto de colunista aguardando" : "textos de colunistas aguardando"} revisão
-            </strong>
-          </span>
-          <span className="text-sm font-semibold">Revisar →</span>
-        </Link>
-      )}
-
-      {(returned ?? 0) > 0 && (
-        <Link
-          href="/admin/textos?status=draft"
-          className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/5 p-4 hover:border-accent"
-        >
-          <span>
-            <strong className="font-semibold">
-              {returned} {returned === 1 ? "texto devolvido" : "textos devolvidos"} pela coordenação
-            </strong>{" "}
-            <span className="text-sm text-muted">com recado para ajustes</span>
-          </span>
-          <span className="text-sm font-semibold text-accent">Ver →</span>
-        </Link>
-      )}
 
       {(unreadContact ?? 0) > 0 && (
         <Link

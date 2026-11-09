@@ -18,7 +18,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
   const staff = await requireStaff();
   const sp = (await searchParams) as Record<string, string | undefined>;
   const q = sp.q?.trim() ?? "";
-  const status = (["draft", "published", "scheduled", "archived", "revisao"] as const).find((s) => s === sp.status);
+  const status = (["draft", "published", "scheduled", "archived"] as const).find((s) => s === sp.status);
   const secao = sp.secao ?? "";
   const autor = sp.autor ?? "";
   const page = Math.max(1, Number(sp.pagina) || 1);
@@ -36,8 +36,7 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
       .order("updated_at", { ascending: false })
       .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
     if (q) query = query.ilike("title", `%${q.replace(/[%_]/g, "")}%`);
-    if (status === "revisao") query = withReview ? query.eq("in_review", true) : query.eq("status", "draft");
-    else if (status) query = query.eq("status", status);
+    if (status) query = query.eq("status", status);
     if (secao) query = query.eq("section_id", secao);
     if (autor) query = query.eq("author_id", autor);
     return query;
@@ -105,7 +104,6 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
           <span className="sr-only">Estado</span>
           <select name="status" defaultValue={status ?? ""} className="input">
             <option value="">Todos os estados</option>
-            <option value="revisao">Em revisão</option>
             {(Object.keys(STATUS_LABEL) as ArticleStatus[]).map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABEL[s]}

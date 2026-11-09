@@ -168,7 +168,8 @@ export async function getAuthorPage(slug: string, page: number) {
   const db = setup();
   if (!db) return null;
   const { data: author } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id").eq("slug", slug).maybeSingle();
-  if (!author) return null;
+  // Colaboradores externos não têm página com o histórico de textos
+  if (!author || author.is_contributor) return null;
   const from = (page - 1) * PAGE_SIZE;
   const { data, count, error } = await db
     .from("articles")
@@ -220,7 +221,7 @@ export async function getSitemapData() {
   const [a, s, au] = await Promise.all([
     db.from("articles").select("slug, published_at, updated_at").order("published_at", { ascending: false }).limit(5000),
     db.from("sections").select("slug"),
-    db.from("authors").select("slug"),
+    db.from("authors").select("slug").eq("is_contributor", false),
   ]);
   return {
     articles: (a.data ?? []) as { slug: string; published_at: string; updated_at: string }[],

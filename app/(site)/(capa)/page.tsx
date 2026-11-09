@@ -130,11 +130,14 @@ export default async function HomePage() {
                       {a.author?.name.charAt(0) ?? "T"}
                     </span>
                   )}
-                  {a.author && (
-                    <Link href={`/autor/${a.author.slug}`} className="text-[13px] font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
-                      {a.author.name}
-                    </Link>
-                  )}
+                  {a.author &&
+                    (a.author.is_contributor ? (
+                      <span className="text-[13px] font-bold tracking-[0.06em] text-band-accent uppercase">{a.author.name}</span>
+                    ) : (
+                      <Link href={`/autor/${a.author.slug}`} className="text-[13px] font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
+                        {a.author.name}
+                      </Link>
+                    ))}
                   <h3 className="font-sans text-lg leading-snug font-semibold sm:text-xl">
                     <Link href={articlePath(a)} className="headline-link">
                       {a.title}

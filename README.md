@@ -97,6 +97,7 @@ Escolha **um** dos dois caminhos.
 5. `supabase/migrations/20261108000005_contributors.sql`
 6. `supabase/migrations/20261108000006_security_hardening.sql`
 7. `supabase/migrations/20261108000007_autores_revisao_contato.sql`
+8. `supabase/migrations/20261108000008_colunista_publica_perfil.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -196,9 +197,9 @@ Resumo abaixo. O passo a passo completo está no [checklist](docs/CHECKLIST-DEPL
 
 | Papel | O que pode fazer |
 | --- | --- |
-| **admin** | tudo, inclusive convidar pessoas, editar autores, ler o Contato, ver a Produção e exportar a newsletter |
-| **coordenador** (`editor` no banco) | revisar, editar, publicar, agendar e arquivar qualquer texto; devolver textos aos colunistas; aprovar envios de leitores |
-| **colunista** | escrever e editar **só os próprios** rascunhos e enviá-los para revisão; não publica |
+| **admin** | tudo, inclusive convidar pessoas, editar autores e páginas, apagar mensagens do Contato e exportar a newsletter |
+| **coordenador** (`editor` no banco) | tudo o que o colunista faz, mais: editar, publicar e tirar do ar qualquer texto; destacar na capa; aprovar envios de leitores; Produção, Editorias e Contato (sem apagar mensagens) |
+| **colunista** | escrever, publicar, agendar e tirar do ar **só os próprios** textos; editar a própria foto, nome e biografia |
 | **visitante** | ler o que está publicado (não precisa de conta) |
 
 A proteção funciona em três camadas:

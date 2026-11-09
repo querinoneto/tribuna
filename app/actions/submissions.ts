@@ -13,8 +13,10 @@ export type SubmissionResult = { ok: true } | { ok: false; error: string };
 export async function submitText(raw: unknown): Promise<SubmissionResult> {
   const parsed = submissionSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
-  const { consent: _consent, ...data } = parsed.data;
+  const { consent: _consent, first_name, last_name, ...rest } = parsed.data;
   void _consent;
+  // Nome e sobrenome são obrigatórios; no banco ficam juntos, como serão assinados
+  const data = { ...rest, name: `${first_name} ${last_name}`.replace(/\s+/g, " ").trim() };
 
   const db = createPublicClient();
   if (!db) return { ok: false, error: "Envios indisponíveis no momento." };

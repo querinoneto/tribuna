@@ -11,7 +11,8 @@ test("visitante envia texto e foto; o envio aparece para a edição", async ({ p
   const form = page.getByRole("main");
   await expect(page.getByRole("heading", { level: 1, name: "Escreva e publique conosco" })).toBeVisible();
 
-  await form.getByLabel("Nome completo").fill(nome);
+  await form.locator("input[name=first_name]").fill(nome.split(" ")[0]);
+  await form.locator("input[name=last_name]").fill(nome.split(" ").slice(1).join(" "));
   await form.getByLabel("E-mail").fill(`leitora.${Date.now().toString(36)}@exemplo.test`);
   await form.getByLabel(/Título do texto/).fill("Por que a cidade precisa de mais praças");
   await form.getByLabel("Não, é a primeira vez").check();
@@ -40,7 +41,8 @@ test("visitante envia texto e foto; o envio aparece para a edição", async ({ p
 test("arquivo que não é PDF nem Word é recusado", async ({ page }) => {
   await page.goto("/publique");
   const form = page.getByRole("main");
-  await form.getByLabel("Nome completo").fill("Fulano");
+  await form.locator("input[name=first_name]").fill("Fulano");
+  await form.locator("input[name=last_name]").fill("de Tal");
   await form.getByLabel("E-mail").fill("fulano@exemplo.test");
   await form.getByLabel("Sim, já publiquei").check();
   await form.getByLabel(/^Seu texto/).setInputFiles({ name: "virus.exe", mimeType: "application/octet-stream", buffer: Buffer.from("x") });

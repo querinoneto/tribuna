@@ -20,7 +20,7 @@ function str(fd: FormData, k: string) {
 
 /* ------------------------------- Editorias ------------------------------- */
 export async function saveSection(_: FormState, fd: FormData): Promise<FormState> {
-  await requireRole("admin");
+  await requireRole("admin", "editor");
   const id = str(fd, "id");
   const parsed = sectionSchema.safeParse({
     name: str(fd, "name"),
@@ -40,7 +40,7 @@ export async function saveSection(_: FormState, fd: FormData): Promise<FormState
 }
 
 export async function deleteSection(id: string): Promise<FormState> {
-  await requireRole("admin");
+  await requireRole("admin", "editor");
   const supabase = await createClient();
   const { error } = await supabase.from("sections").delete().eq("id", id);
   if (error) return fail(dbErrorMessage(error));

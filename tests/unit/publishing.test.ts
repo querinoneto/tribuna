@@ -26,10 +26,10 @@ const ready: ArticleInput = {
 };
 
 describe("permissões por papel (interface)", () => {
-  it("só admin e editor publicam", () => {
+  it("toda a equipe publica; quem não está na equipe, não", () => {
     expect(canPublish("admin")).toBe(true);
     expect(canPublish("editor")).toBe(true);
-    expect(canPublish("colunista")).toBe(false);
+    expect(canPublish("colunista")).toBe(true);
     expect(canPublish(null)).toBe(false);
   });
 
@@ -38,10 +38,10 @@ describe("permissões por papel (interface)", () => {
     expect(canManageUsers("editor")).toBe(false);
   });
 
-  it("colunista edita só o próprio rascunho", () => {
+  it("colunista edita só os próprios textos, inclusive publicados", () => {
     expect(canEditArticle("colunista", "u1", { created_by: "u1", status: "draft" })).toBe(true);
     expect(canEditArticle("colunista", "u1", { created_by: "u2", status: "draft" })).toBe(false);
-    expect(canEditArticle("colunista", "u1", { created_by: "u1", status: "published" })).toBe(false);
+    expect(canEditArticle("colunista", "u1", { created_by: "u1", status: "published" })).toBe(true);
     expect(canEditArticle("editor", "u1", { created_by: "u2", status: "published" })).toBe(true);
     expect(canEditArticle(null, "u1", { created_by: "u1", status: "draft" })).toBe(false);
   });
@@ -59,11 +59,11 @@ describe("fluxo de publicação e agendamento", () => {
     expect(r.ok && r.patch.published_at).toBe(original);
   });
 
-  it("colunista não publica nem agenda", () => {
+  it("colunista publica e agenda os próprios textos", () => {
     const pub = planTransition({ role: "colunista", target: "published", input: ready, now: NOW });
     const sch = planTransition({ role: "colunista", target: "scheduled", input: ready, scheduledAt: "2026-11-09T12:00:00Z", now: NOW });
-    expect(pub.ok).toBe(false);
-    expect(sch.ok).toBe(false);
+    expect(pub.ok).toBe(true);
+    expect(sch.ok).toBe(true);
     expect(planTransition({ role: "colunista", target: "draft", input: ready, now: NOW }).ok).toBe(true);
   });
 
