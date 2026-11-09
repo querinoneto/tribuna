@@ -16,6 +16,12 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  {
+    // Impede que o site seja embutido por terceiros, que plugins rodem e que
+    // formulários enviem dados para outros domínios.
+    key: "Content-Security-Policy",
+    value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+  },
 ];
 
 const nextConfig: NextConfig = {

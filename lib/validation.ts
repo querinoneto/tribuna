@@ -77,7 +77,13 @@ export const authorSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome.").max(120),
   slug,
   bio: z.string().trim().max(600, "A biografia pode ter no máximo 600 caracteres.").optional().default(""),
-  avatar_url: z.string().url().nullable().or(z.literal("").transform(() => null)).optional(),
+  avatar_url: z
+    .string()
+    .url("Endereço da foto inválido.")
+    .refine((u) => u.startsWith("https://"), "Use um endereço de imagem que comece com https://")
+    .nullable()
+    .or(z.literal("").transform(() => null))
+    .optional(),
   is_columnist: z.boolean().default(false),
 });
 

@@ -70,7 +70,7 @@ function preparedNotice(code?: string): string | undefined {
   if (!code) return undefined;
   const parts = code.split(",");
   const who = parts.includes("colaboracao-existente")
-    ? "A assinatura usa o cadastro de colaboração que essa pessoa já tinha."
+    ? "A assinatura reaproveita um cadastro de colaboração com o mesmo nome e e-mail. O e-mail do formulário não é verificado: confira se é mesmo a mesma pessoa."
     : "A pessoa foi cadastrada como colaboradora (não aparece entre os colunistas), com a foto enviada.";
   const text = parts.includes("texto-importado")
     ? "O texto do arquivo Word já está no editor: revise a formatação."

@@ -118,22 +118,28 @@ export async function prepareSubmission(id: string): Promise<EnvioResult> {
     if (existing) redirect(`/admin/textos/${existing.id}`);
   }
 
-  // 1. Autor: o mesmo da última colaboração desta pessoa…
-  let authorId: string | null = s.author_id;
-  if (!authorId) {
-    const { data: prev } = await supabase
-      .from("submissions")
-      .select("author_id")
-      .eq("email", s.email)
-      .not("author_id", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    authorId = prev?.[0]?.author_id ?? null;
+  // 1. Autor. Por segurança, só reaproveitamos um cadastro de COLABORAÇÃO
+  //    (nunca colunista ou Redação) e só se o nome for o mesmo: o e-mail
+  //    informado no formulário não é verificado, então sozinho não prova
+  //    que é a mesma pessoa.
+  const sameName = (a: string, b: string) => slugify(a) === slugify(b);
+  let authorId: string | null = null;
+  const { data: prev } = await supabase
+    .from("submissions")
+    .select("author_id")
+    .eq("email", s.email)
+    .neq("id", s.id)
+    .not("author_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (prev?.[0]?.author_id) {
+    const { data: a } = await supabase.from("authors").select("id, name, is_contributor").eq("id", prev[0].author_id).maybeSingle();
+    if (a?.is_contributor && sameName(a.name, s.name)) authorId = a.id;
   }
-  // …ou, se ela diz que já publicou, um autor com exatamente o mesmo nome
   if (!authorId && !s.first_time) {
-    const { data: same } = await supabase.from("authors").select("id").ilike("name", s.name.replace(/[%_]/g, ""));
-    if (same?.length === 1) authorId = same[0].id;
+    const { data: same } = await supabase.from("authors").select("id, name").eq("is_contributor", true);
+    const matches = (same ?? []).filter((a) => sameName(a.name, s.name));
+    if (matches.length === 1) authorId = matches[0].id;
   }
 
   let reused = Boolean(authorId);

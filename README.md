@@ -95,7 +95,8 @@ Escolha **um** dos dois caminhos.
 3. `supabase/migrations/20261108000003_storage_cron.sql`
 4. `supabase/migrations/20261108000004_submissions.sql`
 5. `supabase/migrations/20261108000005_contributors.sql`
-6. `supabase/seed.sql`
+6. `supabase/migrations/20261108000006_security_hardening.sql`
+7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
 
@@ -209,7 +210,10 @@ O acesso é decidido pela **lista autorizada** (tabela `allowed_emails`). Quem e
 
 Outras proteções:
 
-- o HTML do editor é higienizado antes de salvar (sem scripts, sem eventos e sem iframes que não sejam do YouTube);
+- o HTML dos textos é higienizado **ao salvar e de novo ao exibir** (sem scripts, sem eventos e sem iframes que não sejam do YouTube). A segunda limpeza protege contra conteúdo gravado direto pela API, sem passar pelo site;
+- o papel de cada pessoa só vale com **e-mail confirmado** no Supabase;
+- colunistas só assinam com o próprio nome e não mudam o tipo nem o endereço da própria assinatura;
+- cabeçalho `Content-Security-Policy` básico (o site não pode ser embutido por terceiros, sem plugins, formulários só para o próprio site);
 - uploads só de imagens de até 5 MB, limite conferido no navegador e no próprio bucket do Storage;
 - cabeçalhos de segurança: HSTS, X-Frame-Options, nosniff, Referrer-Policy e Permissions-Policy;
 - a exportação em CSV protege contra fórmulas maliciosas no Excel;

@@ -425,3 +425,71 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
     );
   });
 });
+
+describe.runIf(DB)("reforço de segurança (revisão)", () => {
+  it("conta com e-mail NÃO confirmado não ganha papel, mesmo com e-mail de admin", async () => {
+    const falso = await asRoot(async (c) => {
+      const { rows } = await c.query(
+        "insert into auth.users (email, email_confirmed_at) values ('querino.neto@gmail.com', null) returning id",
+      );
+      return { id: rows[0].id as string, email: "querino.neto@gmail.com" };
+    });
+    const role = await as(falso, async (c) => (await c.query("select current_user_role() as r")).rows[0].r);
+    expect(role).toBeNull();
+    await expectDenied(
+      as(falso, (c) => c.query("insert into allowed_emails (email, role) values ('invasor@x.test', 'admin')")),
+    );
+  });
+
+  it("colunista não assina com o nome de outra pessoa", async () => {
+    const outro = await asRoot(async (c) =>
+      (await c.query("insert into authors (name, slug, is_columnist) values ('Outro Colunista', $1, true) returning id", [uniqueSlug("outro")])).rows[0].id,
+    );
+    await expectDenied(
+      as(colunista, (c) =>
+        c.query("insert into articles (title, slug, author_id) values ('x', $1, $2)", [uniqueSlug(), outro]),
+      ),
+    );
+    const meu = await seedArticle({ createdBy: colunista.id });
+    await expectDenied(as(colunista, (c) => c.query("update articles set author_id = $2 where id = $1", [meu.id, outro])));
+  });
+
+  it("colunista assina com a própria assinatura", async () => {
+    const minha = await asRoot(async (c) =>
+      (await c.query("insert into authors (name, slug, profile_id) values ('Eu Mesma', $1, $2) returning id", [uniqueSlug("eu"), colunista.id])).rows[0].id,
+    );
+    await as(colunista, (c) =>
+      c.query("insert into articles (title, slug, author_id) values ('x', $1, $2)", [uniqueSlug(), minha]),
+    );
+  });
+
+  it("colunista não muda tipo nem endereço da própria assinatura", async () => {
+    const minha = await asRoot(async (c) =>
+      (await c.query("insert into authors (name, slug, profile_id) values ('Assinatura', $1, $2) returning id", [uniqueSlug("ass"), colunista2.id])).rows[0].id,
+    );
+    await as(colunista2, async (c) => {
+      expect((await c.query("update authors set bio = 'Minha bio' where id = $1", [minha])).rowCount).toBe(1);
+    });
+    await expectDenied(as(colunista2, (c) => c.query("update authors set is_columnist = true where id = $1", [minha])));
+  });
+
+  it("ninguém troca o e-mail do próprio perfil", async () => {
+    await expectDenied(
+      as(colunista, (c) => c.query("update profiles set email = 'querino.neto@gmail.com' where id = $1", [colunista.id])),
+    );
+    await as(colunista, (c) => c.query("update profiles set name = 'Novo Nome' where id = $1", [colunista.id]));
+  });
+
+  it("visitante não liga envio a autor ou matéria existentes", async () => {
+    const autor = await asRoot(async (c) => (await c.query("select id from authors limit 1")).rows[0].id);
+    const k = crypto.randomUUID();
+    await expectDenied(
+      as(null, (c) =>
+        c.query(
+          "insert into submissions (name, email, file_path, photo_path, author_id) values ('Falso', 'f@x.test', $1, $2, $3)",
+          [`recebidos/${k}/texto.pdf`, `recebidos/${k}/foto.jpg`, autor],
+        ),
+      ),
+    );
+  });
+});

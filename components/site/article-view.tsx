@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { articlePath, formatDateTime } from "@/lib/format";
+import { sanitizeArticleHtml } from "@/lib/sanitize";
 import type { ArticleFull } from "@/lib/types";
 import { Cover } from "./cover";
 import { NewsletterInline } from "./newsletter-form";
@@ -77,7 +78,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         </aside>
 
         <div className="w-full max-w-[680px] min-w-0">
-          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: article.content_html }} />
+          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.content_html) }} />
 
           {article.tags.length > 0 && (
             <div className="mt-10 flex flex-wrap items-center gap-2 border-t border-rule pt-6">
