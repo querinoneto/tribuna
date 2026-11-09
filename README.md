@@ -103,6 +103,7 @@ Escolha **um** dos dois caminhos.
 11. `supabase/migrations/20261109000011_privacidade_sobre_texto_corrido.sql`
 12. `supabase/migrations/20261109000012_politica_privacidade_v3.sql`
 13. `supabase/migrations/20261109000013_sobre.sql`
+14. `supabase/migrations/20261109000014_assinaturas_resumo_semanal.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -238,6 +239,14 @@ Os botões de X, Instagram e YouTube ficam em `lib/social.ts`. Preencha o endere
 - Por segurança, o conteúdo também se renova sozinho a cada 5 minutos no máximo.
 - **Agendamento.** O texto agendado recebe a data de publicação escolhida, e o site só mostra textos com data de publicação já passada. Ele entra no ar na hora marcada, com atraso de no máximo 5 minutos por causa do cache, sem ninguém precisar abrir o painel. O pg_cron, a cada minuto, muda o rótulo para "Publicado".
 - **Leituras.** Cada visita à matéria soma uma leitura (uma por pessoa por sessão). A lista "Mais lidas" considera os últimos 30 dias.
+
+## 8.1. Assinaturas por e-mail (resumo semanal)
+
+- Quem assina pelo site recebe um e-mail de **confirmação** (dupla confirmação). Só depois a assinatura fica ativa.
+- Toda **sexta-feira às 8h** (horário de Maceió), o Vercel Cron chama `/api/cron/resumo-semanal`, que envia pelo **Resend** um resumo com os textos publicados nos últimos 7 dias. Sem textos novos, nada é enviado. O horário fica em `vercel.json` (em UTC).
+- O cancelamento é feito pelo link do rodapé de cada e-mail (gerido pelo Resend) e sincronizado com o banco antes de cada envio.
+- No painel, em **Assinaturas**: situação de cada e-mail, prévia enviada para você, envio manual e histórico.
+- Variáveis na Vercel: `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `RESEND_SEGMENT_ID`, `NEWSLETTER_FROM`, `CRON_SECRET` (e, opcional, `NEWSLETTER_REPLY_TO`). Veja `.env.example`.
 
 ## 9. Testes
 

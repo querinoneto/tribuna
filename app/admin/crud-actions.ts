@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { forgetSubscriber } from "@/lib/newsletter/service";
 import { dbErrorMessage } from "@/lib/publishing";
 import { revalidateContent } from "@/lib/revalidate";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
@@ -136,8 +137,10 @@ export async function removeUser(email: string): Promise<FormState> {
 export async function deleteSubscriber(id: string): Promise<FormState> {
   await requireRole("admin");
   const supabase = await createClient();
-  const { error } = await supabase.from("subscribers").delete().eq("id", id);
+  const { data: removed, error } = await supabase.from("subscribers").delete().eq("id", id).select("email").maybeSingle();
   if (error) return fail(dbErrorMessage(error));
+  // Também tira o e-mail da lista de envio do Resend
+  if (removed?.email) await forgetSubscriber(removed.email).catch(() => {});
   revalidatePath("/admin/newsletter");
   return done("Inscrição removida.");
 }

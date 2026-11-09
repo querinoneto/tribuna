@@ -585,3 +585,35 @@ describe.runIf(DB)("assinaturas e contato", () => {
     );
   });
 });
+
+describe.runIf(DB)("assinaturas por e-mail", () => {
+  it("visitante cria assinatura apenas como pendente", async () => {
+    await as(null, (c) => c.query("insert into subscribers (email) values ($1)", [`${uniqueSlug("p")}@exemplo.test`]));
+    await expectDenied(as(null, (c) => c.query("insert into subscribers (email, status) values ($1, 'ativo')", [`${uniqueSlug("a")}@exemplo.test`])));
+    await expectDenied(
+      as(null, (c) =>
+        c.query("insert into subscribers (email, confirm_token_hash) values ($1, 'abc')", [`${uniqueSlug("t")}@exemplo.test`]),
+      ),
+    );
+  });
+
+  it("assinatura nova nasce pendente", async () => {
+    const row = await asRoot(async (c) =>
+      (await c.query("insert into subscribers (email) values ($1) returning status", [`${uniqueSlug("n")}@exemplo.test`])).rows[0],
+    );
+    expect(row.status).toBe("pendente");
+  });
+
+  it("histórico de envios: só o administrador vê", async () => {
+    await asRoot((c) => c.query("insert into newsletter_sends (week_key, kind, status) values ($1, 'manual', 'enviado')", [uniqueSlug("w")]));
+    await as(null, async (c) => expect((await c.query("select * from newsletter_sends")).rowCount).toBe(0));
+    await as(editor, async (c) => expect((await c.query("select * from newsletter_sends")).rowCount).toBe(0));
+    await as(admin, async (c) => expect((await c.query("select * from newsletter_sends")).rowCount).toBeGreaterThan(0));
+  });
+
+  it("resumo automático só uma vez por semana", async () => {
+    const w = uniqueSlug("semana");
+    await asRoot((c) => c.query("insert into newsletter_sends (week_key, kind, status) values ($1, 'semanal', 'enviado')", [w]));
+    await expectDenied(asRoot((c) => c.query("insert into newsletter_sends (week_key, kind, status) values ($1, 'semanal', 'enviado')", [w])));
+  });
+});
