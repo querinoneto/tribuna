@@ -14,8 +14,8 @@ const Arrow = ({ dir }: { dir: "left" | "right" }) => (
 /**
  * Menu da capa: as editorias (em preto) e, separadas por um filete, a área
  * de Opinião e as colunas com nome próprio (em vermelho). No celular, a lista
- * rola para o lado e ganha setas ‹ › nas pontas; no computador, cabe
- * centralizada.
+ * rola para o lado e ganha setas ‹ › nas pontas; no computador, fica
+ * centralizada numa linha só (com setas, se um dia não couber).
  */
 export function SectionScroller({ sections, columns = [] }: { sections: S[]; columns?: S[] }) {
   const editorias = sections.filter((s) => s.slug !== "opiniao");
@@ -53,7 +53,8 @@ export function SectionScroller({ sections, columns = [] }: { sections: S[]; col
     el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: reduce ? "auto" : "smooth" });
   };
 
-  const arrow = "absolute top-0 bottom-0 z-10 flex w-10 items-center bg-paper text-ink transition-opacity duration-150 sm:hidden";
+  // Setas só aparecem quando a lista não cabe (no celular, quase sempre; no computador, se houver muitas colunas)
+  const arrow = "absolute top-0 bottom-0 z-10 flex w-10 items-center bg-paper text-ink transition-opacity duration-150";
 
   return (
     <div className="relative">
@@ -68,7 +69,7 @@ export function SectionScroller({ sections, columns = [] }: { sections: S[]; col
       </button>
       <ul
         ref={list}
-        className="flex gap-x-6 overflow-x-auto px-10 text-[12px] font-semibold tracking-[0.1em] whitespace-nowrap uppercase [scrollbar-width:none] sm:flex-wrap sm:justify-center sm:gap-x-9 sm:overflow-visible sm:px-0 sm:text-[13px] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-x-6 overflow-x-auto px-10 text-[12px] font-semibold tracking-[0.08em] whitespace-nowrap uppercase [scrollbar-width:none] sm:gap-x-6 sm:px-0 sm:text-[13px] xl:gap-x-7 [&::-webkit-scrollbar]:hidden [&>li:first-child]:ml-auto [&>li:last-child]:mr-auto"
       >
         {editorias.map((s) => (
           <li key={s.slug}>
