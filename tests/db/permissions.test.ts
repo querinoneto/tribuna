@@ -366,7 +366,7 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
   };
   const insert = (c: import("pg").PoolClient, e: ReturnType<typeof envio>) =>
     c.query(
-      "insert into submissions (name, email, file_path, photo_path, first_time) values ($1, $2, $3, $4, $5)",
+      "insert into submissions (name, email, file_path, photo_path, first_time, terms_version) values ($1, $2, $3, $4, $5, 'teste@1')",
       [e.name, e.email, e.file_path, e.photo_path, e.first_time],
     );
 
@@ -375,6 +375,28 @@ describe.runIf(DB)("envios de textos (Escreva e publique conosco)", () => {
       await insert(c, envio());
       expect((await c.query("select * from submissions")).rowCount).toBe(0);
     });
+  });
+
+  it("envio sem aceite do termo é recusado; com aceite, a data é carimbada pelo banco", async () => {
+    const e = envio();
+    await expectDenied(
+      as(null, (c) =>
+        c.query("insert into submissions (name, email, file_path, photo_path, first_time) values ($1, $2, $3, $4, true)", [
+          e.name, e.email, e.file_path, e.photo_path,
+        ]),
+      ),
+    );
+    await as(null, (c) => insert(c, envio()));
+    const k = crypto.randomUUID();
+    const row = await asRoot(async (c) =>
+      (
+        await c.query(
+          "insert into submissions (name, email, file_path, photo_path, first_time, terms_version) values ('A B', 'a@b.test', $1, $2, true, 'v1') returning terms_accepted_at",
+          [`recebidos/${k}/texto.pdf`, `recebidos/${k}/foto.jpg`],
+        )
+      ).rows[0],
+    );
+    expect(row.terms_accepted_at).not.toBeNull();
   });
 
   it("primeira vez exige foto", async () => {

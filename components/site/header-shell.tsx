@@ -7,6 +7,7 @@ import { IconClose, IconMenu, IconSearch } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SITE_TAGLINE_LINES } from "@/lib/env";
 import { SectionScroller } from "./section-scroller";
+import { SocialButtons } from "./social-buttons";
 import { Wordmark } from "./wordmark";
 
 type S = { name: string; slug: string };
@@ -129,10 +130,12 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
         inert={isHome && !pastMasthead ? true : undefined}
       >
         <div className="wrap flex h-14 items-center gap-3 sm:h-16">
-          <div className="flex-1">
+          <div className="flex flex-1 items-center gap-3">
             <button type="button" className="-ml-2 inline-flex size-11 items-center justify-center" aria-label="Abrir menu" onClick={() => setMenu(true)}>
               <IconMenu />
             </button>
+            {/* Redes sociais ao lado do nome, nas páginas internas */}
+            {!isHome && <SocialButtons size="sm" className="hidden md:block" />}
           </div>
           <Link href="/" className="text-center" aria-label="Tribuna Socialista, página inicial">
             <Wordmark className="text-[24px] sm:text-[30px]" />
@@ -176,6 +179,7 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
             <Link href="/publique" onClick={() => setMenu(false)} className="btn-primary mt-8 h-12 w-full text-base">
               Escreva e publique conosco
             </Link>
+            <SocialButtons className="mt-8" />
           </nav>
           </div>
         </div>

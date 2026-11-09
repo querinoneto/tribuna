@@ -151,6 +151,7 @@ export const submissionSchema = z
       .regex(/^recebidos\/[0-9a-f-]{36}\/foto\.(jpg|jpeg|png|webp)$/)
       .nullable(),
     consent: z.literal(true, { message: "Para enviar, marque que concorda com a Política de privacidade." }),
+    terms: z.literal(true, { message: "Para enviar, aceite o Termo de colaboração e licença de direitos autorais." }),
   })
   .refine((v) => !v.first_time || v.photo_path, { message: "Como é sua primeira publicação, envie uma foto.", path: ["photo_path"] });
 

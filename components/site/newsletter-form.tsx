@@ -53,7 +53,7 @@ function Form({ dark = false, compact = false }: { dark?: boolean; compact?: boo
         </p>
       )}
       <p className={`text-xs ${dark ? "text-band-muted" : "text-muted"}`}>
-        Ao se inscrever, você concorda com a nossa{" "}
+        Ao assinar, você concorda com a nossa{" "}
         <Link href="/privacidade" className="underline underline-offset-2 hover:text-accent">
           Política de privacidade
         </Link>
@@ -69,11 +69,11 @@ export function NewsletterBlock() {
     <section aria-labelledby="nl-titulo" className="border-t border-rule bg-paper-2">
       <div className="wrap flex flex-wrap items-center gap-x-14 gap-y-8 py-14">
         <div className="flex-[1_1_380px]">
-          <span className="kicker">Newsletter</span>
+          <span className="kicker">Assinaturas</span>
           <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
-            O essencial da semana, direto no seu <span className="whitespace-nowrap">e-mail</span>.
+            Receba nosso conteúdo por <span className="whitespace-nowrap">e-mail</span> em primeira mão.
           </h2>
-          <p className="font-serif text-lg text-ink-soft">Sem algoritmo decidindo o que você lê. Cancele quando quiser.</p>
+          <p className="font-serif text-lg text-ink-soft">Apoie a imprensa popular e amplie a voz da classe trabalhadora. Cancele quando quiser.</p>
         </div>
         <div className="flex-[1_1_380px]">
           <Form />
@@ -86,13 +86,13 @@ export function NewsletterBlock() {
 /** Convite no fim da matéria. */
 export function NewsletterInline() {
   return (
-    <aside aria-label="Newsletter" className="mt-12 bg-band text-band-ink">
+    <aside aria-label="Assinaturas" className="mt-12 bg-band text-band-ink">
       <div className="wrap flex flex-wrap items-center gap-x-12 gap-y-5 py-10">
         <div className="flex-[1_1_320px]">
           <p className="font-display text-2xl leading-tight text-balance sm:text-3xl">
             Gostou? Receba a Tribuna Socialista no seu <span className="whitespace-nowrap">e-mail</span>.
           </p>
-          <p className="mt-1.5 text-sm text-band-muted">Uma seleção semanal, sem algoritmo.</p>
+          <p className="mt-1.5 text-sm text-band-muted">Apoie a imprensa popular e amplie a voz da classe trabalhadora.</p>
         </div>
         <div className="flex-[1_1_380px]">
           <Form dark />

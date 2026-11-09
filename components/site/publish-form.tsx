@@ -48,6 +48,7 @@ export function PublishForm() {
       const photoProblem = validatePhotoFile(photo);
       if (photoProblem) return setError(photoProblem);
     }
+    if (fd.get("terms") !== "on") return setError("Para enviar, aceite o Termo de colaboração e licença de direitos autorais.");
     if (fd.get("consent") !== "on") return setError("Para enviar, marque que concorda com a Política de privacidade.");
 
     setStatus("sending");
@@ -86,6 +87,7 @@ export function PublishForm() {
         file_name: text.name.slice(0, 200),
         photo_path,
         consent: true,
+        terms: true,
       });
       if (!r.ok) throw new Error(r.error);
       setStatus("sent");
@@ -192,14 +194,38 @@ export function PublishForm() {
 
       <input type="text" name="site" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
 
+      <div className="border border-rule bg-paper-2 p-4 text-sm leading-relaxed sm:p-5">
+        <p className="font-semibold">Antes de enviar, saiba que:</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
+          <li>a colaboração é voluntária e gratuita, sem nenhuma remuneração;</li>
+          <li>a equipe pode alterar o título e a linha fina, corrigir o texto e cortar trechos, mas nunca acrescentar nada ao que você escreveu;</li>
+          <li>
+            você concede ao jornal, de graça, por prazo indeterminado e de forma irrevogável, licença para usar o texto no site, nas redes, por e-mail, em
+            publicações impressas e em outros meios, sempre com seu nome;
+          </li>
+          <li>a publicação depende de avaliação da equipe.</li>
+        </ul>
+      </div>
+
+      <label className="flex items-start gap-3 text-sm leading-snug">
+        <input type="checkbox" name="terms" className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]" />
+        <span>
+          Li e aceito o{" "}
+          <Link href="/termos-de-colaboracao" target="_blank" className="underline underline-offset-2 hover:text-accent">
+            Termo de colaboração e licença de direitos autorais
+          </Link>
+          , declaro que sou o autor do texto e que tenho 18 anos ou mais (ou autorização dos meus responsáveis).
+        </span>
+      </label>
+
       <label className="flex items-start gap-3 text-sm leading-snug">
         <input type="checkbox" name="consent" className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]" />
         <span>
           Li e concordo com a{" "}
-          <Link href="/privacidade" className="underline underline-offset-2 hover:text-accent">
+          <Link href="/privacidade" target="_blank" className="underline underline-offset-2 hover:text-accent">
             Política de privacidade
           </Link>{" "}
-          e autorizo a Tribuna Socialista a usar estes dados para avaliar e, se aprovado, publicar meu texto.
+          e autorizo a Tribuna Socialista a usar estes dados para avaliar e, se aprovado, publicar meu texto com meu nome e minha foto.
         </span>
       </label>
 

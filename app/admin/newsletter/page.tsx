@@ -5,7 +5,7 @@ import { DeleteButton } from "@/components/admin/delete-button";
 import { PageHeader } from "@/components/admin/page-header";
 import { deleteSubscriber } from "../crud-actions";
 
-export const metadata = { title: "Newsletter" };
+export const metadata = { title: "Assinaturas" };
 
 export default async function NewsletterPage() {
   await requireRole("admin");
@@ -18,14 +18,14 @@ export default async function NewsletterPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
-      <PageHeader title="Newsletter" description="E-mails inscritos pelo rodapé do site. Exporte a lista para usar no seu serviço de envio.">
+      <PageHeader title="Assinaturas" description="E-mails de quem assinou pelo site para receber o conteúdo por e-mail. Exporte a lista para usar no seu serviço de envio.">
         <a href="/admin/newsletter/exportar" className="btn-primary" download>
           Exportar CSV
         </a>
       </PageHeader>
 
       <p className="mb-3 text-sm text-muted">
-        <strong className="text-ink">{count ?? 0}</strong> {count === 1 ? "inscrito" : "inscritos"}
+        <strong className="text-ink">{count ?? 0}</strong> {count === 1 ? "assinante" : "assinantes"}
         {(count ?? 0) > 200 && " (mostrando os 200 mais recentes; o CSV traz todos)"}
       </p>
 
@@ -35,7 +35,7 @@ export default async function NewsletterPage() {
             <li key={s.id} className="flex items-center gap-3 px-4 py-2">
               <span className="min-w-0 flex-1 truncate">{s.email}</span>
               <span className="text-xs text-muted tabular-nums">{formatShort(s.created_at)}</span>
-              <DeleteButton action={deleteSubscriber.bind(null, s.id)} label={`Remover ${s.email}`} title="Remover inscrição?" description={`${s.email} deixará de constar na lista.`} />
+              <DeleteButton action={deleteSubscriber.bind(null, s.id)} label={`Remover ${s.email}`} title="Remover assinatura?" description={`${s.email} deixará de constar na lista.`} />
             </li>
           ))}
         </ul>

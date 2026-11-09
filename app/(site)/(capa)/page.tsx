@@ -11,7 +11,7 @@ export default async function HomePage() {
     return (
       <div className="wrap py-16">
         <EmptyState title="Em breve, as primeiras matérias">
-          O jornal ainda não publicou nenhum texto. Volte em breve ou assine a newsletter para ser avisado.
+          O jornal ainda não publicou nenhum texto. Volte em breve ou faça sua assinatura para ser avisado.
         </EmptyState>
       </div>
     );
@@ -26,18 +26,23 @@ export default async function HomePage() {
           <div className="order-2 flex flex-col lg:order-1 lg:pr-7">
             {side.map((a, i) => (
               <article key={a.id} className={`${i > 0 ? "border-t border-rule pt-5" : ""} pb-5`}>
-                {i === 0 && (
-                  <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="mb-3.5 hidden lg:block">
-                    <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="3/2" sizes="25vw" />
+                <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="mb-3.5 hidden lg:block">
+                  <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="16/9" sizes="25vw" />
+                </Link>
+                <div className="flex items-start gap-4 lg:block">
+                  <div className="min-w-0 flex-1">
+                    <Kicker article={a} />
+                    <h2 className={`mt-2 font-sans leading-[1.2] font-bold tracking-[-0.015em] ${i === 0 ? "text-xl" : "text-lg"}`}>
+                      <Link href={articlePath(a)} className="headline-link">
+                        {a.title}
+                      </Link>
+                    </h2>
+                    {i === 0 && a.subtitle && <p className="mt-2 font-serif text-base leading-snug text-ink-soft">{a.subtitle}</p>}
+                  </div>
+                  <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="w-28 shrink-0 sm:w-36 lg:hidden">
+                    <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="4/3" sizes="150px" />
                   </Link>
-                )}
-                <Kicker article={a} />
-                <h2 className={`mt-2 font-sans leading-[1.2] font-bold tracking-[-0.015em] ${i === 0 ? "text-xl" : "text-lg"}`}>
-                  <Link href={articlePath(a)} className="headline-link">
-                    {a.title}
-                  </Link>
-                </h2>
-                {i === 0 && a.subtitle && <p className="mt-2 font-serif text-base leading-snug text-ink-soft">{a.subtitle}</p>}
+                </div>
               </article>
             ))}
           </div>

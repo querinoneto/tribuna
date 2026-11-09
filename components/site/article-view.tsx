@@ -55,16 +55,8 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         </div>
       </header>
 
-      <figure className="wrap mb-10 sm:mb-12">
-        <Cover
-          src={article.cover_url}
-          alt={article.cover_alt}
-          seed={article.id}
-          ratio="21/9"
-          sizes="(min-width: 1240px) 1176px, 100vw"
-          priority
-          className="max-sm:!aspect-[4/3]"
-        />
+      <figure className="wrap mb-10 max-w-[1040px] sm:mb-12">
+        <Cover src={article.cover_url} alt={article.cover_alt} seed={article.id} ratio="16/9" sizes="(min-width: 1080px) 1000px, 100vw" priority />
         {(article.cover_caption || article.cover_credit) && (
           <figcaption className="flex flex-wrap justify-between gap-x-6 gap-y-1 border-b border-rule py-2.5 text-[13px] leading-normal text-muted">
             <span>{article.cover_caption}</span>

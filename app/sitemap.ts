@@ -5,7 +5,7 @@ import { articlePath } from "@/lib/format";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { articles, sections, authors } = await getSitemapData();
-  const pages = ["sobre", "contato", "expediente", "privacidade", "colunistas"];
+  const pages = ["sobre", "contato", "expediente", "privacidade", "termos-de-colaboracao", "colunistas", "publique"];
   return [
     { url: SITE_URL, changeFrequency: "hourly", priority: 1 },
     ...sections.map((s) => ({ url: `${SITE_URL}/editoria/${s.slug}`, changeFrequency: "hourly" as const, priority: 0.8 })),

@@ -19,7 +19,8 @@ test("visitante envia texto e foto; o envio aparece para a edição", async ({ p
 
   // Sem foto, o formulário avisa
   await form.getByLabel(/^Seu texto/).setInputFiles({ name: "artigo.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 teste") });
-  await form.getByRole("checkbox").check();
+  await form.locator("input[name=terms]").check();
+  await form.locator("input[name=consent]").check();
   await form.getByRole("button", { name: "Enviar meu texto" }).click();
   await expect(page.getByText("Como é sua primeira publicação, envie uma foto sua.")).toBeVisible();
 
@@ -46,7 +47,8 @@ test("arquivo que não é PDF nem Word é recusado", async ({ page }) => {
   await form.getByLabel("E-mail").fill("fulano@exemplo.test");
   await form.getByLabel("Sim, já publiquei").check();
   await form.getByLabel(/^Seu texto/).setInputFiles({ name: "virus.exe", mimeType: "application/octet-stream", buffer: Buffer.from("x") });
-  await form.getByRole("checkbox").check();
+  await form.locator("input[name=terms]").check();
+  await form.locator("input[name=consent]").check();
   await form.getByRole("button", { name: "Enviar meu texto" }).click();
   await expect(page.getByText("Envie o texto em PDF ou Word (.pdf, .doc ou .docx).")).toBeVisible();
 });

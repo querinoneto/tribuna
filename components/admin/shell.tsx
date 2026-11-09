@@ -19,7 +19,7 @@ const NAV: NavItem[] = [
   { href: "/admin/editorias", label: "Editorias", roles: ["admin", "editor"] },
   { href: "/admin/paginas", label: "Páginas", roles: ["admin"] },
   { href: "/admin/contato", label: "Contato", roles: ["admin", "editor"] },
-  { href: "/admin/newsletter", label: "Newsletter", roles: ["admin"] },
+  { href: "/admin/newsletter", label: "Assinaturas", roles: ["admin"] },
   { href: "/admin/usuarios", label: "Usuários", roles: ["admin"] },
 ]
 

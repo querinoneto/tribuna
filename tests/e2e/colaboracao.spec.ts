@@ -30,7 +30,8 @@ test("envio em Word vira rascunho com o texto importado e crédito de colaboraç
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     buffer: readFileSync(path.join(__dirname, "fixtures/colaboracao.docx")),
   });
-  await form.getByRole("checkbox").check();
+  await form.locator("input[name=terms]").check();
+  await form.locator("input[name=consent]").check();
   await form.getByRole("button", { name: "Enviar meu texto" }).click();
   await expect(page.getByRole("heading", { name: "Recebemos seu texto!" })).toBeVisible();
 
