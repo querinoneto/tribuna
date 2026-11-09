@@ -47,5 +47,7 @@ export function sanitizeArticleHtml(html: string): string {
 
 /** Remove todas as tags (para resumos e metadados). */
 export function stripHtml(html: string): string {
-  return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim();
+  // Espaço depois de cada bloco, para "título.Parágrafo" não grudar
+  const spaced = html.replace(/<\/(p|h[1-6]|li|blockquote|div|figcaption)>|<br\s*\/?>/gi, "$& ");
+  return sanitizeHtml(spaced, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim();
 }

@@ -109,7 +109,7 @@ export default async function HomePage() {
       {opinion.length > 0 && (
         <section aria-labelledby="opiniao" className="bg-band text-band-ink">
           <div className="wrap py-10 sm:py-14">
-            <div className="mb-8 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-band-rule pb-5">
+            <div className="mb-8 flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <h2 id="opiniao" className="font-display text-[32px] leading-none sm:text-[40px]">
                 Opinião
               </h2>
@@ -118,33 +118,40 @@ export default async function HomePage() {
                 Ver todas →
               </Link>
             </div>
-            <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-y-8 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+            <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-10 sm:gap-y-10 sm:overflow-visible sm:px-0 lg:grid-cols-4">
               {opinion.map((a) => (
-                <article
-                  key={a.id}
-                  className="flex w-64 shrink-0 snap-start flex-col gap-3.5 border border-band-rule p-5 sm:w-auto sm:border-0 sm:border-l sm:px-6 sm:py-0"
-                >
-                  {a.author?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.author.avatar_url} alt="" className="size-[72px] rounded-full object-cover grayscale" />
-                  ) : (
-                    <span aria-hidden className="flex size-[72px] items-center justify-center rounded-full bg-[#3a3633] font-display text-3xl text-band-muted">
-                      {a.author?.name.charAt(0) ?? "T"}
-                    </span>
-                  )}
-                  {a.author &&
-                    (a.author.is_contributor ? (
-                      <span className="text-[13px] font-bold tracking-[0.06em] text-band-accent uppercase">{a.author.name}</span>
+                <article key={a.id} className="flex w-72 shrink-0 snap-start flex-col gap-3.5 bg-[#242120] p-5 sm:w-auto sm:bg-transparent sm:p-0">
+                  <div className="flex items-center gap-3">
+                    {a.author?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={a.author.avatar_url} alt="" className="size-14 shrink-0 rounded-full object-cover grayscale" />
                     ) : (
-                      <Link href={`/autor/${a.author.slug}`} className="text-[13px] font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
-                        {a.author.name}
-                      </Link>
-                    ))}
+                      <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[#3a3633] font-display text-2xl text-band-muted">
+                        {a.author?.name.charAt(0) ?? "T"}
+                      </span>
+                    )}
+                    {a.author &&
+                      (a.author.is_contributor ? (
+                        <span className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase">{a.author.name}</span>
+                      ) : (
+                        <Link href={`/autor/${a.author.slug}`} className="text-[12px] leading-snug font-bold tracking-[0.06em] text-band-accent uppercase hover:underline">
+                          {a.author.name}
+                        </Link>
+                      ))}
+                  </div>
                   <h3 className="font-sans text-lg leading-snug font-semibold sm:text-xl">
                     <Link href={articlePath(a)} className="headline-link">
                       {a.title}
                     </Link>
                   </h3>
+                  {a.snippet && <p className="line-clamp-5 font-sans text-[14px] leading-relaxed text-band-muted">{a.snippet}</p>}
+                  <Link
+                    href={articlePath(a)}
+                    aria-label={`Ler mais: ${a.title}`}
+                    className="mt-auto self-start text-[13px] font-semibold text-band-accent hover:underline"
+                  >
+                    Ler mais →
+                  </Link>
                 </article>
               ))}
             </div>

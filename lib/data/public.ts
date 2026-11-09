@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { CONTENT_TAG } from "@/lib/revalidate";
 import { createPublicClient } from "@/lib/supabase/public";
+import { stripHtml } from "@/lib/sanitize";
 import type { ArticleCard, ArticleFull, Author, Page, Section } from "@/lib/types";
 
 /*
@@ -44,7 +45,7 @@ export type HomeData = {
   latest: ArticleCard[];
   special: ArticleCard | null;
   mostRead: ArticleCard[];
-  opinion: ArticleCard[];
+  opinion: (ArticleCard & { snippet: string })[];
   blocks: { section: Section; articles: ArticleCard[] }[];
 };
 
@@ -86,8 +87,22 @@ export async function getHomeData(): Promise<HomeData> {
 
   const notOpinion = (a: ArticleCard) => a.section?.slug !== "opiniao";
   const side = pick([...pinned, ...recent], 3, notOpinion);
-  const opinion = recent.filter((a) => a.section?.slug === "opiniao" && !used.has(a.id)).slice(0, 4);
-  opinion.forEach((a) => used.add(a.id));
+  const opinionCards = recent.filter((a) => a.section?.slug === "opiniao" && !used.has(a.id)).slice(0, 4);
+  opinionCards.forEach((a) => used.add(a.id));
+
+  // Trecho inicial de cada texto de opinião, para o convite "Ler mais"
+  const bodies = new Map<string, string>();
+  if (opinionCards.length) {
+    const { data } = await db.from("articles").select("id, content_html").in("id", opinionCards.map((a) => a.id));
+    for (const r of (data ?? []) as { id: string; content_html: string }[]) bodies.set(r.id, stripHtml(r.content_html ?? ""));
+  }
+  const opinion = opinionCards.map((a) => {
+    let text = bodies.get(a.id) || a.excerpt || a.subtitle || "";
+    // Textos importados do Word às vezes repetem o título no início
+    if (a.title && text.toLowerCase().startsWith(a.title.toLowerCase())) text = text.slice(a.title.length).trim();
+    const snippet = text.length > 240 ? `${text.slice(0, 240).replace(/\s+\S*$/, "")}…` : text;
+    return { ...a, snippet };
+  });
   const latest = pick(recent, 4, notOpinion);
 
   const sections = (sectionsQ.data ?? []) as Section[];
