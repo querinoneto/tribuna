@@ -67,13 +67,16 @@ function Form({ dark = false, compact = false }: { dark?: boolean; compact?: boo
 export function NewsletterBlock() {
   return (
     <section aria-labelledby="nl-titulo" className="border-t border-rule bg-paper-2">
-      <div className="wrap flex flex-wrap items-center gap-x-14 gap-y-8 py-14">
+      <div className="wrap flex flex-wrap items-center gap-x-14 gap-y-6 py-8 sm:py-9">
         <div className="flex-[1_1_380px]">
           <span className="kicker">Assinaturas</span>
           <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
             Receba nosso conteúdo por <span className="whitespace-nowrap">e-mail</span> em primeira mão.
           </h2>
-          <p className="font-sans text-lg text-ink-soft">Apoie a imprensa popular e amplie a voz da classe trabalhadora. Cancele quando quiser.</p>
+          <p className="font-sans text-lg text-ink-soft">
+            Apoie a imprensa popular e amplie a voz da classe trabalhadora.
+            <br className="hidden sm:block" /> Cancele quando quiser.
+          </p>
         </div>
         <div className="flex-[1_1_380px]">
           <Form />
