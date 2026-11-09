@@ -61,8 +61,8 @@ export default async function HomePage() {
             {hero.subtitle && <p className="mt-3.5 font-sans text-[17px] leading-snug text-ink-soft sm:text-[19px]">{hero.subtitle}</p>}
             <Byline article={hero} className="mt-3.5 text-[13px]" />
             {heroSnippet && (
-              <div className="mt-5 border-t border-rule pt-5">
-                <p className="line-clamp-6 font-sans text-[15px] leading-relaxed text-ink-soft lg:line-clamp-7">{heroSnippet}</p>
+              <div className="mt-5 hidden border-t border-rule pt-5 lg:block">
+                <p className="line-clamp-7 font-sans text-[15px] leading-relaxed text-ink-soft">{heroSnippet}</p>
                 <Link href={articlePath(hero)} aria-label={`Ler mais: ${hero.title}`} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
                   Ler mais →
                 </Link>
