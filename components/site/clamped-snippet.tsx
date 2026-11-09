@@ -43,7 +43,7 @@ export function ClampedSnippet({ text, href, lines = 5, label }: { text: string;
   }, [text, lines]);
 
   return (
-    <p ref={ref} className="text-center font-sans text-[15px] leading-relaxed text-ink-soft" style={shown === null ? { WebkitLineClamp: lines, display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" } : undefined}>
+    <p ref={ref} className="text-justify hyphens-auto font-sans text-[15px] leading-relaxed text-ink-soft" style={shown === null ? { WebkitLineClamp: lines, display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" } : undefined}>
       <span data-texto>{shown ?? text}</span>{" "}
       <Link href={href} aria-label={label} className="font-semibold whitespace-nowrap text-accent hover:underline">
         Ler mais

@@ -6,15 +6,13 @@
  * para ativá-lo. A ordem aqui é a ordem no site.
  */
 export const SOCIAL_LINKS = {
-  x: "",
-  instagram: "",
+  instagram: "https://www.instagram.com/tribunasocialista/",
   youtube: "",
 } as const;
 
 export type SocialNetwork = keyof typeof SOCIAL_LINKS;
 
 export const SOCIAL_LABEL: Record<SocialNetwork, string> = {
-  x: "X",
   instagram: "Instagram",
   youtube: "YouTube",
 };

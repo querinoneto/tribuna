@@ -233,7 +233,7 @@ Outras proteções:
 
 ### Redes sociais do rodapé
 
-Os botões de X, Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço de cada perfil para ativar o link; enquanto estiver vazio, o botão aparece sem link.
+Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço de cada perfil para ativar o link; enquanto estiver vazio, o botão aparece sem link.
 
 ## 8. Como funcionam a publicação, o cache e o agendamento
 
