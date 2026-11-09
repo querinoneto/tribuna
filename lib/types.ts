@@ -58,7 +58,7 @@ export type ArticleCard = Pick<
   | "pinned"
 > & {
   section: Pick<Section, "name" | "slug"> | null;
-  author: (Pick<Author, "name" | "slug" | "avatar_url"> & { is_contributor?: boolean }) | null;
+  author: (Pick<Author, "name" | "slug" | "avatar_url"> & { is_columnist?: boolean; is_contributor?: boolean }) | null;
 };
 
 export type ArticleFull = ArticleCard &

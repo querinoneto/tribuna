@@ -10,7 +10,7 @@ export function PublishCta() {
           <h2 id="publique-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
             Escreva e publique conosco
           </h2>
-          <p className="font-serif text-lg text-ink-soft">
+          <p className="font-sans text-lg text-ink-soft">
             Tem uma análise, uma denúncia ou uma reflexão que precisa ser lida? Envie seu texto para a redação da Tribuna Socialista.
           </p>
         </div>

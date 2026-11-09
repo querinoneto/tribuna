@@ -374,3 +374,20 @@ textarea.input {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+/* Páginas institucionais: mesmo estilo de texto, sem serifa
+   (serifa só no corpo das matérias) */
+.prose-tribuna.prose-sans {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.65;
+}
+@media (min-width: 640px) {
+  .prose-tribuna.prose-sans {
+    font-size: 1.125rem; /* 18px */
+  }
+}
+.prose-tribuna.prose-sans h2,
+.prose-tribuna.prose-sans h3 {
+  font-family: var(--font-sans);
+}

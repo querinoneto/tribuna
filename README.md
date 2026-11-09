@@ -99,6 +99,7 @@ Escolha **um** dos dois caminhos.
 7. `supabase/migrations/20261108000007_autores_revisao_contato.sql`
 8. `supabase/migrations/20261108000008_colunista_publica_perfil.sql`
 9. `supabase/migrations/20261108000009_paginas_termo_colaboracao.sql`
+10. `supabase/migrations/20261109000010_responsabilidade_autor.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):

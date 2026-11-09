@@ -26,7 +26,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
           {article.title}
         </h1>
         {article.subtitle && (
-          <p className="max-w-[680px] font-serif text-[19px] leading-snug text-ink-soft text-pretty sm:text-[23px]">{article.subtitle}</p>
+          <p className="max-w-[680px] font-sans text-[19px] leading-snug text-ink-soft text-pretty sm:text-[23px]">{article.subtitle}</p>
         )}
         <div className="mt-1 flex items-center gap-3 text-left">
           {article.author?.avatar_url ? (
@@ -74,6 +74,13 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         <div className="w-full max-w-[680px] min-w-0">
           <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.content_html) }} />
 
+          {/* Textos assinados por colunistas e colaboradores: responsabilidade do autor */}
+          {(article.author?.is_columnist || article.author?.is_contributor) && (
+            <p className="mt-10 border-t border-rule pt-4 text-[13px] leading-relaxed text-muted">
+              Este texto é de inteira responsabilidade de seu autor, {article.author.name}, e não expressa necessariamente a posição da Tribuna
+              Socialista.
+            </p>
+          )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3 lg:hidden">
             <span className="kicker text-muted">Compartilhe</span>

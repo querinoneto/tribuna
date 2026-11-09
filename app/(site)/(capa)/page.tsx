@@ -26,22 +26,19 @@ export default async function HomePage() {
           <div className="order-2 flex flex-col lg:order-1 lg:pr-7">
             {side.map((a, i) => (
               <article key={a.id} className={`${i > 0 ? "border-t border-rule pt-5" : ""} pb-5`}>
-                <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="mb-3.5 hidden lg:block">
-                  <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="16/9" sizes="25vw" />
-                </Link>
-                <div className="flex items-start gap-4 lg:block">
+                {/* Computador: imagem em cima. Celular: miniatura à esquerda do título */}
+                <div className="flex items-start gap-3.5 lg:flex-col lg:gap-3">
+                  <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="w-[38%] max-w-40 shrink-0 lg:w-full lg:max-w-none">
+                    <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="16/9" sizes="(min-width: 1024px) 25vw, 40vw" />
+                  </Link>
                   <div className="min-w-0 flex-1">
                     <Kicker article={a} />
-                    <h2 className={`mt-2 font-sans leading-[1.2] font-bold tracking-[-0.015em] ${i === 0 ? "text-xl" : "text-lg"}`}>
+                    <h2 className="mt-1.5 font-sans text-base leading-[1.25] font-bold tracking-[-0.01em] sm:text-lg lg:mt-2">
                       <Link href={articlePath(a)} className="headline-link">
                         {a.title}
                       </Link>
                     </h2>
-                    {i === 0 && a.subtitle && <p className="mt-2 font-serif text-base leading-snug text-ink-soft">{a.subtitle}</p>}
                   </div>
-                  <Link href={articlePath(a)} tabIndex={-1} aria-hidden className="w-28 shrink-0 sm:w-36 lg:hidden">
-                    <Cover src={a.cover_url} alt={a.cover_alt} seed={a.id} ratio="4/3" sizes="150px" />
-                  </Link>
                 </div>
               </article>
             ))}
@@ -61,7 +58,7 @@ export default async function HomePage() {
                 {hero.title}
               </Link>
             </h2>
-            {hero.subtitle && <p className="mt-3.5 font-serif text-lg leading-snug text-ink-soft sm:text-[21px]">{hero.subtitle}</p>}
+            {hero.subtitle && <p className="mt-3.5 font-sans text-[17px] leading-snug text-ink-soft sm:text-[19px]">{hero.subtitle}</p>}
             <Byline article={hero} className="mt-3.5 text-[13px]" />
           </article>
 
@@ -116,7 +113,7 @@ export default async function HomePage() {
               <h2 id="opiniao" className="font-display text-[32px] leading-none sm:text-[40px]">
                 Opinião
               </h2>
-              <span className="hidden font-serif text-lg text-band-muted italic sm:inline">Vozes que disputam o debate público</span>
+              <span className="hidden font-sans text-base text-band-muted sm:inline">Vozes que disputam o debate público</span>
               <Link href="/editoria/opiniao" className="ml-auto text-[13px] font-semibold text-band-accent hover:underline">
                 Ver todas →
               </Link>
@@ -166,7 +163,7 @@ export default async function HomePage() {
               <h2 id="especial" className="font-display text-[30px] leading-[1.05] sm:text-[44px]">
                 {special.title}
               </h2>
-              {special.subtitle && <p className="font-serif text-lg leading-normal text-[#fbe3e2] sm:text-xl">{special.subtitle}</p>}
+              {special.subtitle && <p className="font-sans text-lg leading-normal text-[#fbe3e2] sm:text-xl">{special.subtitle}</p>}
               <Link href={articlePath(special)} className="mt-1.5 self-start border-[1.5px] border-white px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-white hover:text-[#b3201f]">
                 Ler a reportagem
               </Link>

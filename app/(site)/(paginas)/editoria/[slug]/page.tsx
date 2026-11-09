@@ -33,7 +33,7 @@ async function Content({ params, searchParams }: Props) {
       <header className="mb-8 border-b border-rule-strong pb-6 sm:mb-10">
         <p className="kicker mb-2">Editoria</p>
         <h1 className="font-display text-4xl leading-none sm:text-5xl">{section.name}</h1>
-        {section.description && <p className="mt-3 max-w-2xl font-serif text-lg text-ink-soft sm:text-xl">{section.description}</p>}
+        {section.description && <p className="mt-3 max-w-2xl font-sans text-lg text-ink-soft sm:text-xl">{section.description}</p>}
       </header>
 
       {articles.length === 0 ? (

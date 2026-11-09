@@ -27,7 +27,7 @@ function Box({ defaultValue = "" }: { defaultValue?: string }) {
         defaultValue={defaultValue}
         placeholder="O que você procura?"
         maxLength={120}
-        className="h-16 min-w-0 flex-1 bg-transparent font-serif text-2xl outline-offset-4 sm:text-3xl"
+        className="h-16 min-w-0 flex-1 bg-transparent font-sans text-2xl outline-offset-4 sm:text-3xl"
       />
       <button type="submit" className="inline-flex size-14 items-center justify-center" aria-label="Buscar">
         <IconSearch size={24} />

@@ -104,7 +104,7 @@ export function PublishForm() {
           <IconCheck size={20} />
         </span>
         <h2 className="font-sans text-2xl font-bold tracking-tight">Recebemos seu texto!</h2>
-        <p className="font-serif text-lg text-ink-soft">
+        <p className="font-sans text-lg text-ink-soft">
           Obrigado por escrever para a Tribuna Socialista. Nossa equipe vai ler com atenção e responder pelo e-mail informado.
         </p>
         <Link href="/" className="btn-secondary mt-2">
@@ -198,6 +198,7 @@ export function PublishForm() {
         <p className="font-semibold">Antes de enviar, saiba que:</p>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
           <li>a colaboração é voluntária e gratuita, sem nenhuma remuneração;</li>
+          <li>você é o responsável pelo conteúdo do seu texto e pelas opiniões e informações nele contidas;</li>
           <li>a equipe pode alterar o título e a linha fina, corrigir o texto e cortar trechos, mas nunca acrescentar nada ao que você escreveu;</li>
           <li>
             você concede ao jornal, de graça, por prazo indeterminado e de forma irrevogável, licença para usar o texto no site, nas redes, por e-mail, em

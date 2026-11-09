@@ -14,7 +14,7 @@ export default async function ColumnistsPage() {
     <div className="wrap pt-8 pb-16 sm:pt-12">
       <header className="mb-10 border-b border-rule-strong pb-6">
         <h1 className="font-display text-4xl leading-none sm:text-5xl">Colunistas</h1>
-        <p className="mt-3 font-serif text-lg text-ink-soft sm:text-xl">Vozes que disputam o debate público.</p>
+        <p className="mt-3 font-sans text-lg text-ink-soft sm:text-xl">Vozes que disputam o debate público.</p>
       </header>
       {columnists.length === 0 ? (
         <EmptyState title="Em breve">Os colunistas da Tribuna Socialista aparecerão aqui.</EmptyState>
@@ -36,7 +36,7 @@ export default async function ColumnistsPage() {
                     {c.name}
                   </Link>
                 </h2>
-                {c.bio && <p className="mt-1 line-clamp-3 font-serif text-base leading-snug text-ink-soft">{c.bio}</p>}
+                {c.bio && <p className="mt-1 line-clamp-3 font-sans text-base leading-snug text-ink-soft">{c.bio}</p>}
               </div>
             </li>
           ))}

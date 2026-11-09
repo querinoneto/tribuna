@@ -15,7 +15,7 @@ export function SiteFooter() {
           )}
           <div className="flex flex-col items-center gap-1">
             <Wordmark className="text-[24px]" />
-            <p className="font-serif text-[15px] text-band-muted italic">{SITE_TAGLINE}</p>
+            <p className="font-sans text-[14px] text-band-muted">{SITE_TAGLINE}</p>
           </div>
           <SocialButtons tone="band" className="mt-1" />
         </div>

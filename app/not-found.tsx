@@ -16,7 +16,7 @@ export default function NotFound() {
           404
         </p>
         <h1 className="mt-4 font-sans text-3xl font-bold tracking-tight sm:text-4xl">Esta página saiu de circulação</h1>
-        <p className="mt-3 max-w-md font-serif text-lg text-ink-soft">
+        <p className="mt-3 max-w-md font-sans text-lg text-ink-soft">
           O endereço pode ter mudado ou o texto foi retirado do ar. Tente a busca ou volte à capa.
         </p>
         <form role="search" action="/busca" className="mt-8 flex w-full max-w-md border-b-2 border-rule-strong">

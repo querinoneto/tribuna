@@ -15,7 +15,7 @@ import type { ArticleCard, ArticleFull, Author, Page, Section } from "@/lib/type
  */
 
 export const CARD_SELECT =
-  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), author:authors(name, slug, avatar_url, is_contributor)";
+  "id, title, subtitle, slug, excerpt, cover_url, cover_alt, published_at, reading_minutes, featured, pinned, section:sections(name, slug), author:authors(name, slug, avatar_url, is_columnist, is_contributor)";
 
 function setup() {
   cacheTag(CONTENT_TAG);

@@ -12,7 +12,7 @@ export async function InstitutionalPage({ slug, children }: { slug: string; chil
       <header className="mx-auto mb-10 max-w-[680px] border-b border-rule-strong pb-6">
         <h1 className="font-display text-4xl leading-none sm:text-5xl">{page.title}</h1>
       </header>
-      <div className="prose-tribuna mx-auto" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(page.content_html) }} />
+      <div className="prose-tribuna prose-sans mx-auto" dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(page.content_html) }} />
       {children && <div className="mx-auto mt-12 max-w-[680px]">{children}</div>}
       <p className="mx-auto mt-12 max-w-[680px] text-xs text-muted">Atualizado em {formatDate(page.updated_at)}.</p>
     </article>

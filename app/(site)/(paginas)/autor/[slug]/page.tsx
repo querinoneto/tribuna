@@ -42,7 +42,7 @@ async function Content({ params, searchParams }: Props) {
         <div>
           <p className="kicker mb-2">{author.is_columnist ? "Colunista" : author.is_contributor ? "Colaborador externo" : "Autor"}</p>
           <h1 className="font-display text-4xl leading-none sm:text-5xl">{author.name}</h1>
-          {author.bio && <p className="mt-3 max-w-2xl font-serif text-lg leading-snug text-ink-soft">{author.bio}</p>}
+          {author.bio && <p className="mt-3 max-w-2xl font-sans text-lg leading-snug text-ink-soft">{author.bio}</p>}
         </div>
       </header>
 

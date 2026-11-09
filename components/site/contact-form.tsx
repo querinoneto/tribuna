@@ -17,7 +17,7 @@ export function ContactForm() {
           <IconCheck size={20} />
         </span>
         <h2 className="font-sans text-2xl font-bold tracking-tight">Mensagem enviada!</h2>
-        <p className="font-serif text-lg text-ink-soft">Obrigado por escrever para a Tribuna Socialista. Responderemos pelo e-mail informado.</p>
+        <p className="font-sans text-lg text-ink-soft">Obrigado por escrever para a Tribuna Socialista. Responderemos pelo e-mail informado.</p>
       </div>
     );
   }

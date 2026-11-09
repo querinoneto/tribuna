@@ -47,7 +47,7 @@ export function ArticleCard({ article, showDek = true, headingLevel = 3 }: { art
           {article.title}
         </Link>
       </H>
-      {showDek && article.subtitle && <p className="font-serif text-base leading-snug text-ink-soft">{article.subtitle}</p>}
+      {showDek && article.subtitle && <p className="font-sans text-base leading-snug text-ink-soft">{article.subtitle}</p>}
       <Byline article={article} />
     </article>
   );

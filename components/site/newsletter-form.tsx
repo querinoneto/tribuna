@@ -10,7 +10,7 @@ function Form({ dark = false, compact = false }: { dark?: boolean; compact?: boo
 
   if (state.ok) {
     return (
-      <p role="status" className={`font-serif text-lg ${dark ? "text-band-ink" : ""}`}>
+      <p role="status" className={`font-sans text-lg ${dark ? "text-band-ink" : ""}`}>
         {state.message}
       </p>
     );
@@ -73,7 +73,7 @@ export function NewsletterBlock() {
           <h2 id="nl-titulo" className="mt-2.5 mb-2 font-display text-3xl leading-tight sm:text-4xl">
             Receba nosso conteúdo por <span className="whitespace-nowrap">e-mail</span> em primeira mão.
           </h2>
-          <p className="font-serif text-lg text-ink-soft">Apoie a imprensa popular e amplie a voz da classe trabalhadora. Cancele quando quiser.</p>
+          <p className="font-sans text-lg text-ink-soft">Apoie a imprensa popular e amplie a voz da classe trabalhadora. Cancele quando quiser.</p>
         </div>
         <div className="flex-[1_1_380px]">
           <Form />
