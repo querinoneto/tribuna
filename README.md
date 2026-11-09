@@ -101,6 +101,7 @@ Escolha **um** dos dois caminhos.
 9. `supabase/migrations/20261108000009_paginas_termo_colaboracao.sql`
 10. `supabase/migrations/20261109000010_responsabilidade_autor.sql`
 11. `supabase/migrations/20261109000011_privacidade_sobre_texto_corrido.sql`
+12. `supabase/migrations/20261109000012_politica_privacidade_v3.sql`
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
