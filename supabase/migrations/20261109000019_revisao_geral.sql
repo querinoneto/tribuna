@@ -330,7 +330,14 @@ create index if not exists articles_pinned_idx on public.articles (published_at 
 create index if not exists media_created_idx on public.media (created_at desc);
 create index if not exists submissions_created_idx on public.submissions (created_at desc);
 create index if not exists subscribers_created_idx on public.subscribers (created_at desc);
-create index if not exists subscribers_confirm_sent_idx on public.subscribers (confirm_sent_at) where confirm_sent_at is not null;
+-- (só se a migração 14, das assinaturas, já tiver sido rodada)
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'subscribers' and column_name = 'confirm_sent_at') then
+    create index if not exists subscribers_confirm_sent_idx on public.subscribers (confirm_sent_at) where confirm_sent_at is not null;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- 6. Tetos contra abuso nos formulários públicos (somando todos os
