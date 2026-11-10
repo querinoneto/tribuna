@@ -8,15 +8,17 @@ import { isOwnMediaUrl } from "@/lib/env";
 /**
  * Card do feed do Instagram (retrato 4:5, 1080 × 1350), no mesmo modelo
  * aprovado: foto de capa em cima com o logotipo centralizado, filete
- * vermelho e, embaixo, a faixa escura com editoria, título, linha fina,
+ * vermelho e, embaixo, a faixa preta com editoria, título, linha fina,
  * assinatura e o endereço do site. Sai em JPEG (único formato aceito
  * pela API do Instagram).
  */
 
 export const CARD_SIZE = { width: 1080, height: 1350 };
 
-// Fundo branco, letra preta; o vermelho é o mesmo do logotipo (#970512)
-const C = { band: "#ffffff", ink: "#111111", soft: "#3d3a37", muted: "#6b6661", accent: "#970512", red: "#970512", rule: "#d9d4ce" };
+// Fundo preto, letra branca; o vermelho é o mesmo do logotipo (#970512).
+// Esse vermelho, sozinho sobre o preto, tem pouco contraste: por isso a
+// editoria vai em letra branca sobre uma etiqueta vermelha (legível).
+const C = { band: "#0a0a0a", ink: "#ffffff", soft: "#dcdcdc", muted: "#a9a9a9", red: "#970512", rule: "#2e2e2e" };
 
 type Font = { name: string; data: Buffer; weight: 400 | 600 | 700; style: "normal" };
 let fontsPromise: Promise<Font[]> | null = null;
@@ -108,7 +110,7 @@ export async function instagramCard(a: {
             justifyContent: "center",
             flexGrow: 1,
             minHeight: 520,
-            background: cover ? C.band : "#f2efeb",
+            background: cover ? C.band : "#1a1a1a",
             borderBottom: `4px solid ${C.red}`,
             overflow: "hidden",
           }}
@@ -133,12 +135,24 @@ export async function instagramCard(a: {
 
         <div style={{ display: "flex", flexDirection: "column", padding: "48px 72px 56px" }}>
           {a.section && (
-            <div style={{ display: "flex", alignItems: "center", gap: 16, color: C.accent, fontSize: 24, fontWeight: 700, letterSpacing: 3.8, textTransform: "uppercase" }}>
-              <div style={{ width: 44, height: 3, background: C.accent }} />
-              {a.section}
+            <div style={{ display: "flex" }}>
+              <div
+                style={{
+                  display: "flex",
+                  background: C.red,
+                  color: "#ffffff",
+                  padding: "10px 22px",
+                  fontSize: 24,
+                  fontWeight: 700,
+                  letterSpacing: 3.8,
+                  textTransform: "uppercase",
+                }}
+              >
+                {a.section}
+              </div>
             </div>
           )}
-          <div style={{ marginTop: a.section ? 20 : 0, fontSize: titleSize, fontWeight: 700, lineHeight: 1.08, letterSpacing: titleSize * -0.025 }}>{title}</div>
+          <div style={{ marginTop: a.section ? 24 : 0, fontSize: titleSize, fontWeight: 700, lineHeight: 1.08, letterSpacing: titleSize * -0.025 }}>{title}</div>
           {subtitle && <div style={{ marginTop: 18, fontFamily: "Serif", fontSize: subSize, lineHeight: 1.32, color: C.soft }}>{subtitle}</div>}
           <div
             style={{
