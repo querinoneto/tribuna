@@ -24,20 +24,21 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
     const { count } = await supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", status);
     return count ?? 0;
   };
-  const [published, drafts, scheduled] = await Promise.all([count("published"), count("draft"), count("scheduled")]);
-
-  const { count: newSubmissions } = isCoordination(staff.role)
-    ? await supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo")
-    : { count: 0 };
-
-  // Coordenação: mensagens novas do formulário de contato
-  const { count: unreadContact } =
-    isCoordination(staff.role)
-      ? await supabase.from("contact_messages").select("id", { count: "exact", head: true }).is("read_at", null)
-      : { count: 0 };
-
+  const headCount = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
   const recentQuery = (cols: string) => supabase.from("articles").select(cols).order("updated_at", { ascending: false }).limit(8);
-  let recentRes = await recentQuery("id, title, status, in_review, updated_at");
+  const coord = isCoordination(staff.role);
+
+  // Todas as consultas ao mesmo tempo (antes eram feitas uma depois da outra)
+  const [published, drafts, scheduled, newSubmissions, unreadContact, firstRecent] = await Promise.all([
+    count("published"),
+    count("draft"),
+    count("scheduled"),
+    coord ? headCount(supabase.from("submissions").select("id", { count: "exact", head: true }).eq("status", "novo")) : 0,
+    // Coordenação: mensagens novas do formulário de contato
+    coord ? headCount(supabase.from("contact_messages").select("id", { count: "exact", head: true }).is("read_at", null)) : 0,
+    recentQuery("id, title, status, in_review, updated_at"),
+  ]);
+  let recentRes = firstRecent;
   const outdated = isOutdatedSchema(recentRes.error);
   if (outdated) recentRes = await recentQuery("id, title, status, updated_at");
   const recent = (recentRes.data ?? []) as unknown as { id: string; title: string; status: string; in_review?: boolean; updated_at: string }[];
@@ -62,7 +63,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         <NewArticleButton />
       </div>
 
-      {(unreadContact ?? 0) > 0 && (
+      {unreadContact > 0 && (
         <Link
           href="/admin/contato?filtro=nao-lidas"
           className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-rule bg-paper p-4 hover:border-ink"
@@ -74,7 +75,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         </Link>
       )}
 
-      {(newSubmissions ?? 0) > 0 && (
+      {newSubmissions > 0 && (
         <Link
           href="/admin/envios"
           className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/5 p-4 hover:border-accent"

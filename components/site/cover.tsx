@@ -33,7 +33,16 @@ export function Cover({
   }
   return (
     <div className={`relative overflow-hidden bg-paper-2 ${className}`} style={{ aspectRatio: ratio }}>
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+      {/* "priority" saiu do Next 16: a imagem principal carrega já, com prioridade alta */}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={sizes}
+        loading={priority ? "eager" : undefined}
+        fetchPriority={priority ? "high" : undefined}
+        className="object-cover"
+      />
     </div>
   );
 }

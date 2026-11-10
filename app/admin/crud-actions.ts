@@ -116,7 +116,12 @@ export async function inviteUser(_: FormState, fd: FormData): Promise<FormState>
     .from("allowed_emails")
     .insert({ email: parsed.data.email, role: parsed.data.role, invited_by: staff.id });
   if (error) return fail(error.code === "23505" ? "Esse e-mail já está na lista." : dbErrorMessage(error));
+  // Quem volta a ter acesso volta para a área Autores (e, se for colunista ou coordenador, para Colunistas)
+  const { data: profile } = await supabase.from("profiles").select("id").eq("email", parsed.data.email).maybeSingle();
+  if (profile) await supabase.from("authors").update({ revoked_at: null }).eq("profile_id", profile.id);
+  revalidateContent();
   revalidatePath("/admin/usuarios");
+  revalidatePath("/admin/autores");
   return done(`${parsed.data.email} foi autorizado. Avise a pessoa para entrar em /entrar com esse e-mail.`);
 }
 
@@ -139,8 +144,19 @@ export async function removeUser(email: string): Promise<FormState> {
   const supabase = await createClient();
   const { error } = await supabase.from("allowed_emails").delete().eq("email", email);
   if (error) return fail(dbErrorMessage(error));
+
+  // A assinatura sai da área Autores e da página Colunistas; nome, foto,
+  // biografia, página pessoal e textos continuam no ar. (A migração 19 faz o
+  // mesmo no banco; isto cobre bancos que ainda não a receberam.)
+  const { data: profile } = await supabase.from("profiles").select("id").eq("email", email.toLowerCase()).maybeSingle();
+  if (profile) {
+    await supabase.from("authors").update({ is_columnist: false }).eq("profile_id", profile.id);
+    await supabase.from("authors").update({ revoked_at: new Date().toISOString() }).eq("profile_id", profile.id).is("revoked_at", null);
+  }
+  revalidateContent();
   revalidatePath("/admin/usuarios");
-  return done(`Acesso de ${email} removido.`);
+  revalidatePath("/admin/autores");
+  return done(`Acesso de ${email} removido. A assinatura saiu de Autores e de Colunistas; a página pessoal e os textos continuam no ar.`);
 }
 
 /* ------------------------------- Newsletter ------------------------------- */

@@ -6,7 +6,7 @@ import { postArticle, postDueArticles } from "@/lib/instagram/service";
 import { getStaff, requireStaff } from "@/lib/auth";
 import { applyRoleRules, slugFollowsTitle, type Current } from "@/lib/article-rules";
 import { dbErrorMessage, planTransition } from "@/lib/publishing";
-import { revalidateContent } from "@/lib/revalidate";
+import { revalidateContent, revalidateContentQuiet } from "@/lib/revalidate";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/server";
@@ -48,6 +48,14 @@ function normalize(raw: unknown): { ok: true; value: ArticleInput } | { ok: fals
   return { ok: true, value };
 }
 
+/** Estado atual do texto (com a data da primeira publicação, quando o banco já tem essa coluna). */
+async function loadCurrent(supabase: Awaited<ReturnType<typeof createClient>>, id: string): Promise<Current | null> {
+  const r = await supabase.from("articles").select("slug, status, author_id, published_at, first_published_at").eq("id", id).maybeSingle();
+  if (!r.error) return r.data as Current | null;
+  const { data } = await supabase.from("articles").select("slug, status, author_id, published_at").eq("id", id).maybeSingle();
+  return data as Current | null;
+}
+
 /** Atualiza o texto; se o endereço gerado do título já estiver em uso, acrescenta um sufixo curto. */
 async function updateArticle(supabase: Awaited<ReturnType<typeof createClient>>, id: string, cols: Record<string, unknown>, autoSlug: boolean) {
   const run = (patch: Record<string, unknown>) =>
@@ -68,17 +76,17 @@ export async function saveArticle(id: string, raw: unknown): Promise<SaveResult>
   if (!n.ok) return n;
   const supabase = await createClient();
 
-  const { data: current } = await supabase.from("articles").select("slug, status, author_id, published_at").eq("id", id).maybeSingle();
+  const current = await loadCurrent(supabase, id);
   if (!current) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
-  const cols = applyRoleRules(staff.role, n.value, current as Current);
+  const cols = applyRoleRules(staff.role, n.value, current);
 
-  const { data, error } = await updateArticle(supabase, id, cols, slugFollowsTitle(staff.role, current as Current));
+  const { data, error } = await updateArticle(supabase, id, cols, slugFollowsTitle(staff.role, current));
 
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
 
-  // Se o texto já está no ar, a edição aparece no site imediatamente
-  if (data.status === "published" || data.status === "scheduled") revalidateContent();
+  // Se o texto já está no ar, a edição aparece no site na próxima visita
+  if (data.status === "published" || data.status === "scheduled") revalidateContentQuiet();
 
   return { ok: true, savedAt: data.updated_at, status: data.status, publishedAt: data.published_at };
 }
@@ -97,9 +105,9 @@ export async function changeStatus(
   if (!n.ok) return n;
 
   const supabase = await createClient();
-  const { data: current } = await supabase.from("articles").select("slug, status, author_id, published_at").eq("id", id).maybeSingle();
+  const current = await loadCurrent(supabase, id);
   if (!current) return { ok: false, error: "Texto não encontrado ou sem permissão." };
-  const cols = applyRoleRules(staff.role, n.value, current as Current);
+  const cols = applyRoleRules(staff.role, n.value, current);
 
   const plan = planTransition({
     role: staff.role,
@@ -111,7 +119,7 @@ export async function changeStatus(
   if (!plan.ok) return plan;
 
   // O endereço de um texto que vai ao ar não muda mais (para quem não é administrador)
-  const { data, error } = await updateArticle(supabase, id, { ...cols, ...plan.patch }, slugFollowsTitle(staff.role, current as Current));
+  const { data, error } = await updateArticle(supabase, id, { ...cols, ...plan.patch }, slugFollowsTitle(staff.role, current));
 
   if (error) return { ok: false, error: dbErrorMessage(error) };
   if (!data) return { ok: false, error: "Você não tem permissão para alterar o estado deste texto." };

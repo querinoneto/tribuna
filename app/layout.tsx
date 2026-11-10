@@ -39,18 +39,15 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", images: ["/og-default.png"] },
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#121110" },
-  ],
-};
+// A cor da barra do navegador acompanha o tema (o alternador a atualiza)
+export const viewport: Viewport = { themeColor: "#faf8f5" };
 
 /**
- * Aplica o tema antes da primeira pintura (evita o "piscar" claro→escuro):
- * usa a escolha salva no alternador ou, sem escolha, a preferência do sistema.
+ * Aplica o tema antes da primeira pintura (evita o "piscar" claro→escuro).
+ * O padrão é sempre o modo claro, mesmo com o celular ou o computador no
+ * modo noturno; o escuro só entra quando o leitor escolhe no alternador.
  */
-const themeScript = `(function(){try{var t=localStorage.getItem('tema');var d=t?t==='escuro':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d)}catch(e){}})()`;
+const themeScript = `(function(){try{if(localStorage.getItem('tema')==='escuro'){document.documentElement.classList.add('dark');var f=function(){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#121110')};f();document.addEventListener('DOMContentLoaded',f)}}catch(e){}})()`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

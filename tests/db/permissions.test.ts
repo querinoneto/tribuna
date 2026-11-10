@@ -105,23 +105,29 @@ describe.runIf(DB)("visitante (sem conta)", () => {
     });
   });
 
-  it("incrementa leituras só de matérias publicadas", async () => {
+  it("não mexe no contador de leituras direto pela API", async () => {
+    const pub = await seedArticle({ status: "published", publishedAt: new Date(Date.now() - 1000).toISOString() });
+    await expectDenied(as(null, (c) => c.query("select increment_views($1)", [pub.id])));
+    await expectDenied(as(null, (c) => c.query("select register_view($1, $2)", [pub.id, "a".repeat(32)])));
+  });
+
+  it("o servidor conta uma leitura por leitor, por dia, e só de matérias publicadas", async () => {
     const pub = await seedArticle({ status: "published", publishedAt: new Date(Date.now() - 1000).toISOString() });
     const draft = await seedArticle({ status: "draft" });
-    await as(null, async (c) => {
-      await c.query("select increment_views($1)", [pub.id]);
-      await c.query("select increment_views($1)", [draft.id]);
-    });
-    // a transação de `as` é desfeita; rodamos de novo fora dela para conferir
     await asRoot(async (c) => {
-      await c.query("set role anon");
-      await c.query("select increment_views($1)", [pub.id]);
-      await c.query("select increment_views($1)", [draft.id]);
+      const { rows: before } = await c.query("select updated_at from articles where id = $1", [pub.id]);
+      await c.query("set role service_role");
+      await c.query("select register_view($1, $2)", [pub.id, "a".repeat(32)]);
+      await c.query("select register_view($1, $2)", [pub.id, "a".repeat(32)]); // mesmo leitor: não conta de novo
+      await c.query("select register_view($1, $2)", [pub.id, "b".repeat(32)]);
+      await c.query("select register_view($1, $2)", [draft.id, "a".repeat(32)]);
       await c.query("reset role");
-      const { rows } = await c.query("select id, views from articles where id = any($1)", [[pub.id, draft.id]]);
-      const views = Object.fromEntries(rows.map((r) => [r.id, r.views]));
-      expect(views[pub.id]).toBe(1);
-      expect(views[draft.id]).toBe(0);
+      const { rows } = await c.query("select id, views, updated_at from articles where id = any($1)", [[pub.id, draft.id]]);
+      const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
+      expect(byId[pub.id].views).toBe(2);
+      expect(byId[draft.id].views).toBe(0);
+      // Leitura não muda o "Atualizado em"
+      expect(byId[pub.id].updated_at.getTime()).toBe(before[0].updated_at.getTime());
     });
   });
 
@@ -187,9 +193,39 @@ describe.runIf(DB)("colunista", () => {
     expect(n).toBe(0);
   });
 
-  it("não destaca texto na home", async () => {
+  it("não destaca texto na home (o banco ignora o pedido)", async () => {
     const meu = await seedArticle({ createdBy: colunista.id });
-    await expectDenied(as(colunista, (c) => c.query("update articles set featured = true where id = $1", [meu.id])));
+    const row = await as(colunista, async (c) =>
+      (await c.query("update articles set featured = true, pinned = true where id = $1 returning featured, pinned", [meu.id])).rows[0],
+    );
+    expect(row).toEqual({ featured: false, pinned: false });
+  });
+
+  it("não infla o contador de leituras do próprio texto", async () => {
+    const meu = await seedArticle({ createdBy: colunista.id, status: "published", publishedAt: new Date().toISOString() });
+    const row = await as(colunista, async (c) => (await c.query("update articles set views = 99999 where id = $1 returning views", [meu.id])).rows[0]);
+    expect(row.views).toBe(0);
+  });
+
+  it("não antedata a publicação nem agenda no passado", async () => {
+    const meu = await seedArticle({ createdBy: colunista.id });
+    const row = await as(colunista, async (c) =>
+      (await c.query("update articles set status = 'published', published_at = '2001-01-01' where id = $1 returning published_at", [meu.id])).rows[0],
+    );
+    expect(new Date(row.published_at).getFullYear()).toBeGreaterThanOrEqual(2026);
+    await expectDenied(
+      as(colunista, (c) => c.query("update articles set status = 'scheduled', scheduled_at = '2001-01-01' where id = $1", [meu.id])),
+    );
+  });
+
+  it("não muda o endereço de um texto que já foi ao ar, mesmo de volta a rascunho", async () => {
+    const meu = await seedArticle({ createdBy: colunista.id });
+    const slug = await as(colunista, async (c) => {
+      await c.query("update articles set status = 'published' where id = $1", [meu.id]);
+      await c.query("update articles set status = 'draft' where id = $1", [meu.id]);
+      return (await c.query("update articles set slug = 'endereco-trocado' where id = $1 returning slug", [meu.id])).rows[0].slug;
+    });
+    expect(slug).toBe(meu.slug);
   });
 
   it("edita o próprio rascunho, mas não o de outra pessoa", async () => {
@@ -296,12 +332,20 @@ describe.runIf(DB)("editor", () => {
     await expectDenied(as(editor, (c) => c.query("update articles set status = 'scheduled' where id = $1", [r.id])));
   });
 
-  it("só existe uma manchete principal por vez", async () => {
+  it("não escolhe a manchete principal nem fixa textos (só o administrador)", async () => {
     const a = await seedArticle({ status: "published", publishedAt: new Date().toISOString() });
-    await as(editor, async (c) => {
+    const row = await as(editor, async (c) =>
+      (await c.query("update articles set featured = true, pinned = true where id = $1 returning featured, pinned", [a.id])).rows[0],
+    );
+    expect(row).toEqual({ featured: false, pinned: false });
+  });
+
+  it("só existe uma manchete principal por vez (administrador)", async () => {
+    const a = await seedArticle({ status: "published", publishedAt: new Date().toISOString() });
+    await as(admin, async (c) => {
       await c.query("update articles set featured = true where id = $1", [a.id]);
-      const { rows } = await c.query("select count(*)::int as n from articles where featured");
-      expect(rows[0].n).toBe(1);
+      const { rows } = await c.query("select count(*)::int as n, bool_and(id = $1) as ok from articles where featured", [a.id]);
+      expect(rows[0]).toEqual({ n: 1, ok: true });
     });
   });
 
@@ -626,5 +670,66 @@ describe.runIf(DB)("assinaturas por e-mail", () => {
     const w = uniqueSlug("semana");
     await asRoot((c) => c.query("insert into newsletter_sends (week_key, kind, status) values ($1, 'semanal', 'enviado')", [w]));
     await expectDenied(asRoot((c) => c.query("insert into newsletter_sends (week_key, kind, status) values ($1, 'semanal', 'enviado')", [w])));
+  });
+});
+
+describe.runIf(DB)("acesso revogado", () => {
+  it("sai de Colunistas, mas a assinatura continua pública; ao voltar, reaparece", async () => {
+    const ex = await createUser("ex.colunista@tribuna.test", "colunista");
+    await asRoot((c) => c.query("insert into profiles (id, email, name) values ($1, $2, 'Ex Colunista') on conflict (id) do nothing", [ex.id, ex.email]));
+    await asRoot((c) => c.query("select public.ensure_staff_author($1, true)", [ex.id]));
+    const before = await asRoot(async (c) => (await c.query("select is_columnist, revoked_at from authors where profile_id = $1", [ex.id])).rows[0]);
+    expect(before).toEqual({ is_columnist: true, revoked_at: null });
+
+    await as(admin, async (c) => {
+      await c.query("delete from allowed_emails where email = $1", [ex.email]);
+      const a = (await c.query("select is_columnist, revoked_at from authors where profile_id = $1", [ex.id])).rows[0];
+      expect(a.is_columnist).toBe(false);
+      expect(a.revoked_at).not.toBeNull();
+    });
+    // Visitante continua vendo nome e página (a linha do autor é pública)
+    const pub = await as(null, async (c) => (await c.query("select name from authors where profile_id = $1", [ex.id])).rowCount);
+    expect(pub).toBe(1);
+
+    await as(admin, async (c) => {
+      await c.query("delete from allowed_emails where email = $1", [ex.email]);
+      await c.query("insert into allowed_emails (email, role) values ($1, 'colunista')", [ex.email]);
+      const a = (await c.query("select is_columnist, revoked_at from authors where profile_id = $1", [ex.id])).rows[0];
+      expect(a).toEqual({ is_columnist: true, revoked_at: null });
+    });
+  });
+
+  it("quem perdeu o acesso não edita mais a própria coluna", async () => {
+    const ex = await createUser("ex.coluna@tribuna.test", "colunista");
+    await asRoot(async (c) => {
+      await c.query("insert into profiles (id, email, name) values ($1, $2, 'Ex Coluna') on conflict (id) do nothing", [ex.id, ex.email]);
+      const author = (await c.query("select public.ensure_staff_author($1, true) as id", [ex.id])).rows[0].id;
+      await c.query("insert into columns (author_id, name, slug) values ($1, 'Coluna Antiga', 'coluna-antiga')", [author]);
+      await c.query("delete from allowed_emails where email = $1", [ex.email]);
+    });
+    const n = await as(ex, async (c) => (await c.query("update columns set name = 'Pichação' where slug = 'coluna-antiga'")).rowCount);
+    expect(n).toBe(0);
+  });
+
+  it("colunista não marca a si mesmo como revogado ou não revogado", async () => {
+    await expectDenied(
+      as(colunista, (c) => c.query("update authors set revoked_at = now() where profile_id = $1", [colunista.id])),
+    );
+  });
+});
+
+describe.runIf(DB)("tetos contra abuso", () => {
+  it("visitante não envia arquivos além do teto por hora", async () => {
+    await asRoot((c) =>
+      c.query(
+        "insert into storage.objects (bucket_id, name, created_at) select 'envios', 'recebidos/' || gen_random_uuid() || '/texto.pdf', now() from generate_series(1, 80)",
+      ),
+    );
+    await expectDenied(
+      as(null, (c) =>
+        c.query("insert into storage.objects (bucket_id, name) values ('envios', $1)", [`recebidos/${crypto.randomUUID()}/texto.pdf`]),
+      ),
+    );
+    await asRoot((c) => c.query("delete from storage.objects where bucket_id = 'envios'"));
   });
 });

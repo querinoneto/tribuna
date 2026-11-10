@@ -115,7 +115,7 @@ export function HeaderShell({ sections, date, variant }: { sections: S[]; date: 
               </Link>
             </div>
           </div>
-          <nav aria-label="Editorias" className="border-t-4 border-b border-rule-strong">
+          <nav aria-label="Editorias" className="border-t-4 border-rule-strong">
             <SectionScroller sections={sections} />
           </nav>
         </header>

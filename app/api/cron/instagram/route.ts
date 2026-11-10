@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isCronAuthorized } from "@/lib/cron";
 import { instagramAvailable, postDueArticles, refreshTokenIfNeeded } from "@/lib/instagram/service";
 
 /**
@@ -8,8 +9,7 @@ import { instagramAvailable, postDueArticles, refreshTokenIfNeeded } from "@/lib
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!isCronAuthorized(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "não autorizado" }, { status: 401 });
   }
   if (!instagramAvailable) return NextResponse.json({ status: "nao-configurado" });

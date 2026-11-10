@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { articlePath } from "@/lib/format";
+import { articlePath, columnLabel } from "@/lib/format";
 import type { ArticleCard as Card } from "@/lib/types";
 import { Cover } from "./cover";
 
-/** Rótulo acima do título: a coluna (quando o texto é de uma coluna com nome) ou a editoria. */
+/**
+ * Rótulo acima do título: a coluna (quando o texto é de uma coluna com nome)
+ * ou a editoria. A coluna sempre aparece como "Coluna: Nome", para não ser
+ * confundida com uma editoria.
+ */
 export function kickerOf(article: Pick<Card, "section" | "column">): { name: string; href: string } | null {
-  if (article.column) return { name: article.column.name, href: `/colunas/${article.column.slug}` };
+  if (article.column) return { name: columnLabel(article.column.name), href: `/colunas/${article.column.slug}` };
   if (article.section) return { name: article.section.name, href: `/editoria/${article.section.slug}` };
   return null;
 }

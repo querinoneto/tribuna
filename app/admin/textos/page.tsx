@@ -42,8 +42,14 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
     return query;
   };
 
+  // Lista, editorias e autores ao mesmo tempo
+  const [first, { data: sections }, { data: authors }] = await Promise.all([
+    listQuery(true),
+    supabase.from("sections").select("id, name").order("position"),
+    supabase.from("authors").select("id, name").order("name"),
+  ]);
   // Se o banco ainda não recebeu a atualização (coluna in_review), lista sem ela
-  let list = await listQuery(true);
+  let list = first;
   const outdated = isOutdatedSchema(list.error);
   if (outdated) list = (await listQuery(false)) as unknown as typeof list;
   const rows = (list.data ?? []) as unknown as {
@@ -59,11 +65,6 @@ export default async function TextosPage({ searchParams }: PageProps<"/admin/tex
     authors: unknown;
   }[];
   const count = list.count;
-
-  const [{ data: sections }, { data: authors }] = await Promise.all([
-    supabase.from("sections").select("id, name").order("position"),
-    supabase.from("authors").select("id, name").order("name"),
-  ]);
 
   const total = count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));

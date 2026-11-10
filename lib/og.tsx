@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
+import { isOwnMediaUrl } from "@/lib/env";
 
 /**
  * Miniatura de compartilhamento (WhatsApp, Facebook, X, LinkedIn...).
@@ -39,7 +40,8 @@ async function dataUrl(buf: Buffer, mime: string) {
 
 /** Baixa a capa e converte para JPEG no tamanho certo (aceita WebP, PNG, AVIF...). */
 async function coverImage(url: string | null, width: number, height: number): Promise<string | null> {
-  if (!url) return null;
+  // Só baixa imagens do próprio Storage (nada de endereços arbitrários)
+  if (!url || !isOwnMediaUrl(url)) return null;
   try {
     const res = await fetch(url, { cache: "force-cache" });
     if (!res.ok) return null;

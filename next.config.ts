@@ -43,6 +43,9 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    // As imagens enviadas nunca mudam (cada envio ganha um endereço novo):
+    // a versão otimizada fica guardada por 31 dias em vez de ser refeita.
+    minimumCacheTTL: 2_678_400,
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
       : [],

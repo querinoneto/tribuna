@@ -222,15 +222,6 @@ export async function getAuthorPage(slug: string, page: number) {
   return { author: author as Author, articles: asCards(data), total: count ?? 0 };
 }
 
-export async function getColumnists(): Promise<Author[]> {
-  "use cache";
-  const db = setup();
-  if (!db) return [];
-  const { data, error } = await db.from("authors").select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id").eq("is_columnist", true).order("name");
-  log("colunistas", error);
-  return (data ?? []) as Author[];
-}
-
 export type ColumnistSummary = Author & {
   total: number;
   latest: { title: string; slug: string; published_at: string } | null;

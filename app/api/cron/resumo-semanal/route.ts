@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isCronAuthorized } from "@/lib/cron";
 import { newsletterReady, purgeStalePending, sendPendingConfirmations, sendWeeklyDigest } from "@/lib/newsletter/service";
 
 /**
@@ -9,8 +10,7 @@ import { newsletterReady, purgeStalePending, sendPendingConfirmations, sendWeekl
 export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!isCronAuthorized(request.headers.get("authorization"))) {
     return NextResponse.json({ error: "não autorizado" }, { status: 401 });
   }
   if (!newsletterReady) return NextResponse.json({ status: "nao-configurado" });

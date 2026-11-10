@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isOwnMediaUrl } from "./env";
 import { SLUG_RE } from "./slug";
 
 const slug = z
@@ -22,7 +23,13 @@ export const articleSchema = z.object({
   excerpt: z.string().trim().max(300).optional(),
   content_json: z.unknown().nullable(),
   content_html: z.string().max(500_000, "O texto ficou grande demais."),
-  cover_url: z.string().url("Endereço da imagem inválido.").nullable().or(z.literal("").transform(() => null)),
+  // Só imagens do próprio jornal (enviadas pelo painel ou da biblioteca)
+  cover_url: z
+    .string()
+    .url("Endereço da imagem inválido.")
+    .refine(isOwnMediaUrl, "Use uma imagem enviada pelo painel ou escolhida na biblioteca.")
+    .nullable()
+    .or(z.literal("").transform(() => null)),
   cover_alt: z.string().trim().max(300, "O texto alternativo pode ter no máximo 300 caracteres."),
   cover_caption: z.string().trim().max(400).optional(),
   cover_credit: z.string().trim().max(120),

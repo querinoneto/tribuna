@@ -108,6 +108,7 @@ Escolha **um** dos dois caminhos.
 16. `supabase/migrations/20261109000016_expediente.sql`
 17. `supabase/migrations/20261109000017_instagram.sql`
 18. `supabase/migrations/20261109000018_colunas.sql`
+19. `supabase/migrations/20261109000019_revisao_geral.sql` (acesso revogado, regras de publicação reforçadas, contagem de leituras, tetos contra abuso e desempenho)
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -208,7 +209,7 @@ Resumo abaixo. O passo a passo completo está no [checklist](docs/CHECKLIST-DEPL
 | Papel | O que pode fazer |
 | --- | --- |
 | **admin** | tudo, inclusive convidar pessoas, editar autores e páginas, apagar mensagens do Contato e exportar a newsletter |
-| **coordenador** (`editor` no banco) | tudo o que o colunista faz, mais: editar, publicar e tirar do ar qualquer texto; destacar na capa; aprovar envios de leitores; Produção, Editorias e Contato (sem apagar mensagens) |
+| **coordenador** (`editor` no banco) | tudo o que o colunista faz, mais: editar, publicar e tirar do ar qualquer texto; trocar o autor de um texto; aprovar envios de leitores; Produção, Editorias e Contato (sem apagar mensagens). Manchete principal, fixar na home e mudar o endereço (URL) são só do administrador |
 | **colunista** | escrever, publicar, agendar e tirar do ar **só os próprios** textos; editar a própria foto, nome e biografia |
 | **visitante** | ler o que está publicado (não precisa de conta) |
 
@@ -220,6 +221,8 @@ A proteção funciona em três camadas:
 
 O acesso é decidido pela **lista autorizada** (tabela `allowed_emails`). Quem entra com um e-mail fora da lista vê "Acesso não autorizado" e é desconectado na hora. Remover alguém da lista em **Usuários** corta o acesso imediatamente, e o banco impede que o jornal fique sem nenhum administrador.
 
+**Acesso removido.** Quem sai de **Usuários** some da área **Autores**, da página **Colunistas** e das opções de assinatura no editor (`authors.revoked_at`, preenchido por gatilho). O nome, a foto, a biografia, a página pessoal (`/autor/...`) e os textos continuam no ar. Se a pessoa for convidada de novo, volta a aparecer.
+
 Outras proteções:
 
 - o HTML dos textos é higienizado **ao salvar e de novo ao exibir** (sem scripts, sem eventos e sem iframes que não sejam do YouTube). A segunda limpeza protege contra conteúdo gravado direto pela API, sem passar pelo site;
@@ -229,6 +232,11 @@ Outras proteções:
 - uploads só de imagens de até 5 MB, limite conferido no navegador e no próprio bucket do Storage;
 - cabeçalhos de segurança: HSTS, X-Frame-Options, nosniff, Referrer-Policy e Permissions-Policy;
 - a exportação em CSV protege contra fórmulas maliciosas no Excel;
+- **regras de publicação no banco** (migração 19): só o administrador escolhe a manchete e fixa textos; ninguém altera o contador de leituras, antedata a publicação ou agenda no passado; o endereço de um texto que já foi ao ar não muda (salvo pelo administrador);
+- **leituras** contadas pelo servidor, no máximo uma por leitor, por texto, por dia (resumo irreversível e diário do IP e do navegador, apagado em dois dias). Requer `SUPABASE_SECRET_KEY` na Vercel;
+- capas só podem vir do próprio Storage (o servidor nunca baixa imagens de endereços arbitrários para montar os cards);
+- **tetos contra abuso**: 60 mensagens de Contato, 40 envios de leitores, 80 arquivos enviados e 40 e-mails de confirmação de assinatura por hora, somando todos os remetentes (além do limite por e-mail);
+- a senha do cron é comparada em tempo constante;
 - **envios de leitores** ("Escreva e publique conosco", em `/publique`): os arquivos vão para um bucket **privado** (`envios`, até 10 MB, só PDF, Word e imagens). Visitantes só conseguem enviar, nunca ler; apenas editores e administradores veem e baixam os envios, em **Painel → Envios de leitores**. Há limite de 5 envios por e-mail por hora.
 - **Preparar para publicação**: em cada envio, esse botão cadastra a pessoa como **colaboradora** (ou reaproveita o cadastro, se ela já mandou textos), copia a foto para a biblioteca, cria o rascunho com título e autor e, se o arquivo for Word (.docx), já importa o texto. Colaboradores recebem os créditos ("Colaboração") mas **não** aparecem entre os colunistas: colunista é só quem a edição cadastra como tal, em **Colunistas e autores**.
 
@@ -273,7 +281,7 @@ npm test
 ```
 
 - `tests/unit`: regras de permissão por papel, transições de publicação e agendamento, higienização de HTML, validação de uploads e formatação de datas em português.
-- `tests/db`: aplica as migrações reais num Postgres e testa as políticas RLS como visitante, conta não autorizada, colunista, editor e admin (27 cenários).
+- `tests/db`: aplica as migrações reais num Postgres e testa as políticas RLS como visitante, conta não autorizada, colunista, editor e admin, além do acesso revogado e dos tetos contra abuso (64 cenários).
 
 Os testes de banco precisam de um Postgres local, por padrão `postgresql://postgres@localhost:54322/postgres`; outro endereço pode ser definido em `TEST_DATABASE_ADMIN_URL`. Sem ele, esses testes são pulados com um aviso. Se você tiver Docker, um jeito simples é:
 
@@ -293,5 +301,7 @@ O teste de ponta a ponta no navegador (`tests/e2e`) é opcional; veja `tests/e2e
 **O link do e-mail diz que expirou.** Cada link vale uma vez e por uma hora. Peça outro. Se abrir em outro navegador ou aplicativo, copie o link e abra no mesmo navegador onde pediu.
 
 **Publiquei e o texto não apareceu.** Recarregue a página. Se ainda não aparecer, confira se o texto tem data de publicação no passado (os agendados só aparecem na hora marcada).
+
+**O painel está lento.** Confira se a Vercel roda as funções na mesma região do banco: no Supabase, **Project Settings → General → Region**; na Vercel, **Settings → Functions → Function Region** (para um banco em São Paulo, `sa-east-1`, escolha **São Paulo, gru1**). Com o banco em outro continente, cada consulta do painel atravessa o oceano.
 
 **A imagem não sobe.** São aceitos JPG, PNG, WebP, GIF e AVIF de até 5 MB. Confira também se a migração `..._storage_cron.sql` foi aplicada, porque é ela que cria o bucket `media`.

@@ -75,13 +75,17 @@ test("colunista nomeia a coluna, publica sem editoria e com fórmula; a coluna n
   // A faixa Opinião não mostra textos de colunas
   await expect(page.locator("section[aria-labelledby=opiniao]").getByRole("link", { name: title })).toHaveCount(0);
 
-  // Texto da coluna (sem editoria) entra nas listas comuns da capa
+  // Texto da coluna (sem editoria) entra nas listas comuns da capa, sempre com "Coluna:" no rótulo
   await expect(page.getByRole("link", { name: title }).first()).toBeVisible();
+  const card = page.locator("article").filter({ has: page.getByRole("link", { name: title }) }).first();
+  await expect(card.getByText(`Coluna: ${COLUNA}`, { exact: true })).toBeVisible();
+  // Nenhum rótulo mostra o nome da coluna sozinho, como se fosse uma editoria
+  await expect(page.locator("main .kicker", { hasText: new RegExp(`^${COLUNA}$`, "i") })).toHaveCount(0);
 
   // 4. Matéria: rótulo da coluna, assinatura do colunista e fórmula desenhada
   await page.getByRole("link", { name: title }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
-  await expect(page.locator("article header").getByRole("link", { name: COLUNA })).toBeVisible();
+  await expect(page.locator("article header").getByRole("link", { name: `Coluna: ${COLUNA}` })).toBeVisible();
   await expect(page.locator("article").getByText("Paula Freire").first()).toBeVisible();
   await expect(page.locator(".prose-tribuna .math-inline .katex")).toBeVisible();
 
@@ -115,4 +119,17 @@ test("administrador vê URL, manchete e autor; ninguém vê legenda nem resumo p
   await expect(details.getByText("Manchete principal da home")).toBeVisible();
   await expect(details.getByText("Fixar entre os destaques da home")).toBeVisible();
   for (const nome of ["Legenda", "Resumo para redes sociais"]) await expect(details.getByLabel(nome)).toHaveCount(0);
+});
+
+test("o site abre no modo claro mesmo com o aparelho no modo noturno; o escuro só com o botão", async ({ browser }) => {
+  const ctx = await browser.newContext({ colorScheme: "dark", viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await page.goto("/");
+  await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
+  await page.getByRole("button", { name: "Ativar modo escuro" }).click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  // A escolha fica guardada
+  await page.reload();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await ctx.close();
 });

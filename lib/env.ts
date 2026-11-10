@@ -17,3 +17,14 @@ export const SITE_TAGLINE_LINES = ["Imprensa popular a serviço", "da classe tra
 export const SITE_DESCRIPTION =
   "Jornal digital independente com reportagens e opinião sobre política, economia, trabalho, meio ambiente, cultura e o mundo.";
 export const TIMEZONE = process.env.NEXT_PUBLIC_TIMEZONE ?? "America/Maceio";
+
+/**
+ * A imagem é do próprio jornal (Storage público do Supabase)? Capas e fotos
+ * de autor só podem vir daí: o servidor baixa essas imagens para montar os
+ * cards do Instagram e as imagens de compartilhamento, e não deve buscar
+ * endereços arbitrários (inclusive da rede interna).
+ */
+export function isOwnMediaUrl(url: string | null | undefined): boolean {
+  if (!url || !SUPABASE_URL) return false;
+  return url.startsWith(`${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/`) && !url.includes("..");
+}

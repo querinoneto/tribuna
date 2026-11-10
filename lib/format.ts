@@ -82,3 +82,8 @@ export function readingTime(html: string): number {
 export function plural(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
+
+/** A coluna aparece sempre como "Coluna: Nome", para não ser confundida com uma editoria. */
+export function columnLabel(name: string) {
+  return `Coluna: ${name}`;
+}

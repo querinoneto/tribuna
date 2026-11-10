@@ -20,7 +20,7 @@ const Arrow = ({ dir }: { dir: "left" | "right" }) => (
 export function SectionScroller({ sections }: { sections: S[] }) {
   const editorias = sections.filter((s) => s.slug !== "opiniao");
   const list = useRef<HTMLUListElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
+  const [edges, setEdges] = useState({ start: true, end: true });
 
   const update = useCallback(() => {
     const el = list.current;

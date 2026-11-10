@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
+import { getRevokedAuthorIds } from "@/lib/authors";
 import { createClient } from "@/lib/supabase/server";
 import { ArticleEditor, type EditorArticle } from "@/components/admin/article-editor";
 
 export const metadata = { title: "Editar texto" };
+
+const ARTICLE_FIELDS =
+  "id, title, subtitle, slug, excerpt, content_json, content_html, cover_url, cover_alt, cover_caption, cover_credit, section_id, column_id, author_id, featured, pinned, status, published_at, scheduled_at, updated_at, in_review, submitted_at, review_note";
 // Ao publicar, o envio do card ao Instagram roda em segundo plano e pode levar alguns segundos
 export const maxDuration = 120;
 
@@ -13,12 +17,19 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
   const staff = await requireStaff();
   const supabase = await createClient();
 
-  const [{ data: article }, { data: sections }, { data: authors }, { data: columnRows }] = await Promise.all([
-    supabase.from("articles").select("*").eq("id", id).maybeSingle(),
+  const loadArticle = async () => {
+    // Só o que o editor usa (sem o índice de busca e outros campos internos);
+    // num banco sem as últimas migrações, cai para todas as colunas
+    const r = await supabase.from("articles").select(ARTICLE_FIELDS).eq("id", id).maybeSingle();
+    return r.error ? await supabase.from("articles").select("*").eq("id", id).maybeSingle() : r;
+  };
+  const [{ data: article }, { data: sections }, { data: authors }, { data: columnRows }, revoked] = await Promise.all([
+    loadArticle(),
     supabase.from("sections").select("id, name").order("position"),
     supabase.from("authors").select("id, name, profile_id").order("name"),
     // Sem a migração 18, a consulta falha e o editor simplesmente não mostra o campo Coluna
     supabase.from("columns").select("id, name, author_id").order("name"),
+    getRevokedAuthorIds(supabase, staff.role),
   ]);
 
   if (!article) notFound();
@@ -27,7 +38,8 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
   const authorOptions =
     staff.role === "colunista"
       ? (authors ?? []).filter((a) => a.profile_id === staff.id || a.id === article.author_id)
-      : (authors ?? []);
+      : // Quem teve o acesso removido não aparece para novas assinaturas (o autor atual do texto continua)
+        (authors ?? []).filter((a) => !revoked.has(a.id) || a.id === article.author_id);
 
   const editorArticle: EditorArticle = {
     id: article.id,

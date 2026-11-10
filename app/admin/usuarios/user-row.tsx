@@ -64,7 +64,7 @@ export function UserRow({
         <ConfirmButton
           className="btn-danger"
           title="Remover acesso?"
-          description={`${email} não poderá mais entrar no painel. Os textos dessa pessoa continuam no jornal.`}
+          description={`${email} não poderá mais entrar no painel e sairá de Autores e da página Colunistas. O nome, a foto, a biografia, a página pessoal e os textos continuam no ar.`}
           confirmLabel="Remover"
           onConfirm={async () => {
             const r = await removeUser(email);

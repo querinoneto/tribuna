@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SITE_URL } from "@/lib/env";
+import { columnLabel } from "@/lib/format";
 import { instagramCard } from "./card";
 
 type Row = {
@@ -25,7 +26,7 @@ export async function renderCardFor(client: SupabaseClient | null, id: string, c
   const jpg = await instagramCard({
     title: data.title || "Sem título",
     subtitle: data.subtitle,
-    section: data.column?.name ?? data.section?.name ?? null,
+    section: data.column?.name ? columnLabel(data.column.name) : (data.section?.name ?? null),
     author: data.author?.name ?? null,
     cover_url: data.cover_url,
     domain: new URL(SITE_URL).host.replace(/^www\./, ""),

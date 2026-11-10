@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
+import { getRevokedAuthorIds } from "@/lib/authors";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/admin/page-header";
 import { AuthorForm } from "./author-form";
@@ -15,7 +16,7 @@ type Row = {
   is_columnist: boolean;
   is_contributor: boolean;
   profile: { email: string } | null;
-  articles: { status: string }[];
+  articles: { id: string }[];
 };
 
 const FILTERS = [
@@ -31,18 +32,24 @@ function kindOf(a: Pick<Row, "is_columnist" | "is_contributor">) {
 const KIND_LABEL = { colunistas: "Colunista", colaboradores: "Colaborador", equipe: "Equipe / Redação" };
 
 export default async function AutoresPage({ searchParams }: PageProps<"/admin/autores">) {
-  await requireRole("admin");
+  const staff = await requireRole("admin");
   const { tipo = "" } = (await searchParams) as { tipo?: string };
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("authors")
-    .select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile:profiles(email), articles(status)")
-    .order("name");
-  // Consulta separada: sem a migração 18, a lista de autores continua aparecendo
-  const { data: cols } = await supabase.from("columns").select("author_id, name");
+  const [{ data }, { data: cols }, revoked] = await Promise.all([
+    // Só os ids dos textos publicados de cada autor (para a contagem)
+    supabase
+      .from("authors")
+      .select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile:profiles(email), articles(id)")
+      .eq("articles.status", "published")
+      .order("name"),
+    // Consulta separada: sem a migração 18, a lista de autores continua aparecendo
+    supabase.from("columns").select("author_id, name"),
+    // Quem teve o acesso removido em Usuários sai desta lista (a página pessoal continua no ar)
+    getRevokedAuthorIds(supabase, staff.role),
+  ]);
   const columnOf = new Map((cols ?? []).map((c) => [c.author_id as string, c.name as string]));
 
-  const all = (data ?? []) as unknown as Row[];
+  const all = ((data ?? []) as unknown as Row[]).filter((a) => !revoked.has(a.id));
   const counts = {
     "": all.length,
     colunistas: all.filter((a) => kindOf(a) === "colunistas").length,
@@ -56,7 +63,7 @@ export default async function AutoresPage({ searchParams }: PageProps<"/admin/au
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
       <PageHeader
         title="Autores"
-        description="Colunistas e colaboradores que assinam textos no jornal. Colunistas entram pelo convite na área Usuários; colaboradores, pelos envios de leitores. Aqui você edita nome, foto, biografia e endereço da página de cada um."
+        description="Colunistas e colaboradores que assinam textos no jornal. Colunistas entram pelo convite na área Usuários; colaboradores, pelos envios de leitores. Aqui você edita nome, foto, biografia e endereço da página de cada um. Quem tem o acesso removido em Usuários sai desta lista, mas a página pessoal e os textos continuam no ar."
       />
 
       <nav aria-label="Filtrar autores" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
@@ -89,7 +96,7 @@ export default async function AutoresPage({ searchParams }: PageProps<"/admin/au
       ) : (
         <ul className="mt-4 divide-y divide-rule rounded-lg border border-rule bg-paper">
           {list.map((a) => {
-            const published = a.articles.filter((x) => x.status === "published").length;
+            const published = a.articles.length;
             return (
               <li key={a.id} className="p-4">
                 <details className="group">

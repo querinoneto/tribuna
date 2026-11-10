@@ -12,6 +12,13 @@ export const newsletterReady = hasResend && hasAdminClient;
 
 const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
 const RESEND_INTERVAL_MS = 10 * 60_000; // não reenvia a confirmação ao mesmo e-mail em menos de 10 min
+/**
+ * Teto de e-mails de confirmação por hora, somando todos os endereços. Sem
+ * ele, um robô poderia cadastrar milhares de e-mails e esgotar a cota do
+ * Resend. Acima do teto, a assinatura fica registrada e a confirmação sai na
+ * rotina semanal (sendPendingConfirmations).
+ */
+const CONFIRMATIONS_PER_HOUR = 40;
 
 export type SubscribeOutcome = "confirmacao-enviada" | "ja-ativa" | "registrada" | "erro";
 
@@ -32,6 +39,16 @@ export async function subscribe(email: string): Promise<SubscribeOutcome> {
   if (existing?.status === "ativo") return "ja-ativa";
   if (existing?.confirm_sent_at && Date.now() - new Date(existing.confirm_sent_at).getTime() < RESEND_INTERVAL_MS) {
     return "confirmacao-enviada";
+  }
+
+  const hourAgo = new Date(Date.now() - 3600_000).toISOString();
+  const { count: recent } = await db.from("subscribers").select("id", { count: "exact", head: true }).gte("confirm_sent_at", hourAgo);
+  if ((recent ?? 0) >= CONFIRMATIONS_PER_HOUR) {
+    if (!existing) {
+      const { error } = await db.from("subscribers").insert({ email, status: "pendente" });
+      if (error && error.code !== "23505") return "erro";
+    }
+    return "registrada";
   }
 
   const token = randomBytes(32).toString("base64url");

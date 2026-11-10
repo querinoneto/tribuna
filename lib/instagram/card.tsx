@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
+import { isOwnMediaUrl } from "@/lib/env";
 
 /**
  * Card do feed do Instagram (retrato 4:5, 1080 × 1350), no mesmo modelo
@@ -40,7 +41,8 @@ function fonts() {
 const toDataUrl = (buf: Buffer, mime: string) => `data:${mime};base64,${buf.toString("base64")}`;
 
 async function photo(url: string | null, width: number, height: number): Promise<string | null> {
-  if (!url) return null;
+  // Só baixa imagens do próprio Storage (nada de endereços arbitrários)
+  if (!url || !isOwnMediaUrl(url)) return null;
   try {
     const res = await fetch(url, { cache: "force-cache" });
     if (!res.ok) return null;

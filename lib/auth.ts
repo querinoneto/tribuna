@@ -18,25 +18,33 @@ export type Staff = {
  * Lê quem está logado e o papel na lista autorizada. Retorna null se não
  * houver sessão ou se o e-mail não estiver autorizado.
  * Memorizado por requisição (React cache).
+ *
+ * Desempenho: a sessão é conferida pela assinatura do token (getClaims, sem
+ * ida ao servidor de autenticação quando o projeto usa chaves assimétricas)
+ * e o papel e o perfil são lidos ao mesmo tempo. O papel continua vindo do
+ * banco a cada requisição, então remover alguém em Usuários vale na hora.
  */
 export const getStaff = cache(async (): Promise<Staff | null> => {
   // Sempre no momento da requisição (depende da sessão de quem acessa)
   await connection();
   if (!hasSupabase) return null;
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-  if (!user?.email) return null;
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const id = typeof claims?.sub === "string" ? claims.sub : null;
+  const email = typeof claims?.email === "string" ? claims.email : null;
+  if (!id || !email) return null;
 
-  const { data: role } = await supabase.rpc("current_user_role");
+  const [{ data: role }, { data: profile }] = await Promise.all([
+    supabase.rpc("current_user_role"),
+    supabase.from("profiles").select("name, avatar_url").eq("id", id).maybeSingle(),
+  ]);
   if (!role) return null;
 
-  const { data: profile } = await supabase.from("profiles").select("name, avatar_url").eq("id", user.id).maybeSingle();
-
   return {
-    id: user.id,
-    email: user.email,
-    name: profile?.name || user.email.split("@")[0],
+    id,
+    email,
+    name: profile?.name || email.split("@")[0],
     avatarUrl: profile?.avatar_url ?? null,
     role: role as Role,
   };
@@ -47,8 +55,8 @@ export async function requireStaff(): Promise<Staff> {
   const staff = await getStaff();
   if (!staff) {
     const supabase = hasSupabase ? await createClient() : null;
-    const { data } = (await supabase?.auth.getUser()) ?? { data: { user: null } };
-    redirect(data.user ? "/entrar?erro=nao-autorizado" : "/entrar");
+    const { data } = (await supabase?.auth.getClaims()) ?? { data: null };
+    redirect(data?.claims ? "/entrar?erro=nao-autorizado" : "/entrar");
   }
   return staff;
 }

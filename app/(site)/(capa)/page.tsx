@@ -145,9 +145,6 @@ export default async function HomePage() {
                             {a.author.name}
                           </Link>
                         ))}
-                      {a.column && (
-                        <span className="font-sans text-[13px] leading-snug text-band-muted italic">{a.column.name}</span>
-                      )}
                     </div>
                   </div>
                   <h3 className="font-sans text-lg leading-snug font-semibold sm:text-xl">

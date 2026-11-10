@@ -25,7 +25,23 @@ function articleColumns(v: ArticleInput) {
   };
 }
 
-export type Current = { slug: string; status: ArticleStatus; author_id: string | null; published_at: string | null };
+export type Current = {
+  slug: string;
+  status: ArticleStatus;
+  author_id: string | null;
+  published_at: string | null;
+  /** Primeira vez em que o texto foi ao ar (migração 19); continua preenchida se ele voltar a rascunho. */
+  first_published_at?: string | null;
+};
+
+/**
+ * Rascunho que nunca foi ao ar: para quem não é administrador, o endereço
+ * acompanha o título. Depois que o texto foi publicado (mesmo que volte a
+ * rascunho), o endereço não muda mais, para não quebrar links já divulgados.
+ */
+export function slugFollowsTitle(role: Role, current: Current) {
+  return role !== "admin" && current.status === "draft" && !current.published_at && !current.first_published_at;
+}
 
 /**
  * Regras por papel, aplicadas no servidor (o painel só esconde os campos):
@@ -34,12 +50,8 @@ export type Current = { slug: string; status: ArticleStatus; author_id: string |
  *   (para os demais, o endereço de um rascunho é gerado do título e, depois de
  *   publicado ou agendado, não muda mais);
  * - trocar o autor do texto: administrador e coordenação.
+ * O banco aplica as mesmas regras de novo (migração 19).
  */
-/** Rascunho que nunca foi ao ar: para quem não é administrador, o endereço acompanha o título. */
-export function slugFollowsTitle(role: Role, current: Current) {
-  return role !== "admin" && current.status === "draft" && !current.published_at;
-}
-
 export function applyRoleRules(role: Role, v: ArticleInput, current: Current) {
   if (v.column_id) v.section_id = null;
   if (!isCoordination(role)) v.author_id = current.author_id;
