@@ -109,6 +109,7 @@ Escolha **um** dos dois caminhos.
 17. `supabase/migrations/20261109000017_instagram.sql`
 18. `supabase/migrations/20261109000018_colunas.sql`
 19. `supabase/migrations/20261109000019_revisao_geral.sql` (acesso revogado, regras de publicação reforçadas, contagem de leituras, tetos contra abuso e desempenho)
+20. `supabase/migrations/20261109000020_privacidade_contagem_leituras.sql` (Política de Privacidade 3.1: descreve a contagem de leituras)
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
