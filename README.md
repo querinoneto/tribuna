@@ -82,7 +82,16 @@ proxy.ts                  protege /admin (antigo "middleware")
 
 Vá em **Database → Extensions**, procure **pg_cron** e ative.
 
-O agendamento funciona mesmo sem essa extensão, porque o site só mostra um texto agendado depois da hora marcada. O pg_cron apenas muda o rótulo de "Agendado" para "Publicado" no painel.
+O agendamento funciona mesmo sem essa extensão, porque o site só mostra um texto agendado depois da hora marcada. O pg_cron muda o rótulo de "Agendado" para "Publicado" no painel e, com o passo abaixo, avisa o site.
+
+**Para o agendado aparecer na capa e ir ao Instagram no minuto marcado**, ative também a extensão **pg_net** (mesma tela), rode a migração 21 e, em **SQL Editor**, guarde no Vault o endereço do site e a mesma senha do `CRON_SECRET` da Vercel:
+
+```sql
+select vault.create_secret('https://tribunasocialista.com.br', 'tribuna_site_url');
+select vault.create_secret('COLE-AQUI-O-CRON_SECRET', 'tribuna_cron_secret');
+```
+
+Sem isso, o agendado aparece em até 5 minutos (cache) e vai ao Instagram quando alguém abre o Painel ou na rotina diária.
 
 ### 3.3 Criar as tabelas e as regras de acesso
 
@@ -110,6 +119,7 @@ Escolha **um** dos dois caminhos.
 18. `supabase/migrations/20261109000018_colunas.sql`
 19. `supabase/migrations/20261109000019_revisao_geral.sql` (acesso revogado, regras de publicação reforçadas, contagem de leituras, tetos contra abuso e desempenho)
 20. `supabase/migrations/20261109000020_privacidade_contagem_leituras.sql` (Política de Privacidade 3.1: descreve a contagem de leituras)
+21. `supabase/migrations/20261112000021_agendados_avisam_o_site.sql` (o agendado aparece na capa e vai ao Instagram no minuto marcado; veja 3.2)
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -250,7 +260,7 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 - As páginas públicas são **estáticas**: geradas uma vez e servidas de cache, por isso são muito rápidas.
 - Ao **publicar, atualizar, despublicar ou arquivar**, o painel expira o cache na hora (`updateTag("conteudo")`), e a próxima visita já mostra a mudança.
 - Por segurança, o conteúdo também se renova sozinho a cada 5 minutos no máximo.
-- **Agendamento.** O texto agendado recebe a data de publicação escolhida, e o site só mostra textos com data de publicação já passada. Ele entra no ar na hora marcada, com atraso de no máximo 5 minutos por causa do cache, sem ninguém precisar abrir o painel. O pg_cron, a cada minuto, muda o rótulo para "Publicado".
+- **Agendamento.** O texto agendado recebe a data de publicação escolhida, e o site só mostra textos com data de publicação já passada. O pg_cron, a cada minuto, muda o rótulo para "Publicado" e chama `/api/cron/agendados` (pg_net), que expira o cache na hora e posta o card no Instagram. Sem pg_net ou sem os segredos do Vault (3.2), o texto entra no ar com atraso de até 5 minutos por causa do cache.
 - **Leituras.** Cada visita à matéria soma uma leitura (uma por pessoa por sessão). A lista "Mais lidas" considera os últimos 30 dias.
 
 ## 8.1. Assinaturas por e-mail (resumo semanal)
@@ -271,7 +281,7 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 ## 8.2. Instagram (card automático)
 
 - Ao **publicar** um texto, o site gera o card no modelo do jornal (1080 × 1350, JPEG) em `/instagram/card/<id>` e o posta no feed pela API oficial do Instagram (`graph.instagram.com`), com fundo preto, letra branca e o vermelho do logotipo (#970512) na etiqueta da editoria e nos filetes, e legenda no formato "Título: linha fina." + o primeiro parágrafo entre aspas + "Leia na íntegra em <domínio>". Cada texto vai uma única vez.
-- Textos **agendados** vão ao Instagram quando alguém abre o Painel depois da hora marcada ou, no máximo, na rotina diária (`/api/cron/instagram`, 9h30 de Maceió), que também renova o token de acesso.
+- Textos **agendados** vão ao Instagram no minuto marcado, pelo aviso do banco ao site (`/api/cron/agendados`, ver 3.2). Se esse aviso não estiver configurado, vão quando alguém abre o Painel depois da hora marcada ou, no máximo, na rotina diária (`/api/cron/instagram`, 9h30 de Maceió), que também renova o token de acesso.
 - Painel → **Instagram**: conectar a conta (colar o token), ligar/desligar a automação, ver a prévia do card de cada texto, "Postar agora" e "Tentar de novo". Só textos publicados **depois** de ligar a automação são postados sozinhos.
 - Requisitos: conta do Instagram **profissional** (Empresa ou Criador) e um app na Meta (developers.facebook.com) com o caso de uso do Instagram. Funciona com os dois tipos de token: login do Instagram (`IG…`, 60 dias, renovado sozinho, em graph.instagram.com) ou login unificado (`EAA…`, usuário do sistema, não expira, em graph.facebook.com; exige portfólio empresarial e a permissão `instagram_content_publish`). Também precisa de `SUPABASE_SECRET_KEY` e `CRON_SECRET` na Vercel.
 
