@@ -214,7 +214,9 @@ export function ArticleEditor({
       const r = await changeStatus(article.id, payload(), target, when ?? null);
       if (applyResult(r, message)) {
         setScheduleOpen(false);
-        router.refresh();
+        // Agendou: volta ao painel (o texto fica na lista com a data marcada)
+        if (target === "scheduled") router.push("/admin");
+        else router.refresh();
       }
     });
   }
@@ -415,7 +417,7 @@ export function ArticleEditor({
         </label>
       ) : (
         <p className="text-sm text-ink-soft">
-          <span className="font-semibold text-ink">Autor:</span> {authors.find((a) => a.id === form.author_id)?.name ?? "Redação"}
+          <span className="font-semibold text-ink">Autor:</span> {authors.find((a) => a.id === form.author_id)?.name ?? "sem autor"}
         </p>
       )}
 

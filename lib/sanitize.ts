@@ -18,8 +18,9 @@ export function sanitizeArticleHtml(html: string): string {
       img: ["src", "alt", "title", "width", "height"],
       iframe: ["src", "width", "height", "allowfullscreen", "allow", "title", "frameborder"],
       div: ["data-youtube-video", "data-type", "data-latex"],
-      // Fórmulas (LaTeX): só o código, que o site transforma em fórmula ao exibir
-      span: ["data-type", "data-latex"],
+      // Fórmulas (LaTeX) e notas de rodapé: só o código/texto, que o site
+      // transforma em fórmula ou em nota numerada ao exibir
+      span: ["data-type", "data-latex", "data-note"],
       ol: ["start"],
     },
     allowedSchemes: ["http", "https", "mailto"],

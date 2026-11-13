@@ -28,3 +28,21 @@ export async function getRevokedAuthorIds(supabase: SupabaseClient, role: Role):
   }
   return out;
 }
+
+export type AuthorRow = { id: string; name: string; profile_id: string | null; is_contributor: boolean; revoked_at: string | null };
+
+/**
+ * Quem pode assinar um texto escolhido no editor: só quem tem conta ativa
+ * no painel (administrador, coordenador ou colunista). Colaboradores
+ * (leitores que enviaram texto), autores sem conta e quem perdeu o acesso
+ * ficam de fora.
+ */
+export function isSelectableAuthor(a: Pick<AuthorRow, "profile_id" | "is_contributor" | "revoked_at">): boolean {
+  return Boolean(a.profile_id) && !a.is_contributor && !a.revoked_at;
+}
+
+/** Confere no servidor se o autor escolhido pode assinar (vale para a troca de autor). */
+export async function authorIsSelectable(supabase: SupabaseClient, id: string): Promise<boolean> {
+  const { data } = await supabase.from("authors").select("profile_id, is_contributor, revoked_at").eq("id", id).maybeSingle();
+  return Boolean(data && isSelectableAuthor(data as AuthorRow));
+}

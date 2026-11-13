@@ -37,7 +37,7 @@ test("coordenação escreve, salva automaticamente e publica; o texto aparece no
   // Detalhes
   const details = page.getByRole("complementary", { name: "Detalhes do texto" });
   await details.getByLabel("Editoria").selectOption({ label: "Política" });
-  await details.getByLabel("Autor").selectOption({ label: "Redação" });
+  await details.getByLabel("Autor").selectOption({ index: 1 });
 
   await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
@@ -64,7 +64,7 @@ test("texto agendado não aparece no site antes da hora", async ({ page, context
   await body.pressSequentially("Este texto só deve aparecer no site na data marcada pelo editor.");
   const details = page.getByRole("complementary", { name: "Detalhes do texto" });
   await details.getByLabel("Editoria").selectOption({ label: "Economia" });
-  await details.getByLabel("Autor").selectOption({ label: "Redação" });
+  await details.getByLabel("Autor").selectOption({ index: 1 });
 
   await escolherCapa(page);
   await page.getByRole("button", { name: "Agendar", exact: true }).first().click();

@@ -227,7 +227,7 @@ export type ColumnistSummary = Author & {
   latest: { title: string; slug: string; published_at: string } | null;
 };
 
-/** Colunistas com o número de textos publicados e o texto mais recente. */
+/** Autores com acesso ativo (colunistas, coordenação e administração), com o número de textos e o mais recente. */
 export async function getColumnistsOverview(): Promise<ColumnistSummary[]> {
   "use cache";
   const db = setup();
@@ -235,7 +235,11 @@ export async function getColumnistsOverview(): Promise<ColumnistSummary[]> {
   const { data: authors, error } = await db
     .from("authors")
     .select("id, name, slug, bio, avatar_url, is_columnist, is_contributor, profile_id")
+    // Só quem tem conta ativa no painel (administração, coordenação e colunistas);
+    // quem perdeu o acesso sai daqui, mas a página pessoal e os textos continuam no ar
     .eq("is_columnist", true)
+    .not("profile_id", "is", null)
+    .is("revoked_at", null)
     .order("name");
   log("colunistas", error);
   const list = (authors ?? []) as Author[];
