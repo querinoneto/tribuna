@@ -25,9 +25,12 @@ export function usePrompt(): [React.ReactNode, (c: Config) => Promise<Values | n
   const ref = useRef<HTMLDialogElement>(null);
   const resolver = useRef<((v: Values | null) => void) | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
+  // Cada pergunta monta o formulário do zero (senão os campos guardam o que foi digitado antes)
+  const [round, setRound] = useState(0);
 
   const ask = useCallback((c: Config) => {
     setConfig(c);
+    setRound((n) => n + 1);
     requestAnimationFrame(() => ref.current?.showModal());
     return new Promise<Values | null>((resolve) => {
       resolver.current = resolve;
@@ -48,6 +51,7 @@ export function usePrompt(): [React.ReactNode, (c: Config) => Promise<Values | n
     >
       {config && (
         <form
+          key={round}
           method="dialog"
           className="flex flex-col gap-4 p-6"
           onSubmit={(e) => {
