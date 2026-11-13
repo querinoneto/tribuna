@@ -59,7 +59,7 @@ test("conecta a conta, liga a automação e o texto publicado vai para o Instagr
   await body.pressSequentially("A paralisação afeta as quatro linhas do sistema.");
   const details = page.getByRole("complementary", { name: "Detalhes do texto" });
   await details.getByLabel("Editoria").selectOption({ label: "Trabalho" });
-  await details.getByLabel("Autor").selectOption({ label: "Redação" });
+  await details.getByLabel("Autor").selectOption({ index: 1 });
   await escolherCapa(page);
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Texto publicado.")).toBeVisible();

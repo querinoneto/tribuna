@@ -130,7 +130,7 @@ export default async function HomePage() {
                   <div className="flex items-center gap-3">
                     {a.author?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={a.author.avatar_url} alt="" className="size-14 shrink-0 rounded-full object-cover grayscale" />
+                      <img src={a.author.avatar_url} alt="" className="size-14 shrink-0 rounded-full object-cover" />
                     ) : (
                       <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[#3a3633] font-display text-2xl text-band-muted">
                         {a.author?.name.charAt(0) ?? "T"}

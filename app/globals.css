@@ -417,3 +417,74 @@ textarea.input {
   padding: 0.5em 0;
   text-align: center;
 }
+
+/* Notas de rodapé */
+.prose-tribuna .footnote-ref {
+  font-size: 0.7em;
+  line-height: 0;
+  vertical-align: super;
+}
+.prose-tribuna .footnote-ref a {
+  padding: 0 0.12em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.prose-tribuna .footnote-ref a:hover {
+  text-decoration: underline;
+}
+.prose-tribuna .footnotes {
+  margin-top: 2.5em;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 1em;
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+.prose-tribuna .footnotes h2 {
+  margin: 0 0 0.6em;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.prose-tribuna .footnotes ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.prose-tribuna .footnotes li + li {
+  margin-top: 0.4em;
+}
+.prose-tribuna .footnotes li:target {
+  background: var(--color-paper-2);
+}
+.prose-tribuna .footnotes a {
+  overflow-wrap: anywhere;
+}
+.prose-tribuna .footnote-back {
+  text-decoration: none;
+}
+/* No editor: número da nota contado na ordem em que aparece */
+.tiptap {
+  counter-reset: nota;
+}
+.tiptap [data-type="footnote"] {
+  counter-increment: nota;
+  cursor: pointer;
+}
+.tiptap [data-type="footnote"]::after {
+  content: counter(nota);
+  margin: 0 0.1em;
+  border-radius: 3px;
+  padding: 0 0.2em;
+  font-family: var(--font-sans);
+  font-size: 0.7em;
+  font-weight: 700;
+  vertical-align: super;
+  color: var(--color-accent);
+  background: var(--color-paper-2);
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "katex/dist/katex.min.css";
 import { articlePath, formatDateTime } from "@/lib/format";
+import { renderFootnotes } from "@/lib/footnotes";
 import { renderMath } from "@/lib/math";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
 import { kickerOf } from "./article-card";
@@ -45,11 +46,11 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
             {article.author?.is_contributor ? (
               <span className="font-bold">{article.author.name}</span>
             ) : article.author ? (
-              <Link href={`/autor/${article.author.slug}`} className="font-bold hover:text-accent">
+              <Link href={`/autor/${article.author.slug}`} className="font-bold text-accent hover:underline">
                 {article.author.name}
               </Link>
             ) : (
-              <span className="font-bold">Redação</span>
+              <span className="font-bold">Tribuna Socialista</span>
             )}
             {article.author?.is_contributor && <span className="text-xs font-semibold tracking-[0.08em] text-accent uppercase">Colaborador externo</span>}
             <span className="text-muted">
@@ -76,7 +77,7 @@ export function ArticleView({ article, url }: { article: ArticleFull; url: strin
         </aside>
 
         <div className="w-full max-w-[680px] min-w-0">
-          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: renderMath(sanitizeArticleHtml(article.content_html)) }} />
+          <div className="prose-tribuna drop-cap" dangerouslySetInnerHTML={{ __html: renderFootnotes(renderMath(sanitizeArticleHtml(article.content_html))) }} />
 
           {/* Textos assinados por colunistas e colaboradores: responsabilidade do autor */}
           {(article.author?.is_columnist || article.author?.is_contributor) && (

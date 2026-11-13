@@ -6,6 +6,8 @@ import { requireRole } from "@/lib/auth";
 import { readingTime } from "@/lib/format";
 import { dbErrorMessage } from "@/lib/publishing";
 import { sanitizeArticleHtml } from "@/lib/sanitize";
+import { inspectFile } from "@/lib/security/files";
+import { cleanVisitorText } from "@/lib/security/text";
 import { slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/server";
 import { PHOTO_FILE_TYPES, fileExtension } from "@/lib/validation";
@@ -61,7 +63,8 @@ async function wordToHtml(buffer: Buffer): Promise<string> {
     .replace(/<(\/?)h1>/gi, "<$1h2>")
     .replace(/<(\/?)h[4-6]>/gi, "<$1h3>")
     .replace(/<p>\s*<\/p>/gi, "");
-  return sanitizeArticleHtml(html);
+  // Sem caracteres invisíveis (que escondem instruções ou trechos do texto)
+  return sanitizeArticleHtml(cleanVisitorText(html));
 }
 
 /** Endereço único para a página do autor (ex.: maria-silva, maria-silva-2). */
@@ -77,19 +80,25 @@ async function uniqueAuthorSlug(supabase: Supabase, name: string): Promise<strin
 async function publishPhoto(supabase: Supabase, staffId: string, photoPath: string, name: string): Promise<string | null> {
   const { data: blob, error } = await supabase.storage.from("envios").download(photoPath);
   if (error || !blob) return null;
-  const ext = fileExtension(photoPath);
+  // Só imagens de verdade; e a foto é regravada (sem metadados nem conteúdo escondido)
+  const original = Buffer.from(await blob.arrayBuffer());
+  if (!inspectFile(photoPath, original, "foto").ok) return null;
+  const sharp = (await import("sharp")).default;
+  const clean = await sharp(original).rotate().resize(800, 800, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 86 }).toBuffer().catch(() => null);
+  if (!clean) return null;
+  const ext = "jpg";
   const now = new Date();
   const path = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${crypto.randomUUID().slice(0, 8)}-${slugify(name, 40) || "colaboracao"}.${ext}`;
   const { error: upErr } = await supabase.storage
     .from("media")
-    .upload(path, blob, { contentType: PHOTO_FILE_TYPES[ext], cacheControl: "31536000", upsert: false });
+    .upload(path, clean, { contentType: PHOTO_FILE_TYPES[ext], cacheControl: "31536000", upsert: false });
   if (upErr) return null;
   const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
   await supabase.from("media").insert({
     path,
     url: pub.publicUrl,
     alt: `Foto de ${name}`,
-    size_bytes: blob.size,
+    size_bytes: clean.length,
     mime_type: PHOTO_FILE_TYPES[ext],
     uploaded_by: staffId,
   });
@@ -176,9 +185,11 @@ export async function prepareSubmission(id: string): Promise<EnvioResult> {
   let imported = false;
   if (fileExtension(s.file_path) === "docx") {
     const { data: file } = await supabase.storage.from("envios").download(s.file_path);
-    if (file) {
+    const buffer = file ? Buffer.from(await file.arrayBuffer()) : null;
+    // Documento com macros ou objetos embutidos não é importado
+    if (buffer && inspectFile(s.file_path, buffer, "texto").ok) {
       try {
-        contentHtml = await wordToHtml(Buffer.from(await file.arrayBuffer()));
+        contentHtml = await wordToHtml(buffer);
         imported = contentHtml.length > 0;
       } catch {
         imported = false;

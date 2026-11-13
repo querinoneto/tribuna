@@ -33,7 +33,7 @@ async function Content({ params, searchParams }: Props) {
       <header className="mb-10 flex flex-col items-start gap-6 border-b border-rule-strong pb-8 sm:flex-row sm:items-center">
         {author.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={author.avatar_url} alt={`Foto de ${author.name}`} className="size-28 rounded-full object-cover grayscale sm:size-32" />
+          <img src={author.avatar_url} alt={`Foto de ${author.name}`} className="size-28 rounded-full object-cover sm:size-32" />
         ) : (
           <span aria-hidden className="flex size-28 items-center justify-center rounded-full bg-paper-2 font-display text-5xl text-muted sm:size-32">
             {author.name.charAt(0)}
@@ -41,7 +41,7 @@ async function Content({ params, searchParams }: Props) {
         )}
         <div className="min-w-0 flex-1">
           <p className="kicker mb-2">{author.is_columnist ? "Colunista" : author.is_contributor ? "Colaborador externo" : "Autor"}</p>
-          <h1 className="font-display text-4xl leading-none sm:text-5xl">{author.name}</h1>
+          <h1 className="font-display text-4xl leading-none text-accent sm:text-5xl">{author.name}</h1>
           {author.bio && <p className="mt-3 font-sans text-[15px] leading-relaxed text-ink-soft sm:text-base">{author.bio}</p>}
         </div>
       </header>
@@ -52,7 +52,8 @@ async function Content({ params, searchParams }: Props) {
       {articles.length === 0 ? (
         <EmptyState title="Nenhum texto ainda" />
       ) : (
-        <div className="max-w-3xl">
+        // Duas colunas no computador, lidas da esquerda para a direita, do mais recente ao mais antigo
+        <div className="grid gap-x-10 sm:grid-cols-2">
           {articles.map((a) => (
             <ArticleRow key={a.id} article={a} />
           ))}

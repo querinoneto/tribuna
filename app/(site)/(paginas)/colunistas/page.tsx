@@ -37,7 +37,7 @@ export default async function ColumnistsPage() {
                   <img
                     src={c.avatar_url}
                     alt=""
-                    className="size-16 shrink-0 rounded-full object-cover grayscale transition duration-300 group-hover:grayscale-0 sm:size-20"
+                    className="size-16 shrink-0 rounded-full object-cover sm:size-20"
                   />
                 ) : (
                   <span
@@ -51,7 +51,7 @@ export default async function ColumnistsPage() {
                 <div className="min-w-0 flex-1">
                   <h2 className="font-display text-[22px] leading-tight sm:text-2xl">
                     {/* O link cobre o cartão inteiro (área de toque maior no celular) */}
-                    <Link href={`/autor/${c.slug}`} className="after:absolute after:inset-0 group-hover:text-accent">
+                    <Link href={`/autor/${c.slug}`} className="text-accent after:absolute after:inset-0 group-hover:underline">
                       {c.name}
                     </Link>
                   </h2>

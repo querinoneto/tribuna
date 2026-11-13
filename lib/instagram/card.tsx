@@ -167,7 +167,7 @@ export async function instagramCard(a: {
             }}
           >
             <span style={{ display: "flex" }}>
-              Por&nbsp;<span style={{ color: C.ink, fontWeight: 600 }}>{a.author || "Redação"}</span>
+              Por&nbsp;<span style={{ color: C.ink, fontWeight: 600 }}>{a.author || "Tribuna Socialista"}</span>
             </span>
             <span style={{ color: C.ink, fontWeight: 600 }}>{a.domain}</span>
           </div>

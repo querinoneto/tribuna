@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useId } from "react";
 import { sendContact, type ContactState } from "@/app/actions/contact";
 import { IconCheck } from "@/components/icons";
+import { CaptchaField } from "./captcha-field";
 
 /** Formulário da página Contato. */
 export function ContactForm() {
@@ -45,6 +46,8 @@ export function ContactForm() {
       </label>
 
       <input type="text" name="site" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
+
+      <CaptchaField round={state.key} />
 
       <label className="flex items-start gap-3 text-sm leading-snug">
         <input type="checkbox" name="consent" required className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]" />

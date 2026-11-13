@@ -68,6 +68,16 @@ export function usePrompt(): [React.ReactNode, (c: Config) => Promise<Values | n
                     </option>
                   ))}
                 </select>
+              ) : f.type === "textarea" ? (
+                <textarea
+                  name={f.name}
+                  defaultValue={f.defaultValue}
+                  placeholder={f.placeholder}
+                  required={f.required}
+                  autoFocus={i === 0}
+                  rows={4}
+                  className="input min-h-28 py-2"
+                />
               ) : (
                 <input
                   name={f.name}

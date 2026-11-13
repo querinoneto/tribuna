@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Tribuna Socialista — dados iniciais
--- Administrador inicial, editorias, autor "Redação", páginas
+-- Administrador inicial, editorias, páginas
 -- institucionais e 3 matérias de exemplo (podem ser apagadas no painel).
 -- =====================================================================
 
@@ -16,10 +16,6 @@ insert into public.sections (name, slug, position, description) values
   ('Cultura',       'cultura',       5, 'Arte, cultura popular e memória.'),
   ('Internacional', 'internacional', 6, 'O mundo visto do Sul.'),
   ('Opinião',       'opiniao',       7, 'Colunas e artigos assinados.')
-on conflict (slug) do nothing;
-
-insert into public.authors (name, slug, bio, is_columnist) values
-  ('Redação', 'redacao', 'Equipe de reportagem da Tribuna Socialista.', false)
 on conflict (slug) do nothing;
 
 -- Páginas institucionais (edite pelo painel em /admin/paginas)
@@ -38,9 +34,9 @@ insert into public.pages (slug, title, content_html, content_json) values
    '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Este site coleta apenas o e-mail de quem se inscreve na newsletter, usado exclusivamente para o envio do boletim. Você pode pedir a remoção a qualquer momento pelos canais de contato. Revise este texto com orientação jurídica antes de publicar."}]}]}')
 on conflict (slug) do nothing;
 
--- Três matérias de exemplo
+-- Três matérias de exemplo (sem autor: escolha um no painel antes de republicar)
 with s as (select id, slug from public.sections),
-     a as (select id from public.authors where slug = 'redacao')
+     a as (select null::uuid as id)
 insert into public.articles
   (title, subtitle, slug, excerpt, content_html, content_json, status, published_at, featured, section_id, author_id, reading_minutes, cover_alt)
 values

@@ -9,6 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, type RefObject } from "react";
 import "katex/dist/katex.min.css";
 import { uploadImage } from "@/lib/upload";
+import { Footnote } from "./footnote-extension";
 import { usePrompt } from "./prompt-dialog";
 import { useToast } from "./toast";
 
@@ -33,6 +34,8 @@ export function RichEditor({
 }) {
   // Clique numa fórmula abre a edição (a função é preenchida pela barra de ferramentas)
   const editMath = useRef<MathEditor | null>(null);
+  // Clique numa nota de rodapé abre a edição do texto da nota
+  const editNote = useRef<NoteEditor | null>(null);
   const editor = useEditor({
     immediatelyRender: false,
     editable,
@@ -52,10 +55,16 @@ export function RichEditor({
         inlineOptions: { onClick: (node, pos) => editMath.current?.("inline", node.attrs.latex ?? "", pos) },
         blockOptions: { onClick: (node, pos) => editMath.current?.("block", node.attrs.latex ?? "", pos) },
       }),
+      Footnote,
     ],
     content: (initial as object) ?? "",
     editorProps: {
       attributes: { class: "prose-tribuna tiptap mx-auto", "aria-label": "Corpo do texto", role: "textbox", "aria-multiline": "true" },
+      handleClickOn: (_view, pos, node) => {
+        if (node.type.name !== "footnote") return false;
+        editNote.current?.(String(node.attrs.note ?? ""), pos);
+        return true;
+      },
     },
     onUpdate: ({ editor }) => onChange({ json: editor.getJSON(), html: editor.getHTML() }),
   });
@@ -66,7 +75,7 @@ export function RichEditor({
 
   return (
     <div>
-      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} editMath={editMath} />}
+      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} editMath={editMath} editNote={editNote} />}
       <div className="px-1 py-6">
         <EditorContent editor={editor} />
       </div>
@@ -75,10 +84,23 @@ export function RichEditor({
 }
 
 type MathEditor = (kind: "inline" | "block", latex: string, pos: number) => void;
+type NoteEditor = (note: string, pos: number) => void;
+
+const NOTE_HINT = "Aparece numerada no fim do texto, na seção “Notas”. Endereços (https://…) viram links.";
 
 const MATH_HINT = "Escreva em LaTeX, sem cifrões. Ex.: \\frac{a}{b}, x^2, \\sqrt{2}, \\sum_{i=1}^{n} x_i";
 
-function Toolbar({ editor, stickyTop, editMath }: { editor: Editor; stickyTop: string; editMath: RefObject<MathEditor | null> }) {
+function Toolbar({
+  editor,
+  stickyTop,
+  editMath,
+  editNote,
+}: {
+  editor: Editor;
+  stickyTop: string;
+  editMath: RefObject<MathEditor | null>;
+  editNote: RefObject<NoteEditor | null>;
+}) {
   const [dialog, ask] = usePrompt();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -107,6 +129,36 @@ function Toolbar({ editor, stickyTop, editMath }: { editor: Editor; stickyTop: s
     if (v.mode === "block") c.insertBlockMath({ latex: v.latex }).run();
     else c.insertInlineMath({ latex: v.latex }).run();
   }
+
+  async function addNote() {
+    const v = await ask({
+      title: "Inserir nota de rodapé",
+      fields: [{ name: "note", label: "Texto da nota", placeholder: "Ex.: MARX, Karl. O Capital. Livro I. São Paulo: Boitempo, 2013, p. 113.", type: "textarea", required: true, hint: NOTE_HINT }],
+      confirmLabel: "Inserir",
+    });
+    const note = v?.note?.trim();
+    if (!note) return;
+    // A nota entra no fim da seleção (ou no cursor), sem apagar o texto selecionado
+    editor.chain().focus().setTextSelection(editor.state.selection.to).insertFootnote(note).run();
+  }
+
+  useEffect(() => {
+    editNote.current = async (note, pos) => {
+      const v = await ask({
+        title: "Editar nota de rodapé",
+        fields: [{ name: "note", label: "Texto da nota", defaultValue: note, type: "textarea", hint: `${NOTE_HINT} Deixe vazio para apagar a nota.` }],
+        confirmLabel: "Aplicar",
+      });
+      if (v === null) return;
+      const text = v.note?.trim() ?? "";
+      const c = editor.chain().focus().setNodeSelection(pos);
+      if (!text) c.deleteSelection().run();
+      else c.updateAttributes("footnote", { note: text }).run();
+    };
+    return () => {
+      editNote.current = null;
+    };
+  }, [editor, ask, editNote]);
 
   useEffect(() => {
     editMath.current = async (kind, latex, pos) => {
@@ -259,6 +311,11 @@ function Toolbar({ editor, stickyTop, editMath }: { editor: Editor; stickyTop: s
         </Btn>
         <Btn label="Fórmula (LaTeX)" onClick={addFormula}>
           <span className="font-serif text-lg leading-none italic">∑</span>
+        </Btn>
+        <Btn label="Nota de rodapé" onClick={addNote}>
+          <span className="text-sm leading-none font-semibold">
+            x<sup className="text-[10px]">1</sup>
+          </span>
         </Btn>
         <Btn label="Divisor" onClick={() => chain().setHorizontalRule().run()}>
           {svg(<path d="M4 12h16" />)}

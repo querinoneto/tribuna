@@ -121,6 +121,7 @@ Escolha **um** dos dois caminhos.
 20. `supabase/migrations/20261109000020_privacidade_contagem_leituras.sql` (Política de Privacidade 3.1: descreve a contagem de leituras)
 21. `supabase/migrations/20261112000021_agendados_avisam_o_site.sql` (o agendado aparece na capa e vai ao Instagram no minuto marcado; veja 3.2)
 22. `supabase/migrations/20261113000022_aviso_confere_senha_no_vault.sql` (a senha desse aviso é conferida no próprio Vault; espera até 30 s)
+23. `supabase/migrations/20261113000023_autores_so_equipe_ativa.sql` (autores são só administração, coordenação e colunistas com acesso ativo; sai a "Redação")
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
@@ -135,7 +136,7 @@ npx supabase db push            # aplica as migrações
 O `seed.sql` faz o seguinte:
 
 - cadastra **querino.neto@gmail.com** como administrador;
-- cria as editorias (Política, Economia, Trabalho, Meio Ambiente, Cultura, Internacional e Opinião), o autor "Redação" e as páginas Sobre, Contato, Expediente e Privacidade;
+- cria as editorias (Política, Economia, Trabalho, Meio Ambiente, Cultura, Internacional e Opinião), e as páginas Sobre, Contato, Expediente e Privacidade;
 - publica 3 matérias de exemplo, que você pode apagar pelo painel.
 
 ### 3.4 Configurar os endereços de login
@@ -247,6 +248,9 @@ Outras proteções:
 - **regras de publicação no banco** (migração 19): só o administrador escolhe a manchete e fixa textos; ninguém altera o contador de leituras, antedata a publicação ou agenda no passado; o endereço de um texto que já foi ao ar não muda (salvo pelo administrador);
 - **leituras** contadas pelo servidor, no máximo uma por leitor, por texto, por dia (resumo irreversível e diário do IP e do navegador, apagado em dois dias). Requer `SUPABASE_SECRET_KEY` na Vercel;
 - capas só podem vir do próprio Storage (o servidor nunca baixa imagens de endereços arbitrários para montar os cards);
+- **Contato com captcha**: imagem com 5 números desenhados (gerada no servidor, sem serviço externo), que vale 15 minutos e só é aceita depois de 3 segundos; mais o campo-armadilha contra robôs e no máximo 3 links por mensagem;
+- **texto de visitantes limpo** (Contato e Envios): caracteres invisíveis que escondem instruções ou trechos (largura zero, inversão de direção, caracteres "tag") são removidos, e letras disfarçadas são normalizadas;
+- **arquivos de leitores conferidos pelo conteúdo**, não pela extensão: PDF com JavaScript, comandos ou arquivos embutidos, Word com macros, ActiveX ou objetos embutidos, e "fotos" que não são imagem de verdade são recusados e apagados; a foto aprovada é regravada (sem metadados) antes de ir para a biblioteca;
 - **tetos contra abuso**: 60 mensagens de Contato, 40 envios de leitores, 80 arquivos enviados e 40 e-mails de confirmação de assinatura por hora, somando todos os remetentes (além do limite por e-mail);
 - a senha do cron é comparada em tempo constante;
 - **envios de leitores** ("Escreva e publique conosco", em `/publique`): os arquivos vão para um bucket **privado** (`envios`, até 10 MB, só PDF, Word e imagens). Visitantes só conseguem enviar, nunca ler; apenas editores e administradores veem e baixam os envios, em **Painel → Envios de leitores**. Há limite de 5 envios por e-mail por hora.
@@ -277,6 +281,8 @@ Os botões de Instagram e YouTube ficam em `lib/social.ts`. Preencha o endereço
 - **Colunas com nome próprio.** O colunista dá nome à sua coluna em **Meu perfil** (o administrador também pode, em **Autores**). A coluna ganha página em `/colunas/<nome>`, mas **não há menu nem lista de colunas**: a página só é alcançada pelo nome da coluna, no alto da própria matéria. A página da coluna mostra o autor (foto, biografia e link para o perfil); a página do autor não aponta para a coluna. A faixa Opinião da capa mostra só textos da editoria Opinião, nunca de colunas. No editor, quem tem coluna vê a caixa **Este texto sai na coluna …**; marcada, o texto não tem editoria. O nome da coluna não substitui a assinatura do colunista.
 - **Imagem de capa obrigatória** para publicar ou agendar qualquer texto (com texto alternativo).
 - **Campos do editor por papel** (regras em `lib/article-rules.ts`, aplicadas no servidor): o endereço (URL), a manchete principal e a fixação na home são só do **administrador** (para os demais, o endereço de um rascunho nasce do título e, depois de publicado, não muda); trocar o autor do texto é do administrador e da coordenação. A legenda da imagem de capa e o "resumo para redes sociais" saíram do painel.
+- **Autores.** Só assina texto quem tem conta ativa no painel: administrador, coordenador ou colunista (todos aparecem em Colunistas). Leitores que enviaram texto (colaboradores) não são autores e não podem ser escolhidos no editor; o texto preparado em **Envios** continua assinado com o nome do leitor. Quem perde o acesso sai de Autores (vai para "Autores antigos") e de Colunistas, mas a página pessoal e os textos continuam no ar. Não existe mais a autora "Redação": texto sem autor aparece assinado "Tribuna Socialista".
+- **Notas de rodapé.** Botão **x¹** na barra do editor: o texto da nota fica guardado no ponto da chamada, aparece como número sobrescrito e entra numerado na seção **Notas**, no fim do texto (clique no número, no editor, para editar ou apagar).
 - **Fórmulas (LaTeX).** Botão **∑** na barra do editor, ou digite `$$fórmula$$` (no meio da frase) ou `$$$fórmula$$$` (em destaque). Clique na fórmula para editar. No site, são desenhadas pelo KaTeX.
 
 ## 8.2. Instagram (card automático)

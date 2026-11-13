@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
-import { getRevokedAuthorIds } from "@/lib/authors";
+import { isSelectableAuthor, type AuthorRow } from "@/lib/authors";
 import { createClient } from "@/lib/supabase/server";
 import { ArticleEditor, type EditorArticle } from "@/components/admin/article-editor";
 
@@ -23,23 +23,28 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
     const r = await supabase.from("articles").select(ARTICLE_FIELDS).eq("id", id).maybeSingle();
     return r.error ? await supabase.from("articles").select("*").eq("id", id).maybeSingle() : r;
   };
-  const [{ data: article }, { data: sections }, { data: authors }, { data: columnRows }, revoked] = await Promise.all([
+  const [{ data: article }, { data: sections }, { data: authorRows }, { data: columnRows }] = await Promise.all([
     loadArticle(),
     supabase.from("sections").select("id, name").order("position"),
-    supabase.from("authors").select("id, name, profile_id").order("name"),
+    supabase.from("authors").select("id, name, profile_id, is_contributor, revoked_at").order("name"),
     // Sem a migração 18, a consulta falha e o editor simplesmente não mostra o campo Coluna
     supabase.from("columns").select("id, name, author_id").order("name"),
-    getRevokedAuthorIds(supabase, staff.role),
   ]);
 
   if (!article) notFound();
 
-  // Colunistas assinam apenas com o próprio nome (ou "Redação", se não tiver autor ligado)
-  const authorOptions =
-    staff.role === "colunista"
-      ? (authors ?? []).filter((a) => a.profile_id === staff.id || a.id === article.author_id)
-      : // Quem teve o acesso removido não aparece para novas assinaturas (o autor atual do texto continua)
-        (authors ?? []).filter((a) => !revoked.has(a.id) || a.id === article.author_id);
+  const authors = (authorRows ?? []) as AuthorRow[];
+  // Colunistas assinam apenas com o próprio nome. Administração e coordenação
+  // escolhem entre quem tem conta ativa no painel (administrador, coordenador
+  // ou colunista); colaboradores (leitores que enviaram texto) e quem perdeu
+  // o acesso não aparecem. O autor atual do texto continua na lista, para não
+  // se perder ao salvar (ex.: texto de leitor preparado em Envios).
+  const authorOptions = authors
+    .filter((a) => (staff.role === "colunista" ? a.profile_id === staff.id : isSelectableAuthor(a)) || a.id === article.author_id)
+    .map((a) => ({
+      id: a.id,
+      name: isSelectableAuthor(a) ? a.name : `${a.name} (${a.is_contributor ? "leitor colaborador" : "sem acesso ao painel"})`,
+    }));
 
   const editorArticle: EditorArticle = {
     id: article.id,
@@ -72,7 +77,7 @@ export default async function EditArticlePage({ params, searchParams }: PageProp
       key={article.id}
       article={editorArticle}
       sections={sections ?? []}
-      authors={authorOptions.map((a) => ({ id: a.id, name: a.name }))}
+      authors={authorOptions}
       columns={(columnRows ?? []) as { id: string; name: string; author_id: string }[]}
       role={staff.role}
       notice={preparedNotice(preparado)}

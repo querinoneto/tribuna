@@ -733,3 +733,24 @@ describe.runIf(DB)("tetos contra abuso", () => {
     await asRoot((c) => c.query("delete from storage.objects where bucket_id = 'envios'"));
   });
 });
+
+describe.runIf(DB)("autores: só a equipe com acesso ativo (migração 23)", () => {
+  it("o administrador tem assinatura e aparece entre os colunistas", async () => {
+    const rows = await asRoot(async (c) => (await c.query("select is_columnist from authors where profile_id = $1", [admin.id])).rows);
+    expect(rows).toEqual([{ is_columnist: true }]);
+  });
+
+  it("a Redação não existe mais como autora", async () => {
+    const n = await asRoot(async (c) => (await c.query("select count(*)::int as n from authors where slug = 'redacao'")).rows[0].n);
+    expect(n).toBe(0);
+  });
+
+  it("conta com e-mail NÃO confirmado não ganha assinatura, mesmo com e-mail da equipe", async () => {
+    const n = await asRoot(async (c) => {
+      const { rows } = await c.query("insert into auth.users (email, email_confirmed_at) values ('colunista.falsa@x.test', null) returning id");
+      await c.query("insert into allowed_emails (email, role) values ('colunista.falsa@x.test', 'colunista') on conflict do nothing");
+      return (await c.query("select count(*)::int as n from authors where profile_id = $1", [rows[0].id])).rows[0].n;
+    });
+    expect(n).toBe(0);
+  });
+});

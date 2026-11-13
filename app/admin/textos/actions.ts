@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { postArticle, postDueArticles } from "@/lib/instagram/service";
 import { getStaff, requireStaff } from "@/lib/auth";
+import { authorIsSelectable } from "@/lib/authors";
 import { applyRoleRules, slugFollowsTitle, type Current } from "@/lib/article-rules";
 import { dbErrorMessage, planTransition } from "@/lib/publishing";
 import { revalidateContent, revalidateContentQuiet } from "@/lib/revalidate";
@@ -56,6 +57,21 @@ async function loadCurrent(supabase: Awaited<ReturnType<typeof createClient>>, i
   return data as Current | null;
 }
 
+/**
+ * Trocar o autor só para quem tem conta ativa no painel (administrador,
+ * coordenador ou colunista): leitores colaboradores e quem perdeu o acesso
+ * não podem ser escolhidos. Manter o autor atual é sempre permitido.
+ */
+async function checkAuthorChange(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  next: string | null | undefined,
+  current: string | null,
+): Promise<{ ok: false; error: string } | null> {
+  if (!next || next === current) return null;
+  if (await authorIsSelectable(supabase, next)) return null;
+  return { ok: false, error: "Esse autor não pode ser escolhido: só administradores, coordenadores e colunistas com acesso ao painel assinam textos." };
+}
+
 /** Atualiza o texto; se o endereço gerado do título já estiver em uso, acrescenta um sufixo curto. */
 async function updateArticle(supabase: Awaited<ReturnType<typeof createClient>>, id: string, cols: Record<string, unknown>, autoSlug: boolean) {
   const run = (patch: Record<string, unknown>) =>
@@ -79,6 +95,8 @@ export async function saveArticle(id: string, raw: unknown): Promise<SaveResult>
   const current = await loadCurrent(supabase, id);
   if (!current) return { ok: false, error: "Você não pode editar este texto (ele pode ter sido publicado ou pertencer a outra pessoa)." };
   const cols = applyRoleRules(staff.role, n.value, current);
+  const denied = await checkAuthorChange(supabase, cols.author_id, current.author_id);
+  if (denied) return denied;
 
   const { data, error } = await updateArticle(supabase, id, cols, slugFollowsTitle(staff.role, current));
 
@@ -108,6 +126,8 @@ export async function changeStatus(
   const current = await loadCurrent(supabase, id);
   if (!current) return { ok: false, error: "Texto não encontrado ou sem permissão." };
   const cols = applyRoleRules(staff.role, n.value, current);
+  const denied = await checkAuthorChange(supabase, cols.author_id, current.author_id);
+  if (denied) return denied;
 
   const plan = planTransition({
     role: staff.role,
