@@ -84,11 +84,11 @@ Vá em **Database → Extensions**, procure **pg_cron** e ative.
 
 O agendamento funciona mesmo sem essa extensão, porque o site só mostra um texto agendado depois da hora marcada. O pg_cron muda o rótulo de "Agendado" para "Publicado" no painel e, com o passo abaixo, avisa o site.
 
-**Para o agendado aparecer na capa e ir ao Instagram no minuto marcado**, ative também a extensão **pg_net** (mesma tela), rode a migração 21 e, em **SQL Editor**, guarde no Vault o endereço do site e a mesma senha do `CRON_SECRET` da Vercel:
+**Para o agendado aparecer na capa e ir ao Instagram no minuto marcado**, ative também a extensão **pg_net** (mesma tela), rode as migrações 21 e 22 e, em **SQL Editor**, guarde no Vault o endereço do site e uma senha longa e aleatória (não precisa ser igual a nada na Vercel: o site confere essa senha no próprio Vault, com a `SUPABASE_SECRET_KEY`):
 
 ```sql
 select vault.create_secret('https://tribunasocialista.com.br', 'tribuna_site_url');
-select vault.create_secret('COLE-AQUI-O-CRON_SECRET', 'tribuna_cron_secret');
+select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'tribuna_cron_secret');
 ```
 
 Sem isso, o agendado aparece em até 5 minutos (cache) e vai ao Instagram quando alguém abre o Painel ou na rotina diária.
@@ -120,6 +120,7 @@ Escolha **um** dos dois caminhos.
 19. `supabase/migrations/20261109000019_revisao_geral.sql` (acesso revogado, regras de publicação reforçadas, contagem de leituras, tetos contra abuso e desempenho)
 20. `supabase/migrations/20261109000020_privacidade_contagem_leituras.sql` (Política de Privacidade 3.1: descreve a contagem de leituras)
 21. `supabase/migrations/20261112000021_agendados_avisam_o_site.sql` (o agendado aparece na capa e vai ao Instagram no minuto marcado; veja 3.2)
+22. `supabase/migrations/20261113000022_aviso_confere_senha_no_vault.sql` (a senha desse aviso é conferida no próprio Vault; espera até 30 s)
 7. `supabase/seed.sql`
 
 **Caminho B: pela linha de comando**, com a [Supabase CLI](https://supabase.com/docs/guides/cli):
