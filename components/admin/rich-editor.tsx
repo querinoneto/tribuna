@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "@tiptap/extension-image";
 import { Mathematics } from "@tiptap/extension-mathematics";
 import Youtube from "@tiptap/extension-youtube";
 import { Placeholder } from "@tiptap/extensions";
@@ -9,6 +8,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, type RefObject } from "react";
 import "katex/dist/katex.min.css";
 import { uploadImage } from "@/lib/upload";
+import { CaptionedImage } from "./captioned-image";
 import { Footnote } from "./footnote-extension";
 import { usePrompt } from "./prompt-dialog";
 import { useToast } from "./toast";
@@ -36,6 +36,8 @@ export function RichEditor({
   const editMath = useRef<MathEditor | null>(null);
   // Clique numa nota de rodapé abre a edição do texto da nota
   const editNote = useRef<NoteEditor | null>(null);
+  // Clique numa imagem abre a edição da legenda e do texto alternativo
+  const editImage = useRef<ImageEditor | null>(null);
   const editor = useEditor({
     immediatelyRender: false,
     editable,
@@ -46,7 +48,7 @@ export function RichEditor({
         codeBlock: false,
         link: { openOnClick: false, autolink: true, defaultProtocol: "https" },
       }),
-      Image.configure({ inline: false }),
+      CaptionedImage.configure({ inline: false }),
       Youtube.configure({ nocookie: true, controls: true, modestBranding: true }),
       Placeholder.configure({ placeholder }),
       // eslint-disable-next-line react-hooks/refs -- a ref só é lida no clique, não durante a renderização
@@ -61,9 +63,15 @@ export function RichEditor({
     editorProps: {
       attributes: { class: "prose-tribuna tiptap mx-auto", "aria-label": "Corpo do texto", role: "textbox", "aria-multiline": "true" },
       handleClickOn: (_view, pos, node) => {
-        if (node.type.name !== "footnote") return false;
-        editNote.current?.(String(node.attrs.note ?? ""), pos);
-        return true;
+        if (node.type.name === "footnote") {
+          editNote.current?.(String(node.attrs.note ?? ""), pos);
+          return true;
+        }
+        if (node.type.name === "image") {
+          editImage.current?.({ alt: String(node.attrs.alt ?? ""), caption: String(node.attrs.caption ?? "") }, pos);
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => onChange({ json: editor.getJSON(), html: editor.getHTML() }),
@@ -75,7 +83,7 @@ export function RichEditor({
 
   return (
     <div>
-      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} editMath={editMath} editNote={editNote} />}
+      {editor && editable && <Toolbar editor={editor} stickyTop={stickyTop} editMath={editMath} editNote={editNote} editImage={editImage} />}
       <div className="px-1 py-6">
         <EditorContent editor={editor} />
       </div>
@@ -85,6 +93,9 @@ export function RichEditor({
 
 type MathEditor = (kind: "inline" | "block", latex: string, pos: number) => void;
 type NoteEditor = (note: string, pos: number) => void;
+type ImageEditor = (attrs: { alt: string; caption: string }, pos: number) => void;
+
+const CAPTION_HINT = "Aparece abaixo da imagem, no texto publicado. Pode deixar vazio.";
 
 const NOTE_HINT = "Aparece numerada no fim do texto, na seção “Notas”. Endereços (https://…) viram links.";
 
@@ -95,11 +106,13 @@ function Toolbar({
   stickyTop,
   editMath,
   editNote,
+  editImage,
 }: {
   editor: Editor;
   stickyTop: string;
   editMath: RefObject<MathEditor | null>;
   editNote: RefObject<NoteEditor | null>;
+  editImage: RefObject<ImageEditor | null>;
 }) {
   const [dialog, ask] = usePrompt();
   const toast = useToast();
@@ -141,6 +154,24 @@ function Toolbar({
     // A nota entra no fim da seleção (ou no cursor), sem apagar o texto selecionado
     editor.chain().focus().setTextSelection(editor.state.selection.to).insertFootnote(note).run();
   }
+
+  useEffect(() => {
+    editImage.current = async ({ alt, caption }, pos) => {
+      const v = await ask({
+        title: "Legenda e descrição da imagem",
+        fields: [
+          { name: "caption", label: "Legenda", defaultValue: caption, type: "textarea", hint: CAPTION_HINT },
+          { name: "alt", label: "Texto alternativo", defaultValue: alt, required: true, hint: "Descreve a imagem para leitores de tela e buscadores." },
+        ],
+        confirmLabel: "Aplicar",
+      });
+      if (v === null) return;
+      editor.chain().focus().setNodeSelection(pos).updateAttributes("image", { alt: v.alt, caption: v.caption ?? "" }).run();
+    };
+    return () => {
+      editImage.current = null;
+    };
+  }, [editor, ask, editImage]);
 
   useEffect(() => {
     editNote.current = async (note, pos) => {
@@ -222,6 +253,7 @@ function Toolbar({
       title: "Descreva a imagem",
       fields: [
         { name: "alt", label: "Texto alternativo", placeholder: "O que aparece na imagem?", required: true, hint: "Usado por leitores de tela e buscadores." },
+        { name: "caption", label: "Legenda", placeholder: "Ex.: Ato na Praça dos Martírios, em Maceió. Foto: …", type: "textarea", hint: CAPTION_HINT },
       ],
       confirmLabel: "Enviar imagem",
     });
@@ -229,7 +261,9 @@ function Toolbar({
     try {
       toast("success", "Enviando imagem…");
       const up = await uploadImage(file, { alt: v.alt });
-      chain().setImage({ src: up.url, alt: v.alt }).run();
+      chain()
+        .insertContent({ type: "image", attrs: { src: up.url, alt: v.alt, caption: v.caption ?? "" } })
+        .run();
     } catch (e) {
       toast("error", (e as Error).message);
     }

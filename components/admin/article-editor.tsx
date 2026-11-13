@@ -81,6 +81,7 @@ export function ArticleEditor({
     slug: article.slug,
     cover_url: article.cover_url ?? "",
     cover_alt: article.cover_alt,
+    cover_caption: article.cover_caption ?? "",
     cover_credit: article.cover_credit,
     section_id: article.section_id ?? "",
     // Rascunho novo de quem tem coluna com nome já nasce na coluna
@@ -346,6 +347,17 @@ export function ArticleEditor({
             Texto alternativo <span className="text-accent">(obrigatório)</span>
           </span>
           <input className="input" value={form.cover_alt} onChange={(e) => set("cover_alt", e.target.value)} placeholder="Descreva a imagem para quem não pode vê-la" />
+        </label>
+        <label className="field">
+          Legenda
+          <textarea
+            className="input min-h-20 py-2"
+            rows={2}
+            maxLength={400}
+            value={form.cover_caption}
+            onChange={(e) => set("cover_caption", e.target.value)}
+            placeholder="Aparece abaixo da foto, no texto publicado (opcional)"
+          />
         </label>
         <label className="field">
           Crédito
